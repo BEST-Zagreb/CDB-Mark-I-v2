@@ -16,6 +16,14 @@ export const companyService = {
     return response.data;
   },
 
+  // Search companies by query
+  search: async (query: string): Promise<Company[]> => {
+    const response = await api.get(
+      `/companies?search=${encodeURIComponent(query)}`
+    );
+    return response.data;
+  },
+
   // Get a specific company by ID
   getById: async (id: number): Promise<Company> => {
     const response = await api.get(`/companies/${id}`);

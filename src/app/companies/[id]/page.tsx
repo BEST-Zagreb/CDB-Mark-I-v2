@@ -25,9 +25,19 @@ import { PeopleList } from "@/components/people/people-list";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
 import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
-import { companyService } from "@/services/company.service";
-import { personService } from "@/services/person.service";
-import { collaborationService } from "@/services/collaboration.service";
+import { useCompany, useUpdateCompany } from "@/hooks/useCompanies";
+import {
+  usePeopleByCompany,
+  useCreatePerson,
+  useUpdatePerson,
+  useDeletePerson,
+} from "@/hooks/usePeople";
+import {
+  useCollaborationsByCompany,
+  useCreateCollaboration,
+  useUpdateCollaboration,
+  useDeleteCollaboration,
+} from "@/hooks/useCollaborations";
 import { Company, CompanyFormData } from "@/types/company";
 import { Person, PersonFormData } from "@/types/person";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
@@ -37,19 +47,32 @@ export default function CompanyDetailPage() {
   const router = useRouter();
   const companyId = parseInt(params.id as string);
 
-  const [company, setCompany] = useState<Company | null>(null);
-  const [people, setPeople] = useState<Person[]>([]);
-  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [peopleLoading, setPeopleLoading] = useState(true);
-  const [collaborationsLoading, setCollaborationsLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [personDialogOpen, setPersonDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [selectedCollaboration, setSelectedCollaboration] =
     useState<Collaboration | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+
+  // React Query hooks
+  const {
+    data: company,
+    isLoading: loading,
+    error: companyError,
+  } = useCompany(companyId);
+  const { data: people = [], isLoading: peopleLoading } =
+    usePeopleByCompany(companyId);
+  const { data: collaborations = [], isLoading: collaborationsLoading } =
+    useCollaborationsByCompany(companyId);
+
+  // Mutation hooks
+  const updateCompanyMutation = useUpdateCompany();
+  const createPersonMutation = useCreatePerson();
+  const updatePersonMutation = useUpdatePerson();
+  const deletePersonMutation = useDeletePerson();
+  const createCollaborationMutation = useCreateCollaboration();
+  const updateCollaborationMutation = useUpdateCollaboration();
+  const deleteCollaborationMutation = useDeleteCollaboration();
 
   useEffect(() => {
     if (isNaN(companyId)) {
@@ -57,51 +80,15 @@ export default function CompanyDetailPage() {
       router.push("/companies");
       return;
     }
+  }, [companyId, router]);
 
-    loadCompany();
-    loadPeople();
-    loadCollaborations();
-  }, [companyId]);
-
-  const loadCompany = async () => {
-    try {
-      setLoading(true);
-      const data = await companyService.getById(companyId);
-      setCompany(data);
-    } catch (error) {
-      console.error("Error loading company:", error);
+  // Redirect if company not found
+  useEffect(() => {
+    if (companyError) {
       toast.error("Failed to load company");
       router.push("/companies");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const loadPeople = async () => {
-    try {
-      setPeopleLoading(true);
-      const data = await personService.getByCompany(companyId);
-      setPeople(data);
-    } catch (error) {
-      console.error("Error loading people:", error);
-      toast.error("Failed to load people");
-    } finally {
-      setPeopleLoading(false);
-    }
-  };
-
-  const loadCollaborations = async () => {
-    try {
-      setCollaborationsLoading(true);
-      const data = await collaborationService.getByCompany(companyId);
-      setCollaborations(data);
-    } catch (error) {
-      console.error("Error loading collaborations:", error);
-      toast.error("Failed to load collaborations");
-    } finally {
-      setCollaborationsLoading(false);
-    }
-  };
+  }, [companyError, router]);
 
   const handleEditCompany = () => {
     setEditDialogOpen(true);
@@ -109,19 +96,8 @@ export default function CompanyDetailPage() {
 
   const handleSubmitCompany = async (data: CompanyFormData) => {
     if (!company) return;
-
-    try {
-      setSubmitting(true);
-      const updatedCompany = await companyService.update(company.id, data);
-      setCompany(updatedCompany);
-      toast.success("Company updated successfully");
-    } catch (error) {
-      console.error("Error updating company:", error);
-      toast.error("Failed to update company");
-      throw error;
-    } finally {
-      setSubmitting(false);
-    }
+    await updateCompanyMutation.mutateAsync({ id: company.id, data });
+    setEditDialogOpen(false);
   };
 
   const handleAddPerson = () => {
@@ -135,34 +111,21 @@ export default function CompanyDetailPage() {
   };
 
   const handleDeletePerson = async (personId: number) => {
-    try {
-      await personService.delete(personId);
-      toast.success("Person deleted successfully");
-      loadPeople();
-    } catch (error) {
-      console.error("Error deleting person:", error);
-      toast.error("Failed to delete person");
-    }
+    await deletePersonMutation.mutateAsync(personId);
   };
 
   const handleSubmitPerson = async (data: PersonFormData) => {
-    try {
-      setSubmitting(true);
-      if (selectedPerson) {
-        await personService.update(selectedPerson.id, data);
-        toast.success("Person updated successfully");
-      } else {
-        await personService.create(data);
-        toast.success("Person created successfully");
-      }
-      loadPeople();
-    } catch (error) {
-      console.error("Error saving person:", error);
-      toast.error("Failed to save person");
-      throw error;
-    } finally {
-      setSubmitting(false);
+    const personData = { ...data, companyId };
+
+    if (selectedPerson) {
+      await updatePersonMutation.mutateAsync({
+        id: selectedPerson.id,
+        data: personData,
+      });
+    } else {
+      await createPersonMutation.mutateAsync(personData);
     }
+    setPersonDialogOpen(false);
   };
 
   const handleAddCollaboration = () => {
@@ -176,44 +139,34 @@ export default function CompanyDetailPage() {
   };
 
   const handleDeleteCollaboration = async (collaborationId: number) => {
-    try {
-      await collaborationService.delete(collaborationId);
-      toast.success("Collaboration deleted successfully");
-      loadCollaborations();
-    } catch (error) {
-      console.error("Error deleting collaboration:", error);
-      toast.error("Failed to delete collaboration");
-    }
+    await deleteCollaborationMutation.mutateAsync(collaborationId);
   };
 
   const handleSubmitCollaboration = async (data: CollaborationFormData) => {
-    try {
-      setSubmitting(true);
-      // Ensure companyId is set for new collaborations
-      const collaborationData = {
-        ...data,
-        companyId: data.companyId || companyId,
-      };
+    const collaborationData = {
+      ...data,
+      companyId: data.companyId || companyId,
+    };
 
-      if (selectedCollaboration) {
-        await collaborationService.update(
-          selectedCollaboration.id,
-          collaborationData
-        );
-        toast.success("Collaboration updated successfully");
-      } else {
-        await collaborationService.create(collaborationData);
-        toast.success("Collaboration created successfully");
-      }
-      loadCollaborations();
-    } catch (error) {
-      console.error("Error saving collaboration:", error);
-      toast.error("Failed to save collaboration");
-      throw error;
-    } finally {
-      setSubmitting(false);
+    if (selectedCollaboration) {
+      await updateCollaborationMutation.mutateAsync({
+        id: selectedCollaboration.id,
+        data: collaborationData,
+      });
+    } else {
+      await createCollaborationMutation.mutateAsync(collaborationData);
     }
+    setCollaborationDialogOpen(false);
   };
+
+  const isSubmitting =
+    updateCompanyMutation.isPending ||
+    createPersonMutation.isPending ||
+    updatePersonMutation.isPending ||
+    deletePersonMutation.isPending ||
+    createCollaborationMutation.isPending ||
+    updateCollaborationMutation.isPending ||
+    deleteCollaborationMutation.isPending;
 
   const formatUrl = (url: string) => {
     if (!url || url === "null" || url === "") return null;
@@ -446,7 +399,7 @@ export default function CompanyDetailPage() {
         onOpenChange={setEditDialogOpen}
         company={company}
         onSubmit={handleSubmitCompany}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
 
       <PersonDialog
@@ -455,7 +408,7 @@ export default function CompanyDetailPage() {
         person={selectedPerson}
         companyId={companyId}
         onSubmit={handleSubmitPerson}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
 
       <CollaborationDialog
@@ -464,7 +417,7 @@ export default function CompanyDetailPage() {
         collaboration={selectedCollaboration}
         projectId={selectedCollaboration?.projectId || 1}
         onSubmit={handleSubmitCollaboration}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
     </div>
   );

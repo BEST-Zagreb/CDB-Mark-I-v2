@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -13,32 +13,35 @@ import {
 } from "@/components/ui/card";
 import { CompanyList } from "@/components/companies/company-list";
 import { CompanyDialog } from "@/components/companies/company-dialog";
-import { companyService } from "@/services/company.service";
+import {
+  useCompanies,
+  useCreateCompany,
+  useUpdateCompany,
+  useDeleteCompany,
+} from "@/hooks/useCompanies";
 import { Company, CompanyFormData } from "@/types/company";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function CompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | undefined>();
-  const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Load companies on component mount
-  useEffect(() => {
-    loadCompanies();
-  }, []);
+  // Debounce search query to avoid too many API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  const loadCompanies = async () => {
-    try {
-      setLoading(true);
-      const data = await companyService.getAll();
-      setCompanies(data);
-    } catch (error) {
-      console.error("Error loading companies:", error);
-      toast.error("Failed to load companies");
-    } finally {
-      setLoading(false);
-    }
+  // React Query hooks
+  const {
+    data: companies = [],
+    isLoading: loading,
+    error,
+  } = useCompanies(debouncedSearchQuery);
+  const createMutation = useCreateCompany();
+  const updateMutation = useUpdateCompany();
+  const deleteMutation = useDeleteCompany();
+
+  const clearSearch = () => {
+    setSearchQuery("");
   };
 
   const handleCreateCompany = () => {
@@ -52,47 +55,21 @@ export default function CompaniesPage() {
   };
 
   const handleSubmitCompany = async (data: CompanyFormData) => {
-    try {
-      setSubmitting(true);
-
-      if (editingCompany) {
-        // Update existing company
-        const updatedCompany = await companyService.update(
-          editingCompany.id,
-          data
-        );
-        setCompanies((prev) =>
-          prev.map((c) => (c.id === editingCompany.id ? updatedCompany : c))
-        );
-        toast.success("Company updated successfully");
-      } else {
-        // Create new company
-        const newCompany = await companyService.create(data);
-        setCompanies((prev) => [newCompany, ...prev]);
-        toast.success("Company created successfully");
-      }
-    } catch (error) {
-      console.error("Error submitting company:", error);
-      toast.error(
-        editingCompany ? "Failed to update company" : "Failed to create company"
-      );
-      throw error; // Re-throw to prevent dialog from closing
-    } finally {
-      setSubmitting(false);
+    if (editingCompany) {
+      // Update existing company
+      await updateMutation.mutateAsync({ id: editingCompany.id, data });
+    } else {
+      // Create new company
+      await createMutation.mutateAsync(data);
     }
+    setDialogOpen(false);
   };
 
   const handleDeleteCompany = async (companyId: number) => {
-    try {
-      await companyService.delete(companyId);
-      setCompanies((prev) => prev.filter((c) => c.id !== companyId));
-      toast.success("Company deleted successfully");
-    } catch (error) {
-      console.error("Error deleting company:", error);
-      toast.error("Failed to delete company");
-      throw error; // Re-throw to prevent optimistic UI update
-    }
+    await deleteMutation.mutateAsync(companyId);
   };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -110,17 +87,47 @@ export default function CompaniesPage() {
           </Button>
         </div>
 
+        {/* Search Bar */}
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search companies by name, city, country..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearch}
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">
             Loading companies...
           </div>
         ) : (
-          <CompanyList
-            companies={companies}
-            onEdit={handleEditCompany}
-            onDelete={handleDeleteCompany}
-            isLoading={submitting}
-          />
+          <>
+            {/* Search Results Info */}
+            {debouncedSearchQuery.trim() !== "" && (
+              <div className="text-sm text-muted-foreground">
+                Found {companies.length} companies matching "
+                {debouncedSearchQuery}"
+              </div>
+            )}
+            <CompanyList
+              companies={companies}
+              onEdit={handleEditCompany}
+              onDelete={handleDeleteCompany}
+              isLoading={isSubmitting}
+            />
+          </>
         )}
       </div>
 
@@ -129,7 +136,7 @@ export default function CompaniesPage() {
         onOpenChange={setDialogOpen}
         company={editingCompany}
         onSubmit={handleSubmitCompany}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
     </div>
   );

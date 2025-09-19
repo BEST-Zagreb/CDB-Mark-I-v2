@@ -15,8 +15,13 @@ import {
 import { ProjectDialog } from "@/components/projects/project-dialog";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
 import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
-import { projectService } from "@/services/project.service";
-import { collaborationService } from "@/services/collaboration.service";
+import { useProject, useUpdateProject } from "@/hooks/useProjects";
+import {
+  useCollaborationsByProject,
+  useCreateCollaboration,
+  useUpdateCollaboration,
+  useDeleteCollaboration,
+} from "@/hooks/useCollaborations";
 import { Project, ProjectFormData } from "@/types/project";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
@@ -25,15 +30,25 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const projectId = parseInt(params.id as string);
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingCollaborations, setLoadingCollaborations] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
   const [editingCollaboration, setEditingCollaboration] =
     useState<Collaboration | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+
+  // React Query hooks
+  const {
+    data: project,
+    isLoading: loading,
+    error: projectError,
+  } = useProject(projectId);
+  const { data: collaborations = [], isLoading: loadingCollaborations } =
+    useCollaborationsByProject(projectId);
+
+  // Mutation hooks
+  const updateProjectMutation = useUpdateProject();
+  const createCollaborationMutation = useCreateCollaboration();
+  const updateCollaborationMutation = useUpdateCollaboration();
+  const deleteCollaborationMutation = useDeleteCollaboration();
 
   useEffect(() => {
     if (isNaN(projectId)) {
@@ -41,37 +56,15 @@ export default function ProjectDetailPage() {
       router.push("/projects");
       return;
     }
+  }, [projectId, router]);
 
-    loadProject();
-    loadCollaborations();
-  }, [projectId]);
-
-  const loadProject = async () => {
-    try {
-      setLoading(true);
-      const data = await projectService.getById(projectId);
-      setProject(data);
-    } catch (error) {
-      console.error("Error loading project:", error);
+  // Redirect if project not found
+  useEffect(() => {
+    if (projectError) {
       toast.error("Failed to load project");
       router.push("/projects");
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const loadCollaborations = async () => {
-    try {
-      setLoadingCollaborations(true);
-      const data = await collaborationService.getByProject(projectId);
-      setCollaborations(data);
-    } catch (error) {
-      console.error("Error loading collaborations:", error);
-      toast.error("Failed to load collaborations");
-    } finally {
-      setLoadingCollaborations(false);
-    }
-  };
+  }, [projectError, router]);
 
   const handleEditProject = () => {
     setEditDialogOpen(true);
@@ -79,19 +72,8 @@ export default function ProjectDetailPage() {
 
   const handleSubmitProject = async (data: ProjectFormData) => {
     if (!project) return;
-
-    try {
-      setSubmitting(true);
-      const updatedProject = await projectService.update(project.id, data);
-      setProject(updatedProject);
-      toast.success("Project updated successfully");
-    } catch (error) {
-      console.error("Error updating project:", error);
-      toast.error("Failed to update project");
-      throw error;
-    } finally {
-      setSubmitting(false);
-    }
+    await updateProjectMutation.mutateAsync({ id: project.id, data });
+    setEditDialogOpen(false);
   };
 
   const handleAddCollaboration = () => {
@@ -105,42 +87,28 @@ export default function ProjectDetailPage() {
   };
 
   const handleSubmitCollaboration = async (data: CollaborationFormData) => {
-    try {
-      setSubmitting(true);
-      if (editingCollaboration) {
-        const updated = await collaborationService.update(
-          editingCollaboration.id,
-          data
-        );
-        setCollaborations((prev) =>
-          prev.map((c) => (c.id === updated.id ? updated : c))
-        );
-        toast.success("Collaboration updated successfully");
-      } else {
-        const created = await collaborationService.create(data);
-        setCollaborations((prev) => [created, ...prev]);
-        toast.success("Collaboration created successfully");
-      }
-    } catch (error) {
-      console.error("Error saving collaboration:", error);
-      toast.error("Failed to save collaboration");
-      throw error;
-    } finally {
-      setSubmitting(false);
+    const collaborationData = { ...data, projectId };
+
+    if (editingCollaboration) {
+      await updateCollaborationMutation.mutateAsync({
+        id: editingCollaboration.id,
+        data: collaborationData,
+      });
+    } else {
+      await createCollaborationMutation.mutateAsync(collaborationData);
     }
+    setCollaborationDialogOpen(false);
   };
 
   const handleDeleteCollaboration = async (collaborationId: number) => {
-    try {
-      await collaborationService.delete(collaborationId);
-      setCollaborations((prev) => prev.filter((c) => c.id !== collaborationId));
-      toast.success("Collaboration deleted successfully");
-    } catch (error) {
-      console.error("Error deleting collaboration:", error);
-      toast.error("Failed to delete collaboration");
-      throw error;
-    }
+    await deleteCollaborationMutation.mutateAsync(collaborationId);
   };
+
+  const isSubmitting =
+    updateProjectMutation.isPending ||
+    createCollaborationMutation.isPending ||
+    updateCollaborationMutation.isPending ||
+    deleteCollaborationMutation.isPending;
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "—";
@@ -286,7 +254,7 @@ export default function ProjectDetailPage() {
         onOpenChange={setEditDialogOpen}
         project={project}
         onSubmit={handleSubmitProject}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
 
       <CollaborationDialog
@@ -295,7 +263,7 @@ export default function ProjectDetailPage() {
         collaboration={editingCollaboration}
         projectId={projectId}
         onSubmit={handleSubmitCollaboration}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
     </div>
   );

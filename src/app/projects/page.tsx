@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,33 +11,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProjectList, ProjectDialog } from "@/components/projects";
-import { projectService } from "@/services/project.service";
+import {
+  useProjects,
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
+} from "@/hooks/useProjects";
 import { Project, ProjectFormData } from "@/types/project";
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
-  const [submitting, setSubmitting] = useState(false);
 
-  // Load projects on component mount
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      setLoading(true);
-      const data = await projectService.getAll();
-      setProjects(data);
-    } catch (error) {
-      console.error("Error loading projects:", error);
-      toast.error("Failed to load projects");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // React Query hooks
+  const { data: projects = [], isLoading: loading } = useProjects();
+  const createMutation = useCreateProject();
+  const updateMutation = useUpdateProject();
+  const deleteMutation = useDeleteProject();
 
   const handleCreateProject = () => {
     setEditingProject(undefined);
@@ -51,47 +40,21 @@ export default function ProjectsPage() {
   };
 
   const handleSubmitProject = async (data: ProjectFormData) => {
-    try {
-      setSubmitting(true);
-
-      if (editingProject) {
-        // Update existing project
-        const updatedProject = await projectService.update(
-          editingProject.id,
-          data
-        );
-        setProjects((prev) =>
-          prev.map((p) => (p.id === editingProject.id ? updatedProject : p))
-        );
-        toast.success("Project updated successfully");
-      } else {
-        // Create new project
-        const newProject = await projectService.create(data);
-        setProjects((prev) => [newProject, ...prev]);
-        toast.success("Project created successfully");
-      }
-    } catch (error) {
-      console.error("Error submitting project:", error);
-      toast.error(
-        editingProject ? "Failed to update project" : "Failed to create project"
-      );
-      throw error; // Re-throw to prevent dialog from closing
-    } finally {
-      setSubmitting(false);
+    if (editingProject) {
+      // Update existing project
+      await updateMutation.mutateAsync({ id: editingProject.id, data });
+    } else {
+      // Create new project
+      await createMutation.mutateAsync(data);
     }
+    setDialogOpen(false);
   };
 
   const handleDeleteProject = async (projectId: number) => {
-    try {
-      await projectService.delete(projectId);
-      setProjects((prev) => prev.filter((p) => p.id !== projectId));
-      toast.success("Project deleted successfully");
-    } catch (error) {
-      console.error("Error deleting project:", error);
-      toast.error("Failed to delete project");
-      throw error; // Re-throw to prevent optimistic UI update
-    }
+    await deleteMutation.mutateAsync(projectId);
   };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -118,7 +81,7 @@ export default function ProjectsPage() {
             projects={projects}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
-            isLoading={submitting}
+            isLoading={isSubmitting}
           />
         )}
       </div>
@@ -128,7 +91,7 @@ export default function ProjectsPage() {
         onOpenChange={setDialogOpen}
         project={editingProject}
         onSubmit={handleSubmitProject}
-        isLoading={submitting}
+        isLoading={isSubmitting}
       />
     </div>
   );

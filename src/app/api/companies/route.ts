@@ -7,15 +7,43 @@ import {
   dbCompanyToCompany,
 } from "@/types/company";
 
-// GET /api/companies - Get all companies
-export async function GET() {
+// GET /api/companies - Get all companies with optional search
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get("search");
+
     const db = getDatabase();
-    const stmt = db.prepare(`
-      SELECT * FROM companies 
-      ORDER BY name ASC
-    `);
-    const companies: CompanyDB[] = stmt.all() as CompanyDB[];
+    let stmt;
+    let companies: CompanyDB[];
+
+    if (searchQuery && searchQuery.trim() !== "") {
+      // Search across name, city, country, and address
+      stmt = db.prepare(`
+        SELECT * FROM companies 
+        WHERE name LIKE ? 
+           OR city LIKE ? 
+           OR country LIKE ? 
+           OR address LIKE ?
+           OR comment LIKE ?
+        ORDER BY name ASC
+      `);
+      const searchPattern = `%${searchQuery.trim()}%`;
+      companies = stmt.all(
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern,
+        searchPattern
+      ) as CompanyDB[];
+    } else {
+      // Get all companies if no search query
+      stmt = db.prepare(`
+        SELECT * FROM companies 
+        ORDER BY name ASC
+      `);
+      companies = stmt.all() as CompanyDB[];
+    }
 
     const formattedCompanies: Company[] = companies.map(dbCompanyToCompany);
 
