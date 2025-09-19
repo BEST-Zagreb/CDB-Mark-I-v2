@@ -21,7 +21,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Project } from "@/types/project";
-import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ProjectListProps {
   projects: Project[];
@@ -39,6 +47,7 @@ export function ProjectList({
   onDelete,
   isLoading = false,
 }: ProjectListProps) {
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -210,7 +219,15 @@ export function ProjectList({
                   <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
+                      onClick={() => router.push(`/projects/${project.id}`)}
+                      disabled={isLoading}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onEdit(project)}
                       disabled={isLoading}
                     >
@@ -218,7 +235,7 @@ export function ProjectList({
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleDeleteClick(project)}
                       disabled={isLoading}
                       className="text-destructive hover:text-destructive"

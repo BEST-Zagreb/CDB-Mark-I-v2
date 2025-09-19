@@ -28,6 +28,7 @@ import {
   ArrowUp,
   ArrowDown,
   ExternalLink,
+  Eye,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -177,11 +178,7 @@ export function CompanyList({
           </TableHeader>
           <TableBody>
             {sortedCompanies.map((company) => (
-              <TableRow
-                key={company.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => router.push(`/companies/${company.id}`)}
-              >
+              <TableRow key={company.id}>
                 <TableCell className="font-medium w-full sm:w-auto whitespace-normal">
                   {company.name}
                 </TableCell>
@@ -206,13 +203,18 @@ export function CompanyList({
                   {company.city || "—"}
                 </TableCell>
                 <TableCell className="text-center">
-                  <div
-                    className="flex justify-center items-center gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
+                      onClick={() => router.push(`/companies/${company.id}`)}
+                      disabled={isLoading}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => onEdit(company)}
                       disabled={isLoading}
                     >
@@ -220,7 +222,7 @@ export function CompanyList({
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleDeleteClick(company)}
                       disabled={isLoading}
                       className="text-destructive hover:text-destructive"
