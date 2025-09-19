@@ -43,7 +43,7 @@ export function ProjectList({
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [sortField, setSortField] = useState<SortField>("created_at");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Sort projects based on current sort field and direction
   const sortedProjects = useMemo(() => {
