@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,8 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ProjectDialog } from "@/components/projects/project-dialog";
+import { CollaborationList } from "@/components/collaborations/collaboration-list";
+import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
 import { projectService } from "@/services/project.service";
+import { collaborationService } from "@/services/collaboration.service";
 import { Project, ProjectFormData } from "@/types/project";
+import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -22,8 +26,13 @@ export default function ProjectDetailPage() {
   const projectId = parseInt(params.id as string);
 
   const [project, setProject] = useState<Project | null>(null);
+  const [collaborations, setCollaborations] = useState<Collaboration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCollaborations, setLoadingCollaborations] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
+  const [editingCollaboration, setEditingCollaboration] =
+    useState<Collaboration | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -34,6 +43,7 @@ export default function ProjectDetailPage() {
     }
 
     loadProject();
+    loadCollaborations();
   }, [projectId]);
 
   const loadProject = async () => {
@@ -47,6 +57,19 @@ export default function ProjectDetailPage() {
       router.push("/projects");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCollaborations = async () => {
+    try {
+      setLoadingCollaborations(true);
+      const data = await collaborationService.getByProject(projectId);
+      setCollaborations(data);
+    } catch (error) {
+      console.error("Error loading collaborations:", error);
+      toast.error("Failed to load collaborations");
+    } finally {
+      setLoadingCollaborations(false);
     }
   };
 
@@ -68,6 +91,54 @@ export default function ProjectDetailPage() {
       throw error;
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddCollaboration = () => {
+    setEditingCollaboration(null);
+    setCollaborationDialogOpen(true);
+  };
+
+  const handleEditCollaboration = (collaboration: Collaboration) => {
+    setEditingCollaboration(collaboration);
+    setCollaborationDialogOpen(true);
+  };
+
+  const handleSubmitCollaboration = async (data: CollaborationFormData) => {
+    try {
+      setSubmitting(true);
+      if (editingCollaboration) {
+        const updated = await collaborationService.update(
+          editingCollaboration.id,
+          data
+        );
+        setCollaborations((prev) =>
+          prev.map((c) => (c.id === updated.id ? updated : c))
+        );
+        toast.success("Collaboration updated successfully");
+      } else {
+        const created = await collaborationService.create(data);
+        setCollaborations((prev) => [created, ...prev]);
+        toast.success("Collaboration created successfully");
+      }
+    } catch (error) {
+      console.error("Error saving collaboration:", error);
+      toast.error("Failed to save collaboration");
+      throw error;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteCollaboration = async (collaborationId: number) => {
+    try {
+      await collaborationService.delete(collaborationId);
+      setCollaborations((prev) => prev.filter((c) => c.id !== collaborationId));
+      toast.success("Collaboration deleted successfully");
+    } catch (error) {
+      console.error("Error deleting collaboration:", error);
+      toast.error("Failed to delete collaboration");
+      throw error;
     }
   };
 
@@ -182,6 +253,32 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Collaborations Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Collaborations</CardTitle>
+                <CardDescription>
+                  Companies and organizations involved in this project
+                </CardDescription>
+              </div>
+              <Button onClick={handleAddCollaboration}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Collaboration
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CollaborationList
+              collaborations={collaborations}
+              onEdit={handleEditCollaboration}
+              onDelete={handleDeleteCollaboration}
+              isLoading={loadingCollaborations}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <ProjectDialog
@@ -189,6 +286,15 @@ export default function ProjectDetailPage() {
         onOpenChange={setEditDialogOpen}
         project={project}
         onSubmit={handleSubmitProject}
+        isLoading={submitting}
+      />
+
+      <CollaborationDialog
+        open={collaborationDialogOpen}
+        onOpenChange={setCollaborationDialogOpen}
+        collaboration={editingCollaboration}
+        projectId={projectId}
+        onSubmit={handleSubmitCollaboration}
         isLoading={submitting}
       />
     </div>
