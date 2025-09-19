@@ -29,13 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
         <SidebarProvider>
           <AppSidebar />
           <main className="w-full">
             <Header />
-            <div className="pt-24">{children}</div>
+            <div className="pt-24 max-w-5xl mx-auto">{children}</div>
           </main>
         </SidebarProvider>
         <Toaster />

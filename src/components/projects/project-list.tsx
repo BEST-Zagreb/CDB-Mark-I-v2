@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Project } from "@/types/project";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface ProjectListProps {
   projects: Project[];
@@ -29,6 +29,9 @@ interface ProjectListProps {
   onDelete: (projectId: number) => Promise<void>;
   isLoading?: boolean;
 }
+
+type SortField = "name" | "created_at" | "updated_at";
+type SortDirection = "asc" | "desc";
 
 export function ProjectList({
   projects,
@@ -39,6 +42,57 @@ export function ProjectList({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Sort projects based on current sort field and direction
+  const sortedProjects = useMemo(() => {
+    return [...projects].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case "name":
+          aValue = a.name?.toLowerCase() || "";
+          bValue = b.name?.toLowerCase() || "";
+          break;
+        case "created_at":
+        case "updated_at":
+          // Handle null dates by putting them at the end
+          aValue = a[sortField] ? new Date(a[sortField]!).getTime() : 0;
+          bValue = b[sortField] ? new Date(b[sortField]!).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [projects, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field with ascending direction
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4" />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-4 w-4" />
+    ) : (
+      <ArrowDown className="h-4 w-4" />
+    );
+  };
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "—";
@@ -55,12 +109,10 @@ export function ProjectList({
     // Check if the date is valid
     if (isNaN(dateObj.getTime())) return "—";
 
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat("hr-HR", {
       year: "numeric",
-      month: "short",
+      month: "numeric",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     }).format(dateObj);
   };
 
@@ -103,22 +155,59 @@ export function ProjectList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("name")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    Name
+                    {getSortIcon("name")}
+                  </span>
+                </Button>
+              </TableHead>
+              <TableHead className="hidden sm:table-cell">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("created_at")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    Created
+                    {getSortIcon("created_at")}
+                  </span>
+                </Button>
+              </TableHead>
+              <TableHead className="hidden sm:table-cell">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("updated_at")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    Updated
+                    {getSortIcon("updated_at")}
+                  </span>
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
+            {sortedProjects.map((project) => (
               <TableRow key={project.id}>
-                <TableCell className="font-mono">{project.id}</TableCell>
-                <TableCell className="font-medium">{project.name}</TableCell>
-                <TableCell>{formatDate(project.created_at)}</TableCell>
-                <TableCell>{formatDate(project.updated_at)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                <TableCell className="font-medium w-full sm:w-auto whitespace-normal">
+                  {project.name}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(project.created_at)}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDate(project.updated_at)}
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"

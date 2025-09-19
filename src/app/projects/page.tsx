@@ -109,28 +109,18 @@ export default function ProjectsPage() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>All Projects</CardTitle>
-            <CardDescription>
-              A list of all projects in your database.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Loading projects...
-              </div>
-            ) : (
-              <ProjectList
-                projects={projects}
-                onEdit={handleEditProject}
-                onDelete={handleDeleteProject}
-                isLoading={submitting}
-              />
-            )}
-          </CardContent>
-        </Card>
+        {loading ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Loading projects...
+          </div>
+        ) : (
+          <ProjectList
+            projects={projects}
+            onEdit={handleEditProject}
+            onDelete={handleDeleteProject}
+            isLoading={submitting}
+          />
+        )}
       </div>
 
       <ProjectDialog
