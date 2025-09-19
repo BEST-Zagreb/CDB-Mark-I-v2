@@ -58,11 +58,13 @@ export default function Header(): JSX.Element {
 
                 <li>
                   <Link
-                    href="#"
-                    className="flex items-center space-x-2 text-muted-foreground/50 cursor-not-allowed block duration-150"
+                    href="/companies"
+                    className="flex items-center space-x-2 text-muted-foreground hover:text-accent-foreground block duration-150 group hover:scale-110"
                   >
-                    <Building className="size-4" />
-                    <span>Companies (Soon)</span>
+                    <Building className="size-4 group-hover:text-primary transition-colors" />
+                    <span className="group-hover:text-primary transition-colors">
+                      Companies
+                    </span>
                   </Link>
                 </li>
               </ul>

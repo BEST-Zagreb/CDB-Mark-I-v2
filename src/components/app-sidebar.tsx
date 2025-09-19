@@ -34,14 +34,18 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { projectService } from "@/services/project.service";
+import { companyService } from "@/services/company.service";
 import { Project } from "@/types/project";
+import { Company } from "@/types/company";
 
-type OpenSection = "projects" | null;
+type OpenSection = "projects" | "companies" | null;
 
 export const AppSidebar = memo(function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<OpenSection>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
   const { setOpen, open, state } = useSidebar();
   const pathname = usePathname();
 
@@ -50,7 +54,7 @@ export const AppSidebar = memo(function AppSidebar() {
     setOpen(false);
   }, [pathname]);
 
-  // Fetch projects when projects menu is opened
+  // Fetch projects and companies when sidebar is expanded
   useEffect(() => {
     if (state === "expanded") {
       setLoadingProjects(true);
@@ -59,6 +63,13 @@ export const AppSidebar = memo(function AppSidebar() {
         .then(setProjects)
         .catch(console.error)
         .finally(() => setLoadingProjects(false));
+
+      setLoadingCompanies(true);
+      companyService
+        .getAll()
+        .then(setCompanies)
+        .catch(console.error)
+        .finally(() => setLoadingCompanies(false));
     }
   }, [state]);
 
@@ -142,12 +153,70 @@ export const AppSidebar = memo(function AppSidebar() {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <SidebarMenuButton disabled>
-                  <Building className="h-4 w-4" />
-                  <span className="text-muted-foreground">
-                    Companies (Coming Soon)
-                  </span>
-                </SidebarMenuButton>
+                <Collapsible
+                  open={openMenu === "companies"}
+                  onOpenChange={(open) =>
+                    setOpenMenu(open ? "companies" : null)
+                  }
+                  className="group/collapsible"
+                >
+                  <div className="flex items-center">
+                    {/* Main link to companies page */}
+                    <SidebarMenuButton asChild className="flex-1">
+                      <Link
+                        href="/companies"
+                        className="flex items-center gap-2"
+                      >
+                        <Building />
+                        <span>Companies</span>
+                      </Link>
+                    </SidebarMenuButton>
+
+                    {/* Separate chevron trigger for collapsible */}
+                    <CollapsibleTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                        <span className="sr-only">Toggle Companies</span>
+                      </button>
+                    </CollapsibleTrigger>
+                  </div>
+
+                  <CollapsibleContent>
+                    <SidebarMenuSub className="max-h-128 overflow-y-auto">
+                      {loadingCompanies ? (
+                        <SidebarMenuSubItem>
+                          <div className="text-sm text-muted-foreground px-2">
+                            Loading companies...
+                          </div>
+                        </SidebarMenuSubItem>
+                      ) : (
+                        companies.map((company) => (
+                          <SidebarMenuSubItem key={company.id}>
+                            <Link
+                              href={`/companies/${company.id}`}
+                              className="flex items-center space-x-2 w-full hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
+                            >
+                              <div className="flex flex-col min-w-0">
+                                <span className="truncate text-sm">
+                                  {company.name}
+                                </span>
+                                <span className="truncate text-xs text-muted-foreground">
+                                  {company.city && company.country
+                                    ? `${company.city}, ${company.country}`
+                                    : company.city || company.country || ""}
+                                </span>
+                              </div>
+                            </Link>
+                          </SidebarMenuSubItem>
+                        ))
+                      )}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
