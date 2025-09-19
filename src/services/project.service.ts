@@ -13,20 +13,7 @@ export const projectService = {
   // Get all projects
   getAll: async (): Promise<Project[]> => {
     const response = await api.get("/projects");
-    const projects = response.data;
-
-    // Client-side sorting as fallback to ensure consistent ordering
-    return projects.sort((a: Project, b: Project) => {
-      // Handle null dates - put them at the end
-      if (!a.created_at && !b.created_at) return 0;
-      if (!a.created_at) return 1;
-      if (!b.created_at) return -1;
-
-      // Sort by created_at ascending (oldest first)
-      return (
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    });
+    return response.data;
   },
 
   // Get a specific project by ID

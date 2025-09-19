@@ -15,7 +15,7 @@ export async function GET() {
       SELECT * FROM projects 
       ORDER BY 
         CASE WHEN created_at IS NULL OR created_at = 'null' THEN 1 ELSE 0 END,
-        created_at ASC
+        created_at DESC
     `);
     const projects: ProjectDB[] = stmt.all() as ProjectDB[];
 
