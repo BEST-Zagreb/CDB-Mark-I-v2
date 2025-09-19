@@ -45,11 +45,12 @@ function transformCollaboration(
   };
 }
 
-// GET /api/collaborations - Get all collaborations with optional project filter
+// GET /api/collaborations - Get all collaborations with optional project or company filter
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("project_id");
+    const companyId = searchParams.get("company_id");
 
     const db = new Database(dbPath, { readonly: true });
 
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
     if (projectId) {
       query += " WHERE c.project_id = ?";
       params.push(parseInt(projectId));
+    } else if (companyId) {
+      query += " WHERE c.company_id = ?";
+      params.push(parseInt(companyId));
     }
 
     query += " ORDER BY c.updated_at DESC, c.created_at DESC";

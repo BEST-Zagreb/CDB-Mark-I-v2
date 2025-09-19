@@ -345,7 +345,7 @@ export function CollaborationList({
                   <div className="flex justify-center items-center gap-2">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => onEdit(collaboration)}
                       disabled={isLoading}
                     >
@@ -353,7 +353,7 @@ export function CollaborationList({
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="icon"
                       onClick={() => handleDeleteClick(collaboration)}
                       disabled={isLoading}
                       className="text-destructive hover:text-destructive"

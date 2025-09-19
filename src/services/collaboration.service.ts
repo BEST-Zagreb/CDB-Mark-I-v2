@@ -41,4 +41,11 @@ export const collaborationService = {
   async getByProject(projectId: number): Promise<Collaboration[]> {
     return this.getAll(projectId);
   },
+
+  // Get collaborations for a specific company
+  async getByCompany(companyId: number): Promise<Collaboration[]> {
+    const params = { company_id: companyId };
+    const response = await axios.get(API_BASE, { params });
+    return response.data;
+  },
 };
