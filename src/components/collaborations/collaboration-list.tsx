@@ -56,6 +56,7 @@ type SortField =
   | "responsible"
   | "type"
   | "priority"
+  | "amount"
   | "contacted"
   | "successful"
   | "updatedAt";
@@ -72,7 +73,7 @@ export function CollaborationList({
   const [collaborationToDelete, setCollaborationToDelete] =
     useState<Collaboration | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("updatedAt");
+  const [sortField, setSortField] = useState<SortField>("priority");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Sort collaborations based on current sort field and direction
@@ -101,6 +102,10 @@ export function CollaborationList({
         case "priority":
           aValue = a.priority;
           bValue = b.priority;
+          break;
+        case "amount":
+          aValue = a.amount || 0;
+          bValue = b.amount || 0;
           break;
         case "contacted":
           aValue = a.contacted ? 1 : 0;
@@ -293,7 +298,18 @@ export function CollaborationList({
                   </span>
                 </Button>
               </TableHead>
-              <TableHead className="hidden md:table-cell">Amount</TableHead>
+              <TableHead className="hidden md:table-cell">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("amount")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    Amount
+                    {getSortIcon("amount")}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead className="hidden lg:table-cell">
                 <Button
                   variant="ghost"
