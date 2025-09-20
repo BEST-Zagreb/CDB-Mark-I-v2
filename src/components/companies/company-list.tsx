@@ -10,19 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  MultiSelect,
-  MultiSelectTrigger,
-  MultiSelectValue,
-  MultiSelectContent,
-  MultiSelectItem,
-} from "@/components/ui/multi-select";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
-import { Pencil, Trash2, ExternalLink, Eye, Settings } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableActions } from "@/components/ui/table-actions";
+import { ColumnSelector } from "@/components/ui/column-selector";
 import {
   Tooltip,
   TooltipContent,
@@ -168,34 +162,18 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
 
   return (
     <>
-      {/* Column Selector */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Columns:</span>
-          <MultiSelect
-            values={visibleColumnsToStrings(tablePreferences.visibleColumns)}
-            onValuesChange={handleUpdateVisibleColumns}
-          >
-            <MultiSelectTrigger className="min-w-[200px]">
-              <MultiSelectValue placeholder="Select columns" />
-            </MultiSelectTrigger>
-            <MultiSelectContent>
-              {COMPANY_FIELDS.map((column) => (
-                <MultiSelectItem
-                  key={column.id}
-                  value={column.id}
-                  badgeLabel={column.label}
-                  disabled={column.required}
-                >
-                  {column.label}
-                  {column.required && " (Required)"}
-                </MultiSelectItem>
-              ))}
-            </MultiSelectContent>
-          </MultiSelect>
-        </div>
-      </div>
+      <ColumnSelector
+        fields={COMPANY_FIELDS.map((field) => ({
+          id: field.id,
+          label: field.label,
+          required: field.required,
+        }))}
+        visibleColumns={visibleColumnsToStrings(
+          tablePreferences.visibleColumns
+        )}
+        onColumnsChange={handleUpdateVisibleColumns}
+        placeholder="Select columns"
+      />
 
       <div className="rounded-md border">
         <Table>
