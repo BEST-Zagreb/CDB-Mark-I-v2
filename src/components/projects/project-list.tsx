@@ -38,7 +38,7 @@ interface ProjectListProps {
   isLoading?: boolean;
 }
 
-type SortField = "name" | "created_at" | "updated_at";
+type SortField = "name" | "frGoal" | "created_at" | "updated_at";
 type SortDirection = "asc" | "desc";
 
 export function ProjectList({
@@ -64,6 +64,10 @@ export function ProjectList({
         case "name":
           aValue = a.name?.toLowerCase() || "";
           bValue = b.name?.toLowerCase() || "";
+          break;
+        case "frGoal":
+          aValue = a.frGoal || 0;
+          bValue = b.frGoal || 0;
           break;
         case "created_at":
         case "updated_at":
@@ -125,6 +129,29 @@ export function ProjectList({
     }).format(dateObj);
   };
 
+  const formatAmount = (
+    amount: number | null,
+    projectUpdatedAt: string | Date | number | null
+  ) => {
+    if (!amount) return "—";
+
+    // if project updated before 1.1.2023. dispplay in HRK, otherwise display in EUR
+    if (
+      projectUpdatedAt &&
+      new Date(projectUpdatedAt) < new Date("2023-01-01")
+    ) {
+      return new Intl.NumberFormat("hr-HR", {
+        style: "currency",
+        currency: "HRK",
+      }).format(amount);
+    }
+
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "EUR",
+    }).format(amount);
+  };
+
   const handleDeleteClick = (project: Project) => {
     setProjectToDelete(project);
     setDeleteDialogOpen(true);
@@ -176,6 +203,18 @@ export function ProjectList({
                   </span>
                 </Button>
               </TableHead>
+              <TableHead className="hidden md:table-cell">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("frGoal")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    FR Goal
+                    {getSortIcon("frGoal")}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead className="hidden sm:table-cell">
                 <Button
                   variant="ghost"
@@ -208,6 +247,9 @@ export function ProjectList({
               <TableRow key={project.id}>
                 <TableCell className="font-medium w-full sm:w-auto whitespace-normal">
                   {project.name}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {formatAmount(project.frGoal, project.updated_at)}
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   {formatDate(project.created_at)}

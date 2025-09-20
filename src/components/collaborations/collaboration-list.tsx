@@ -191,7 +191,7 @@ export function CollaborationList({
 
     return new Intl.DateTimeFormat("hr-HR", {
       year: "numeric",
-      month: "short",
+      month: "numeric",
       day: "numeric",
     }).format(dateObj);
   };

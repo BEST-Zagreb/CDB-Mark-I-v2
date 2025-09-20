@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
@@ -49,6 +50,29 @@ export default function ProjectDetailPage() {
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
+
+  // Calculate fundraising progress
+  const calculateFundraisingProgress = () => {
+    if (!project?.frGoal || !collaborations.length) {
+      return { totalRaised: 0, progressPercentage: 0 };
+    }
+
+    // Sum up amounts from successful collaborations only
+    const totalRaised = collaborations
+      .filter(
+        (collaboration) => collaboration.successful && collaboration.amount
+      )
+      .reduce((sum, collaboration) => sum + (collaboration.amount || 0), 0);
+
+    const progressPercentage = Math.min(
+      (totalRaised / project.frGoal) * 100,
+      100
+    );
+
+    return { totalRaised, progressPercentage };
+  };
+
+  const { totalRaised, progressPercentage } = calculateFundraisingProgress();
 
   useEffect(() => {
     if (isNaN(projectId)) {
@@ -191,6 +215,25 @@ export default function ProjectDetailPage() {
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
+                  Fundraising Goal
+                </label>
+                <p className="mt-1 font-medium">
+                  {project.frGoal &&
+                  new Date(project.updated_at || new Date()) <
+                    new Date("2023-01-01")
+                    ? new Intl.NumberFormat("hr-HR", {
+                        style: "currency",
+                        currency: "HRK",
+                      }).format(project.frGoal)
+                    : new Intl.NumberFormat("hr-HR", {
+                        style: "currency",
+                        currency: "EUR",
+                      }).format(project.frGoal || 0) || "Not specified"}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
                   Project ID
                 </label>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -221,6 +264,74 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Fundraising Progress Section */}
+        {project.frGoal && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Fundraising Progress</CardTitle>
+              <CardDescription>
+                Progress towards the fundraising goal based on successful
+                collaborations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Amount Raised</span>
+                  <span className="font-medium">
+                    {new Date(project.updated_at || new Date()) <
+                    new Date("2023-01-01")
+                      ? new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "HRK",
+                        }).format(totalRaised)
+                      : new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "EUR",
+                        }).format(totalRaised)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Goal</span>
+                  <span className="font-medium">
+                    {new Date(project.updated_at || new Date()) <
+                    new Date("2023-01-01")
+                      ? new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "HRK",
+                        }).format(project.frGoal)
+                      : new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "EUR",
+                        }).format(project.frGoal)}
+                  </span>
+                </div>
+                <Progress value={progressPercentage} className="h-3" />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {progressPercentage.toFixed(1)}% Complete
+                  </span>
+                  <span className="text-muted-foreground">
+                    {new Date(project.updated_at || new Date()) <
+                    new Date("2023-01-01")
+                      ? new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "HRK",
+                        }).format(Math.max(0, project.frGoal - totalRaised))
+                      : new Intl.NumberFormat("hr-HR", {
+                          style: "currency",
+                          currency: "EUR",
+                        }).format(
+                          Math.max(0, project.frGoal - totalRaised)
+                        )}{" "}
+                    remaining
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Collaborations Section */}
         <Card>

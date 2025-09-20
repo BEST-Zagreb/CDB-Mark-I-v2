@@ -35,6 +35,7 @@ export function ProjectForm({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: initialData?.name || "",
+      frGoal: initialData?.frGoal || null,
     },
   });
 
@@ -63,6 +64,33 @@ export function ProjectForm({
                 <Input
                   placeholder="Enter project name"
                   {...field}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="frGoal"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Fundraising Goal</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Enter fundraising goal amount"
+                  min={0}
+                  step={100}
+                  max={1000000}
+                  {...field}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? parseFloat(value) : null);
+                  }}
+                  value={field.value || ""}
                   disabled={isLoading}
                 />
               </FormControl>

@@ -4,6 +4,7 @@ import { z } from "zod";
 export interface ProjectDB {
   id: number;
   name: string | null;
+  fr_goal: number | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -12,6 +13,7 @@ export interface ProjectDB {
 export interface Project {
   id: number;
   name: string;
+  frGoal: number | null;
   created_at: Date | null;
   updated_at: Date | null;
 }
@@ -22,6 +24,11 @@ export const projectSchema = z.object({
     .string()
     .min(1, "Project name is required")
     .max(50, "Project name must be 50 characters or less"),
+  frGoal: z
+    .number()
+    .min(0, "Fundraising goal must be positive")
+    .optional()
+    .nullable(),
 });
 
 // Schema for creating a new project
@@ -50,6 +57,7 @@ export function dbProjectToProject(dbProject: ProjectDB): Project {
   return {
     id: dbProject.id,
     name: dbProject.name || "",
+    frGoal: dbProject.fr_goal,
     created_at: parseDate(dbProject.created_at),
     updated_at: parseDate(dbProject.updated_at),
   };

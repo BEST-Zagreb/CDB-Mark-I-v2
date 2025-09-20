@@ -83,6 +83,11 @@ export async function PUT(
       updateValues.push(validatedData.name);
     }
 
+    if (validatedData.frGoal !== undefined) {
+      updateFields.push("fr_goal = ?");
+      updateValues.push(validatedData.frGoal);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },

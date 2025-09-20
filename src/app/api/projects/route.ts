@@ -43,11 +43,16 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     const stmt = db.prepare(`
-      INSERT INTO projects (name, created_at, updated_at)
-      VALUES (?, ?, ?)
+      INSERT INTO projects (name, fr_goal, created_at, updated_at)
+      VALUES (?, ?, ?, ?)
     `);
 
-    const result = stmt.run(validatedData.name, now, now);
+    const result = stmt.run(
+      validatedData.name,
+      validatedData.frGoal || null,
+      now,
+      now
+    );
 
     if (result.lastInsertRowid) {
       // Fetch the created project
