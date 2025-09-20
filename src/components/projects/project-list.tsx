@@ -10,26 +10,54 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Project } from "@/types/project";
-import {
-  Pencil,
-  Trash2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Eye,
-} from "lucide-react";
+import { type TablePreferences } from "@/types/table";
+import { Pencil, Trash2, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TableActions } from "@/components/ui/table-actions";
+import { ColumnSelector } from "@/components/ui/column-selector";
+import {
+  isColumnVisible,
+  updateVisibleColumns,
+  handleSort,
+  getSortIcon,
+  visibleColumnsToStrings,
+} from "@/lib/table-utils";
+import { formatDate, formatAmount } from "@/lib/format-utils";
+
+// Define available columns for the table using Project type
+const PROJECT_FIELDS: Array<{
+  id: keyof Project;
+  label: string;
+  required: boolean;
+  sortable: boolean;
+  center: boolean;
+}> = [
+  { id: "id", label: "ID", required: false, sortable: true, center: true },
+  { id: "name", label: "Name", required: true, sortable: true, center: false },
+  {
+    id: "frGoal",
+    label: "FR Goal",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "created_at",
+    label: "Created at",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "updated_at",
+    label: "Updated at",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+];
 
 interface ProjectListProps {
   projects: Project[];
@@ -38,9 +66,6 @@ interface ProjectListProps {
   isLoading?: boolean;
 }
 
-type SortField = "name" | "frGoal" | "created_at" | "updated_at";
-type SortDirection = "asc" | "desc";
-
 export function ProjectList({
   projects,
   onEdit,
@@ -48,11 +73,29 @@ export function ProjectList({
   isLoading = false,
 }: ProjectListProps) {
   const router = useRouter();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("created_at");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const { showDeleteAlert } = useDeleteAlert();
+
+  // Consolidated table preferences state
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Project>
+  >({
+    visibleColumns: ["name", "frGoal", "created_at", "updated_at"], // Default visible columns
+    sortField: PROJECT_FIELDS[1].id, // Default to second column (name)
+    sortDirection: "asc", // Default sort direction
+  });
+
+  function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
+    const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
+    setTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  }
+
+  function handleSortColumn(field: keyof Project) {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  }
 
   // Sort projects based on current sort field and direction
   const sortedProjects = useMemo(() => {
@@ -60,10 +103,13 @@ export function ProjectList({
       let aValue: any;
       let bValue: any;
 
+      const { sortField, sortDirection } = tablePreferences;
+
+      // Handle different field types
       switch (sortField) {
         case "name":
-          aValue = a.name?.toLowerCase() || "";
-          bValue = b.name?.toLowerCase() || "";
+          aValue = String(a.name || "").toLowerCase();
+          bValue = String(b.name || "").toLowerCase();
           break;
         case "frGoal":
           aValue = a.frGoal || 0;
@@ -76,106 +122,31 @@ export function ProjectList({
           bValue = b[sortField] ? new Date(b[sortField]!).getTime() : 0;
           break;
         default:
-          return 0;
+          aValue = String(a[sortField as keyof Project] || "").toLowerCase();
+          bValue = String(b[sortField as keyof Project] || "").toLowerCase();
       }
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [projects, sortField, sortDirection]);
+  }, [projects, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // Set new field with ascending direction
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
+  function handleDeleteClick(project: Project) {
+    showDeleteAlert({
+      entity: "project",
+      entityName: project.name,
+      onConfirm: () => onDelete(project.id),
+    });
+  }
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="h-4 w-4" />;
-    }
-    return sortDirection === "asc" ? (
-      <ArrowUp className="h-4 w-4" />
-    ) : (
-      <ArrowDown className="h-4 w-4" />
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading projects...
+      </div>
     );
-  };
-
-  const formatDate = (date: Date | string | null) => {
-    if (!date) return "—";
-
-    // Convert to Date object if it's a string
-    let dateObj: Date;
-    if (typeof date === "string") {
-      if (date === "null" || date === "") return "—";
-      dateObj = new Date(date);
-    } else {
-      dateObj = date;
-    }
-
-    // Check if the date is valid
-    if (isNaN(dateObj.getTime())) return "—";
-
-    return new Intl.DateTimeFormat("hr-HR", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    }).format(dateObj);
-  };
-
-  const formatAmount = (
-    amount: number | null,
-    projectUpdatedAt: string | Date | number | null
-  ) => {
-    if (!amount) return "—";
-
-    // if project updated before 1.1.2023. dispplay in HRK, otherwise display in EUR
-    if (
-      projectUpdatedAt &&
-      new Date(projectUpdatedAt) < new Date("2023-01-01")
-    ) {
-      return new Intl.NumberFormat("hr-HR", {
-        style: "currency",
-        currency: "HRK",
-      }).format(amount);
-    }
-
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount);
-  };
-
-  const handleDeleteClick = (project: Project) => {
-    setProjectToDelete(project);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!projectToDelete) return;
-
-    setDeleting(true);
-    try {
-      await onDelete(projectToDelete.id);
-      setDeleteDialogOpen(false);
-      setProjectToDelete(null);
-    } catch (error) {
-      console.error("Error deleting project:", error);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setProjectToDelete(null);
-  };
+  }
 
   if (projects.length === 0) {
     return (
@@ -187,134 +158,111 @@ export function ProjectList({
 
   return (
     <>
+      {/* Column Selector */}
+      <ColumnSelector
+        fields={PROJECT_FIELDS.map((field) => ({
+          id: field.id,
+          label: field.label,
+          required: field.required,
+        }))}
+        visibleColumns={visibleColumnsToStrings(
+          tablePreferences.visibleColumns
+        )}
+        onColumnsChange={handleUpdateVisibleColumns}
+        placeholder="Select columns"
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("name")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Name
-                    {getSortIcon("name")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden md:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("frGoal")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    FR Goal
-                    {getSortIcon("frGoal")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden sm:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("created_at")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Created
-                    {getSortIcon("created_at")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden sm:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("updated_at")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Updated
-                    {getSortIcon("updated_at")}
-                  </span>
-                </Button>
-              </TableHead>
+              {PROJECT_FIELDS.map((column) => {
+                if (!isColumnVisible(column.id, tablePreferences)) return null;
+
+                return (
+                  <TableHead
+                    key={column.id}
+                    className={column.center ? "text-center" : ""}
+                  >
+                    {column.sortable ? (
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleSortColumn(column.id)}
+                        className="h-auto p-0 font-medium hover:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          {column.label}
+                          {getSortIcon(column.id, tablePreferences)}
+                        </span>
+                      </Button>
+                    ) : (
+                      column.label
+                    )}
+                  </TableHead>
+                );
+              })}
+
+              {/* Actions - Always visible */}
               <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedProjects.map((project) => (
               <TableRow key={project.id}>
-                <TableCell className="font-medium w-full sm:w-auto whitespace-normal">
-                  {project.name}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {formatAmount(project.frGoal, project.updated_at)}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {formatDate(project.created_at)}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {formatDate(project.updated_at)}
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => router.push(`/projects/${project.id}`)}
-                      disabled={isLoading}
+                {PROJECT_FIELDS.map((column) => {
+                  if (
+                    !isColumnVisible(column.id, tablePreferences) &&
+                    !column.required
+                  )
+                    return null;
+
+                  // Handle special formatting for specific columns
+                  if (column.id === "frGoal") {
+                    return (
+                      <TableCell key={column.id}>
+                        {formatAmount(
+                          project.frGoal,
+                          project.created_at || project.updated_at
+                        )}
+                      </TableCell>
+                    );
+                  } else if (
+                    column.id === "created_at" ||
+                    column.id === "updated_at"
+                  ) {
+                    return (
+                      <TableCell key={column.id}>
+                        {formatDate(project[column.id])}
+                      </TableCell>
+                    );
+                  }
+
+                  return (
+                    <TableCell
+                      key={column.id}
+                      className={
+                        column.center
+                          ? "text-center"
+                          : "font-medium whitespace-normal"
+                      }
                     >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(project)}
-                      disabled={isLoading}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDeleteClick(project)}
-                      disabled={isLoading}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                      {project[column.id] || "—"}
+                    </TableCell>
+                  );
+                })}
+
+                {/* Actions - Always visible */}
+                <TableActions
+                  item={project}
+                  onView={(project) => router.push(`/projects/${project.id}`)}
+                  onEdit={onEdit}
+                  onDelete={handleDeleteClick}
+                />
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Project</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{projectToDelete?.name}
-              &quot;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

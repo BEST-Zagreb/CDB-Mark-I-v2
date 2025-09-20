@@ -28,9 +28,9 @@ import {
   updateVisibleColumns,
   handleSort,
   getSortIcon,
-  formatUrl,
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
+import { formatUrl } from "@/lib/format-utils";
 
 // Define available columns for the table using Company type
 const COMPANY_FIELDS: Array<{
@@ -98,9 +98,15 @@ interface CompanyListProps {
   companies: Company[];
   onEdit: (company: Company) => void;
   onDelete: (companyId: number) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
+export function CompanyList({
+  companies,
+  onEdit,
+  onDelete,
+  isLoading,
+}: CompanyListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
@@ -150,6 +156,14 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
       entityName: company.name,
       onConfirm: () => onDelete(company.id),
     });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading companies...
+      </div>
+    );
   }
 
   if (companies.length === 0) {

@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { CompanyDialog } from "@/components/companies/company-dialog";
 import { PeopleList } from "@/components/people/people-list";
+import { formatUrl } from "@/lib/format-utils";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
 import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
@@ -175,14 +176,6 @@ export default function CompanyDetailPage() {
     updateCollaborationMutation.isPending ||
     deleteCollaborationMutation.isPending;
 
-  const formatUrl = (url: string) => {
-    if (!url || url === "null" || url === "") return null;
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      return `https://${url}`;
-    }
-    return url;
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto py-8 px-4">
@@ -264,12 +257,12 @@ export default function CompanyDetailPage() {
                   <div className="mt-1">
                     {formatUrl(company.url) ? (
                       <a
-                        href={formatUrl(company.url)!}
+                        href={formatUrl(company.url)?.link!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
                       >
-                        {company.url}
+                        {formatUrl(company.url)?.label}
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     ) : (

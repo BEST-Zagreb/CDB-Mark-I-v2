@@ -65,23 +65,3 @@ export function getSortIcon<T>(
     <ArrowDown className="h-4 w-4" />
   );
 }
-
-// Format URL utility function
-export function formatUrl(url: string): { label: string; link: string } | null {
-  if (!url || url === "null" || url === "") return null;
-
-  let label = url;
-  let link = url;
-
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    // If URL contains http or https, keep the link same but remove protocol from label
-    link = url;
-    label = url.replace(/^https?:\/\//, "");
-  } else {
-    // If URL doesn't contain http/https, add https:// to link but keep original as label
-    label = url;
-    link = `https://${url}`;
-  }
-
-  return { label, link };
-}
