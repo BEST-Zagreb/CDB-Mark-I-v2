@@ -380,7 +380,6 @@ export function CollaborationList({
                       item={collaboration}
                       onEdit={() => onEdit(collaboration)}
                       onDelete={() => handleDeleteCollaboration(collaboration)}
-                      viewDisabled={true} // Collaboration view not implemented
                     />
                   </TableCell>
                 </TableRow>

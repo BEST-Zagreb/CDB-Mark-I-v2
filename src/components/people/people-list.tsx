@@ -281,7 +281,6 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
                       onDelete={
                         onDelete ? () => handleDeletePerson(person) : undefined
                       }
-                      viewDisabled={true} // Person view not implemented
                     />
                   </TableCell>
                 )}

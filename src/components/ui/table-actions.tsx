@@ -7,10 +7,6 @@ interface TableActionsProps<T> {
   onView?: (item: T) => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
-  isLoading?: boolean;
-  viewDisabled?: boolean;
-  editDisabled?: boolean;
-  deleteDisabled?: boolean;
 }
 
 export function TableActions<T>({
