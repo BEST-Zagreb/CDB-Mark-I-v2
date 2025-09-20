@@ -17,7 +17,7 @@ import {
   MultiSelectContent,
   MultiSelectItem,
 } from "@/components/ui/multi-select";
-import { DeleteAlert } from "@/components/ui/delete-alert";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
 import { Pencil, Trash2, ExternalLink, Eye, Settings } from "lucide-react";
@@ -108,9 +108,7 @@ interface CompanyListProps {
 
 export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const router = useRouter();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const { showDeleteAlert } = useDeleteAlert();
 
   // Consolidated table preferences state
   const [tablePreferences, setTablePreferences] = useState<
@@ -153,28 +151,11 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   }, [companies, tablePreferences.sortField, tablePreferences.sortDirection]);
 
   function handleDeleteClick(company: Company) {
-    setCompanyToDelete(company);
-    setDeleteDialogOpen(true);
-  }
-
-  async function handleDeleteConfirm() {
-    if (!companyToDelete) return;
-
-    setDeleting(true);
-    try {
-      await onDelete(companyToDelete.id);
-      setDeleteDialogOpen(false);
-      setCompanyToDelete(null);
-    } catch (error) {
-      console.error("Error deleting company:", error);
-    } finally {
-      setDeleting(false);
-    }
-  }
-
-  function handleDeleteCancel() {
-    setDeleteDialogOpen(false);
-    setCompanyToDelete(null);
+    showDeleteAlert({
+      entity: "company",
+      entityName: company.name,
+      onConfirm: () => onDelete(company.id),
+    });
   }
 
   if (companies.length === 0) {
@@ -187,16 +168,6 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
 
   return (
     <>
-      <DeleteAlert
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        entity="company"
-        entityName={companyToDelete?.name || ""}
-        isLoading={deleting}
-        onCancel={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-      />
-
       {/* Column Selector */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
