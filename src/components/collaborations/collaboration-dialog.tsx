@@ -33,11 +33,13 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CompanySelect } from "@/components/ui/company-select";
 import { ProjectSelect } from "@/components/ui/project-select";
+import { usePeopleByCompany } from "@/hooks/usePeople";
 import {
   Collaboration,
   CollaborationFormData,
   collaborationSchema,
 } from "@/types/collaboration";
+import { Separator } from "@/components/ui/separator";
 
 interface CollaborationDialogProps {
   open: boolean;
@@ -69,8 +71,13 @@ export function CollaborationDialog({
       letter: false,
       priority: 2,
       type: "financijska",
+      contactInFuture: true,
     },
   });
+
+  // Watch the selected company ID to fetch people
+  const selectedCompanyId = form.watch("companyId");
+  const { data: people = [] } = usePeopleByCompany(selectedCompanyId);
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -104,6 +111,7 @@ export function CollaborationDialog({
           letter: false,
           priority: 2,
           type: "financijska",
+          contactInFuture: true,
         });
       }
     }
@@ -179,44 +187,71 @@ export function CollaborationDialog({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="personId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Person</FormLabel>
+                  <Select
+                    onValueChange={(value) =>
+                      field.onChange(
+                        value === "none" ? undefined : parseInt(value)
+                      )
+                    }
+                    value={field.value?.toString() || "none"}
+                  >
+                    <FormControl className="w-full">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select contact person" />
+                      </SelectTrigger>
+                    </FormControl>
+
+                    <SelectContent>
+                      <SelectItem value="none">
+                        Unknown/Not specified
+                      </SelectItem>
+                      {people.map((person) => (
+                        <SelectItem
+                          key={person.id}
+                          value={person.id.toString()}
+                        >
+                          {person.name}
+                          <span className="text-muted-foreground">
+                            {person.function && `(${person.function})`}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Contact person from the selected company (optional)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type *</FormLabel>
+                    <FormLabel>Collaboration type *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
+                      <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
+
                       <SelectContent>
                         <SelectItem value="financijska">Financial</SelectItem>
                         <SelectItem value="materijalna">Material</SelectItem>
                         <SelectItem value="edukacija">Educational</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="responsible"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Responsible Person *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter responsible person name"
-                        {...field}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -234,11 +269,12 @@ export function CollaborationDialog({
                       }
                       value={field.value?.toString()}
                     >
-                      <FormControl>
+                      <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
+
                       <SelectContent>
                         <SelectItem value="1">Very Low</SelectItem>
                         <SelectItem value="2">Low</SelectItem>
@@ -248,6 +284,99 @@ export function CollaborationDialog({
                       </SelectContent>
                     </Select>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="responsible"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Responsible Person *</FormLabel>
+
+                  <FormControl>
+                    <Input
+                      placeholder="Enter responsible person name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <p className="text-sm font-medium mb-2">Status</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+              <FormField
+                control={form.control}
+                name="contacted"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Contacted</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="letter"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Letter Sent</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="meeting"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Meeting Held</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="successful"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value || false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Successful</FormLabel>
+                    </div>
                   </FormItem>
                 )}
               />
@@ -271,158 +400,56 @@ export function CollaborationDialog({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount (HRK)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value ? parseFloat(value) : undefined);
-                        }}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Achieved value</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      step={50}
+                      min={0}
+                      max={1000000}
+                      {...field}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value ? parseFloat(value) : undefined);
+                      }}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Separator className="my-4" />
+
+            <FormField
+              control={form.control}
+              name="contactInFuture"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value || false}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Contact in Future</FormLabel>
                     <FormDescription>
-                      Expected or received amount in Croatian Kuna
+                      Mark if this company should be contacted for future
+                      projects
                     </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="personId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Person ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Contact person ID"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value ? parseInt(value) : undefined);
-                        }}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      ID of the contact person (if known)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Status</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="contacted"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Contacted</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="letter"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Letter Sent</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="meeting"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value || false}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Meeting Held</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="successful"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value || false}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Successful</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="contactInFuture"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value || false}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Contact in Future</FormLabel>
-                      <FormDescription>
-                        Mark if this company should be contacted for future
-                        projects
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+                  </div>
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <Button

@@ -191,11 +191,26 @@ export function CollaborationList({
     }).format(dateObj);
   };
 
-  const formatAmount = (amount: number | null) => {
+  const formatAmount = (
+    amount: number | null,
+    collaborationUpdatedAt: string | Date | number | null
+  ) => {
     if (!amount) return "—";
-    return new Intl.NumberFormat("hr-HR", {
+
+    // if collaboration updated before 1.1.2023. dispplay in HRK, otherwise display in EUR
+    if (
+      collaborationUpdatedAt &&
+      new Date(collaborationUpdatedAt) < new Date("2023-01-01")
+    ) {
+      return new Intl.NumberFormat("hr-HR", {
+        style: "currency",
+        currency: "HRK",
+      }).format(amount);
+    }
+
+    return new Intl.NumberFormat(undefined, {
       style: "currency",
-      currency: "HRK",
+      currency: "EUR",
     }).format(amount);
   };
 
@@ -358,7 +373,10 @@ export function CollaborationList({
                     {collaboration.amount && (
                       <DollarSign className="h-3 w-3 text-muted-foreground" />
                     )}
-                    {formatAmount(collaboration.amount)}
+                    {formatAmount(
+                      collaboration.amount,
+                      collaboration.updatedAt
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
