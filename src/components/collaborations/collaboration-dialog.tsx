@@ -31,8 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CompanySelect } from "@/components/ui/company-select";
-import { ProjectSelect } from "@/components/ui/project-select";
+import { CompanySelect } from "@/components/collaborations/company-select";
+import { ProjectSelect } from "@/components/collaborations/project-select";
 import { usePeopleByCompany } from "@/hooks/usePeople";
 import {
   Collaboration,

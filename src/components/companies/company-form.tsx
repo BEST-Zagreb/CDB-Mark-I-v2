@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CountrySelect } from "@/components/ui/country-select";
-import { MonthSelect } from "@/components/ui/month-select";
+import { CountrySelect } from "@/components/companies/country-select";
+import { MonthSelect } from "@/components/companies/month-select";
 import {
   companySchema,
   type CompanyFormData,
