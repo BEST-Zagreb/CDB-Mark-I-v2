@@ -109,7 +109,10 @@ export function CountrySelect({
               {filteredCountries.map((country) => (
                 <CommandItem
                   key={country.value}
-                  className="cursor-pointer"
+                  className={cn(
+                    "cursor-pointer",
+                    value === country.value && "bg-muted font-bold"
+                  )}
                   value={country.value}
                   onSelect={(currentValue: string) => {
                     onValueChange(currentValue === value ? "" : currentValue);

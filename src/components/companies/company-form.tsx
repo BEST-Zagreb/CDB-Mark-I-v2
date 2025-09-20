@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CountrySelect } from "@/components/ui/country-select";
+import { MonthSelect } from "@/components/ui/month-select";
 import {
   companySchema,
   type CompanyFormData,
@@ -198,10 +199,11 @@ export function CompanyForm({
               <FormItem>
                 <FormLabel>Budgeting Month</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="e.g., January, Q1"
-                    {...field}
+                  <MonthSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
                     disabled={isLoading}
+                    className="w-full"
                   />
                 </FormControl>
                 <FormMessage />

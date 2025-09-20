@@ -271,7 +271,9 @@ export default function CompanyDetailPage() {
                     Budgeting Month
                   </label>
                   <p className="mt-1">
-                    <Badge variant="outline">{company.budgeting_month}</Badge>
+                    <Badge variant="outline">
+                      {company.budgeting_month || "Unknown"}
+                    </Badge>
                   </p>
                 </div>
               )}

@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { CROATIAN_MONTHS } from "@/constants/months";
+
+// Valid Croatian month values
+const VALID_MONTHS = CROATIAN_MONTHS;
 
 // Database company type (what we get from the database)
 export interface CompanyDB {
@@ -45,7 +49,9 @@ export const companySchema = z.object({
   phone: z.string().max(50, "Phone must be 50 characters or less"),
   budgeting_month: z
     .string()
-    .max(50, "Budgeting month must be 50 characters or less"),
+    .refine((val) => val === "" || VALID_MONTHS.includes(val as any), {
+      message: "Please select a valid month",
+    }),
   comment: z.string().max(500, "Comment must be 500 characters or less"),
 });
 
