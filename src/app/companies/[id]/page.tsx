@@ -9,9 +9,11 @@ import {
   Users,
   Handshake,
   Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -73,6 +75,11 @@ export default function CompanyDetailPage() {
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
+
+  // Check if company should not be contacted in future
+  const hasDoNotContactFlag = collaborations.some(
+    (collaboration) => collaboration.contactInFuture === false
+  );
 
   useEffect(() => {
     if (isNaN(companyId)) {
@@ -219,6 +226,22 @@ export default function CompanyDetailPage() {
             Edit Company
           </Button>
         </div>
+
+        {/* Do Not Contact Warning */}
+        {hasDoNotContactFlag && (
+          <Alert className="border-orange-200 bg-orange-50 text-orange-900 flex items-center gap-4">
+            <AlertTriangle className="size-7 shrink-0" />
+
+            <div>
+              <AlertTitle>Do Not Contact Warning</AlertTitle>
+              <AlertDescription>
+                This company has been marked as "do not contact in future" in
+                one or more collaborations. Please review collaboration history
+                before initiating new contact.
+              </AlertDescription>
+            </div>
+          </Alert>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
