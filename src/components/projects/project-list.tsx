@@ -41,7 +41,7 @@ const PROJECT_FIELDS: Array<{
     label: "FR Goal",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
   },
   {
     id: "created_at",
@@ -138,14 +138,6 @@ export function ProjectList({
       entityName: project.name,
       onConfirm: () => onDelete(project.id),
     });
-  }
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Loading projects...
-      </div>
-    );
   }
 
   if (projects.length === 0) {

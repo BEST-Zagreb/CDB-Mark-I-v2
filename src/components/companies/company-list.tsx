@@ -158,14 +158,6 @@ export function CompanyList({
     });
   }
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Loading companies...
-      </div>
-    );
-  }
-
   if (companies.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">

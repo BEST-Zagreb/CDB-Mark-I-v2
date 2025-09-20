@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -18,16 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import {
   Collaboration,
   getCollaborationStatusText,
@@ -35,18 +25,93 @@ import {
   getCollaborationTypeDisplay,
   getPriorityDisplay,
 } from "@/types/collaboration";
+import { type TablePreferences } from "@/types/table";
+import { User, Calendar, DollarSign, Building2 } from "lucide-react";
+import { TableActions } from "@/components/ui/table-actions";
+import { ColumnSelector } from "@/components/ui/column-selector";
 import {
-  Pencil,
-  Trash2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Building2,
-  User,
-  Calendar,
-  DollarSign,
-  FolderOpen,
-} from "lucide-react";
+  isColumnVisible,
+  updateVisibleColumns,
+  handleSort,
+  getSortIcon,
+  visibleColumnsToStrings,
+} from "@/lib/table-utils";
+import { formatDate, formatAmount } from "@/lib/format-utils";
+
+// Define available columns for the table using Collaboration type
+const COLLABORATION_FIELDS: Array<{
+  id: keyof Collaboration | "companyName" | "projectName";
+  label: string;
+  required: boolean;
+  sortable: boolean;
+  center: boolean;
+}> = [
+  { id: "id", label: "ID", required: false, sortable: true, center: true },
+  {
+    id: "companyName",
+    label: "Company",
+    required: true,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "projectName",
+    label: "Project",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  { id: "type", label: "Type", required: false, sortable: true, center: false },
+  {
+    id: "responsible",
+    label: "Responsible",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "priority",
+    label: "Priority",
+    required: false,
+    sortable: true,
+    center: true,
+  },
+  {
+    id: "successful",
+    label: "Successful",
+    required: false,
+    sortable: true,
+    center: true,
+  },
+  {
+    id: "comment",
+    label: "Comment",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "amount",
+    label: "Amount",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "contacted",
+    label: "Contacted",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "updatedAt",
+    label: "Updated",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+];
 
 interface CollaborationListProps {
   collaborations: Collaboration[];
@@ -56,19 +121,6 @@ interface CollaborationListProps {
   showProjectNames?: boolean; // New prop to show project names instead of company names
 }
 
-type SortField =
-  | "companyName"
-  | "projectName"
-  | "responsible"
-  | "type"
-  | "priority"
-  | "amount"
-  | "comment"
-  | "contacted"
-  | "successful"
-  | "updatedAt";
-type SortDirection = "asc" | "desc";
-
 export function CollaborationList({
   collaborations,
   onEdit,
@@ -76,12 +128,42 @@ export function CollaborationList({
   isLoading = false,
   showProjectNames = false,
 }: CollaborationListProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [collaborationToDelete, setCollaborationToDelete] =
-    useState<Collaboration | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("priority");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const { showDeleteAlert } = useDeleteAlert();
+
+  // Consolidated table preferences state
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<
+      Collaboration & { companyName?: string; projectName?: string }
+    >
+  >({
+    visibleColumns: showProjectNames
+      ? ["projectName", "type", "responsible", "priority", "successful"]
+      : ["companyName", "type", "responsible", "priority", "successful"], // Default visible columns
+    sortField: "priority", // Default sort field
+    sortDirection: "desc", // Default sort direction
+  });
+
+  function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
+    const requiredColumn = showProjectNames ? "projectName" : "companyName";
+    const visibleColumns = updateVisibleColumns(
+      newVisibleColumns,
+      requiredColumn
+    );
+    setTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  }
+
+  function handleSortColumn(
+    field: keyof (Collaboration & {
+      companyName?: string;
+      projectName?: string;
+    })
+  ) {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  }
 
   // Sort collaborations based on current sort field and direction
   const sortedCollaborations = useMemo(() => {
@@ -89,146 +171,54 @@ export function CollaborationList({
       let aValue: any;
       let bValue: any;
 
+      const { sortField, sortDirection } = tablePreferences;
+
+      // Handle different field types
       switch (sortField) {
-        case "companyName":
-          aValue = a.companyName?.toLowerCase() || "";
-          bValue = b.companyName?.toLowerCase() || "";
-          break;
-        case "projectName":
-          aValue = a.projectName?.toLowerCase() || "";
-          bValue = b.projectName?.toLowerCase() || "";
-          break;
-        case "responsible":
-          aValue = a.responsible?.toLowerCase() || "";
-          bValue = b.responsible?.toLowerCase() || "";
-          break;
-        case "type":
-          aValue = a.type?.toLowerCase() || "";
-          bValue = b.type?.toLowerCase() || "";
-          break;
         case "priority":
-          aValue = a.priority;
-          bValue = b.priority;
+          aValue = a.priority ?? -1;
+          bValue = b.priority ?? -1;
           break;
         case "amount":
           aValue = a.amount || 0;
           bValue = b.amount || 0;
           break;
-        case "comment":
-          aValue = a.comment?.toLowerCase() || "";
-          bValue = b.comment?.toLowerCase() || "";
+        case "successful":
+          aValue = a.successful ? 1 : 0;
+          bValue = b.successful ? 1 : 0;
+          break;
+        case "updatedAt":
+          aValue = new Date((a as any)[sortField] || 0).getTime();
+          bValue = new Date((b as any)[sortField] || 0).getTime();
           break;
         case "contacted":
           aValue = a.contacted ? 1 : 0;
           bValue = b.contacted ? 1 : 0;
           break;
-        case "successful":
-          aValue = a.successful === null ? -1 : a.successful ? 1 : 0;
-          bValue = b.successful === null ? -1 : b.successful ? 1 : 0;
-          break;
-        case "updatedAt":
-          aValue = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
-          bValue = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-          break;
         default:
-          return 0;
+          // For string fields, convert to lowercase for case-insensitive sorting
+          aValue = String((a as any)[sortField] || "").toLowerCase();
+          bValue = String((b as any)[sortField] || "").toLowerCase();
+          break;
       }
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [collaborations, sortField, sortDirection]);
+  }, [
+    collaborations,
+    tablePreferences.sortField,
+    tablePreferences.sortDirection,
+  ]);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // Set new field with ascending direction
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="h-4 w-4" />;
-    }
-    return sortDirection === "asc" ? (
-      <ArrowUp className="h-4 w-4" />
-    ) : (
-      <ArrowDown className="h-4 w-4" />
-    );
-  };
-
-  const handleDeleteClick = (collaboration: Collaboration) => {
-    setCollaborationToDelete(collaboration);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!collaborationToDelete) return;
-
-    setDeleting(true);
-    try {
-      await onDelete(collaborationToDelete.id);
-      setDeleteDialogOpen(false);
-      setCollaborationToDelete(null);
-    } catch (error) {
-      console.error("Error deleting collaboration:", error);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setCollaborationToDelete(null);
-  };
-
-  const formatDate = (date: Date | string | null) => {
-    if (!date) return "—";
-
-    let dateObj: Date;
-    if (typeof date === "string") {
-      if (date === "null" || date === "") return "—";
-      dateObj = new Date(date);
-    } else {
-      dateObj = date;
-    }
-
-    if (isNaN(dateObj.getTime())) return "—";
-
-    return new Intl.DateTimeFormat("hr-HR", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    }).format(dateObj);
-  };
-
-  const formatAmount = (
-    amount: number | null,
-    collaborationUpdatedAt: string | Date | number | null
-  ) => {
-    if (!amount) return "—";
-
-    // if collaboration updated before 1.1.2023. dispplay in HRK, otherwise display in EUR
-    if (
-      collaborationUpdatedAt &&
-      new Date(collaborationUpdatedAt) < new Date("2023-01-01")
-    ) {
-      return new Intl.NumberFormat("hr-HR", {
-        style: "currency",
-        currency: "HRK",
-      }).format(amount);
-    }
-
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "EUR",
-    }).format(amount);
-  };
+  function handleDeleteCollaboration(collaboration: Collaboration) {
+    showDeleteAlert({
+      entity: "collaboration",
+      entityName: collaboration.responsible || "Nepoznato",
+      onConfirm: () => onDelete(collaboration.id),
+    });
+  }
 
   if (collaborations.length === 0) {
     return (
@@ -241,265 +231,180 @@ export function CollaborationList({
 
   return (
     <>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <h2 className="text-lg font-semibold">Collaborations</h2>
+          <Badge variant="secondary">{collaborations.length}</Badge>
+        </div>
+        <ColumnSelector
+          fields={COLLABORATION_FIELDS.map((field) => ({
+            id: field.id as string,
+            label: field.label,
+            required: field.required,
+          }))}
+          visibleColumns={visibleColumnsToStrings(
+            tablePreferences.visibleColumns
+          )}
+          onColumnsChange={handleUpdateVisibleColumns}
+        />
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    handleSort(showProjectNames ? "projectName" : "companyName")
-                  }
-                  className="h-auto p-0 font-medium hover:bg-transparent"
+              {COLLABORATION_FIELDS.filter((field) =>
+                isColumnVisible(field.id, tablePreferences)
+              ).map((field) => (
+                <TableHead
+                  key={field.id}
+                  className={field.center ? "text-center" : ""}
                 >
-                  <span className="flex items-center gap-2">
-                    {showProjectNames ? "Project" : "Company"}
-                    {getSortIcon(
-                      showProjectNames ? "projectName" : "companyName"
-                    )}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("type")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Type
-                    {getSortIcon("type")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("responsible")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Responsible
-                    {getSortIcon("responsible")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("priority")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Priority
-                    {getSortIcon("priority")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("successful")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Status
-                    {getSortIcon("successful")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden sm:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("comment")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Comment
-                    {getSortIcon("comment")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden md:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("amount")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Amount
-                    {getSortIcon("amount")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden lg:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("updatedAt")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Updated
-                    {getSortIcon("updatedAt")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+                  {field.sortable ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSortColumn(field.id)}
+                      className="h-auto p-0 font-medium hover:bg-transparent"
+                    >
+                      <span className="flex items-center gap-2">
+                        {field.label}
+                        {getSortIcon(field.id, tablePreferences)}
+                      </span>
+                    </Button>
+                  ) : (
+                    field.label
+                  )}
+                </TableHead>
+              ))}
+              <TableHead className="text-center w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedCollaborations.map((collaboration) => (
-              <TableRow key={collaboration.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {showProjectNames ? (
-                      <>
-                        <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                        <Link
-                          href={`/projects/${collaboration.projectId}`}
-                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {collaboration.projectName || "Unknown Project"}
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
-                        <Link
-                          href={`/companies/${collaboration.companyId}`}
-                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {collaboration.companyName || "Unknown Company"}
-                        </Link>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">
-                    {getCollaborationTypeDisplay(collaboration.type)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">
-                      {collaboration.responsible || "—"}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      collaboration.priority >= 4
-                        ? "destructive"
-                        : collaboration.priority >= 3
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {getPriorityDisplay(collaboration.priority)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className={getCollaborationStatusColor(collaboration)}>
-                    {getCollaborationStatusText(collaboration)}
-                  </span>
-                </TableCell>
-
-                <TableCell className="hidden sm:table-cell">
-                  <TooltipProvider>
-                    {collaboration.comment ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="max-w-[150px] truncate text-sm cursor-help">
-                            {collaboration.comment}
-                          </div>
-                        </TooltipTrigger>
-
-                        <TooltipContent side="top" className="max-w-[300px]">
-                          <p className="whitespace-pre-wrap text-sm p-1">
-                            {collaboration.comment}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
-                    )}
-                  </TooltipProvider>
-                </TableCell>
-
-                <TableCell className="hidden md:table-cell">
-                  <div className="flex items-center gap-1">
-                    {collaboration.amount && (
-                      <DollarSign className="h-3 w-3 text-muted-foreground" />
-                    )}
-                    {formatAmount(
-                      collaboration.amount,
-                      collaboration.updatedAt
-                    )}
-                  </div>
-                </TableCell>
-
-                <TableCell className="hidden lg:table-cell">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {formatDate(collaboration.updatedAt)}
-                  </div>
-                </TableCell>
-
-                <TableCell className="text-center">
-                  <div className="flex justify-center items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(collaboration)}
-                      disabled={isLoading}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDeleteClick(collaboration)}
-                      disabled={isLoading}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={
+                    COLLABORATION_FIELDS.filter((field) =>
+                      isColumnVisible(field.id, tablePreferences)
+                    ).length + 1
+                  }
+                  className="text-center py-8"
+                >
+                  Loading collaborations...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              sortedCollaborations.map(
+                (
+                  collaboration: Collaboration & {
+                    companyName?: string;
+                    projectName?: string;
+                  }
+                ) => (
+                  <TableRow key={collaboration.id}>
+                    {COLLABORATION_FIELDS.filter((field) =>
+                      isColumnVisible(field.id, tablePreferences)
+                    ).map((field) => (
+                      <TableCell
+                        key={field.id}
+                        className={field.center ? "text-center" : ""}
+                      >
+                        {field.id === "id" && collaboration.id}
+                        {field.id === "companyName" &&
+                          (collaboration.companyName || "—")}
+                        {field.id === "projectName" &&
+                          (collaboration.projectName || "—")}
+                        {field.id === "type" && (
+                          <Badge variant="outline">
+                            {getCollaborationTypeDisplay(collaboration.type)}
+                          </Badge>
+                        )}
+                        {field.id === "responsible" && (
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {collaboration.responsible || "—"}
+                          </div>
+                        )}
+                        {field.id === "priority" && (
+                          <Badge
+                            variant={
+                              collaboration.priority &&
+                              collaboration.priority >= 8
+                                ? "destructive"
+                                : "secondary"
+                            }
+                          >
+                            {getPriorityDisplay(collaboration.priority)}
+                          </Badge>
+                        )}
+                        {field.id === "successful" && (
+                          <Badge
+                            variant={
+                              collaboration.successful ? "default" : "secondary"
+                            }
+                          >
+                            {collaboration.successful ? "Yes" : "No"}
+                          </Badge>
+                        )}
+                        {field.id === "comment" && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="max-w-[200px] truncate">
+                                  {collaboration.comment || "—"}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs whitespace-normal">
+                                  {collaboration.comment || "No comment"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {field.id === "amount" && (
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            {formatAmount(
+                              collaboration.amount,
+                              collaboration.updatedAt
+                            )}
+                          </div>
+                        )}
+                        {field.id === "contacted" && (
+                          <Badge
+                            variant={
+                              collaboration.contacted ? "default" : "secondary"
+                            }
+                          >
+                            {collaboration.contacted ? "Yes" : "No"}
+                          </Badge>
+                        )}
+                        {field.id === "updatedAt" && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            {formatDate(collaboration.updatedAt)}
+                          </div>
+                        )}
+                      </TableCell>
+                    ))}
+                    <TableCell className="text-center">
+                      <TableActions
+                        item={collaboration}
+                        onEdit={() => onEdit(collaboration)}
+                        onDelete={() =>
+                          handleDeleteCollaboration(collaboration)
+                        }
+                        viewDisabled={true} // Collaboration view not implemented
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              )
+            )}
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Collaboration</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this collaboration with &quot;
-              {collaborationToDelete?.companyName}&quot;? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
