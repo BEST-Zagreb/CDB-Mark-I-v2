@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -31,19 +31,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CompanySelect } from "@/components/ui/company-select";
+import { ProjectSelect } from "@/components/ui/project-select";
 import {
   Collaboration,
   CollaborationFormData,
   collaborationSchema,
 } from "@/types/collaboration";
-import { Company } from "@/types/company";
-import { companyService } from "@/services/company.service";
 
 interface CollaborationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   collaboration?: Collaboration | null;
-  projectId: number;
+  projectId?: number; // Made optional
+  companyId?: number; // Added for company page
   onSubmit: (data: CollaborationFormData) => Promise<void>;
   isLoading?: boolean;
 }
@@ -53,17 +54,15 @@ export function CollaborationDialog({
   onOpenChange,
   collaboration,
   projectId,
+  companyId,
   onSubmit,
   isLoading = false,
 }: CollaborationDialogProps) {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
-
   const form = useForm<CollaborationFormData>({
     resolver: zodResolver(collaborationSchema),
     defaultValues: {
-      companyId: 0,
-      projectId: projectId,
+      companyId: companyId || 0,
+      projectId: projectId || 0,
       responsible: "",
       comment: "",
       contacted: false,
@@ -72,13 +71,6 @@ export function CollaborationDialog({
       type: "financijska",
     },
   });
-
-  // Load companies for the select dropdown
-  useEffect(() => {
-    if (open) {
-      loadCompanies();
-    }
-  }, [open]);
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -104,8 +96,8 @@ export function CollaborationDialog({
         });
       } else {
         form.reset({
-          companyId: 0,
-          projectId: projectId,
+          companyId: companyId || 0,
+          projectId: projectId || 0,
           responsible: "",
           comment: "",
           contacted: false,
@@ -115,19 +107,7 @@ export function CollaborationDialog({
         });
       }
     }
-  }, [collaboration, form, open, projectId]);
-
-  const loadCompanies = async () => {
-    try {
-      setLoadingCompanies(true);
-      const data = await companyService.getAll();
-      setCompanies(data);
-    } catch (error) {
-      console.error("Error loading companies:", error);
-    } finally {
-      setLoadingCompanies(false);
-    }
-  };
+  }, [collaboration, form, open, projectId, companyId]);
 
   const handleSubmit = async (data: CollaborationFormData) => {
     try {
@@ -166,39 +146,40 @@ export function CollaborationDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Company *</FormLabel>
-                    <Select
-                      onValueChange={(value: string) =>
-                        field.onChange(parseInt(value))
-                      }
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a company" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {loadingCompanies ? (
-                          <SelectItem value="loading" disabled>
-                            Loading companies...
-                          </SelectItem>
-                        ) : (
-                          companies.map((company) => (
-                            <SelectItem
-                              key={company.id}
-                              value={company.id.toString()}
-                            >
-                              {company.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <CompanySelect
+                        value={field.value || undefined}
+                        onValueChange={(value) => field.onChange(value || 0)}
+                        disabled={!!companyId} // Disable if companyId is provided (on company page)
+                        className="w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project *</FormLabel>
+                    <FormControl>
+                      <ProjectSelect
+                        value={field.value || undefined}
+                        onValueChange={(value) => field.onChange(value || 0)}
+                        disabled={!!projectId} // Disable if projectId is provided (on project page)
+                        className="w-full"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="type"

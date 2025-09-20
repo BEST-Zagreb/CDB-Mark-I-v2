@@ -418,7 +418,7 @@ export default function CompanyDetailPage() {
         open={collaborationDialogOpen}
         onOpenChange={setCollaborationDialogOpen}
         collaboration={selectedCollaboration}
-        projectId={selectedCollaboration?.projectId || 1}
+        companyId={companyId}
         onSubmit={handleSubmitCollaboration}
         isLoading={isSubmitting}
       />
