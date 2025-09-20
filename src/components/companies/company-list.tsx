@@ -98,15 +98,9 @@ interface CompanyListProps {
   companies: Company[];
   onEdit: (company: Company) => void;
   onDelete: (companyId: number) => Promise<void>;
-  isLoading?: boolean;
 }
 
-export function CompanyList({
-  companies,
-  onEdit,
-  onDelete,
-  isLoading,
-}: CompanyListProps) {
+export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 

@@ -354,7 +354,6 @@ export default function ProjectDetailPage() {
               collaborations={collaborations}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
-              isLoading={loadingCollaborations}
             />
           </CardContent>
         </Card>

@@ -12,7 +12,7 @@ export interface CollaborationDB {
   successful: boolean | null;
   letter: boolean;
   meeting: boolean | null;
-  priority: number;
+  priority: string; // Changed from number to string
   created_at: string | null;
   updated_at: string | null;
   amount: number | null;
@@ -32,7 +32,7 @@ export interface Collaboration {
   successful: boolean | null;
   letter: boolean;
   meeting: boolean | null;
-  priority: number;
+  priority: string; // Changed from number to string
   createdAt: Date | string | null; // Can be string due to JSON serialization
   updatedAt: Date | string | null; // Can be string due to JSON serialization
   amount: number | null;
@@ -55,7 +55,7 @@ export const collaborationSchema = z.object({
   successful: z.boolean().optional(),
   letter: z.boolean(),
   meeting: z.boolean().optional(),
-  priority: z.number().min(1).max(5),
+  priority: z.enum(["low", "medium", "high"]),
   amount: z.number().positive().optional(),
   contactInFuture: z.boolean().optional(),
   type: z.enum(["financijska", "materijalna", "edukacija"]),
@@ -98,19 +98,29 @@ export function getCollaborationTypeDisplay(type: string): string {
   }
 }
 
-export function getPriorityDisplay(priority: number): string {
+export function getPriorityDisplay(priority: string): string {
   switch (priority) {
-    case 1:
-      return "Very Low";
-    case 2:
+    case "low":
       return "Low";
-    case 3:
+    case "medium":
       return "Medium";
-    case 4:
+    case "high":
       return "High";
-    case 5:
-      return "Very High";
     default:
       return "Unknown";
+  }
+}
+
+// Helper function to get priority order value for sorting
+export function getPriorityOrder(priority: string): number {
+  switch (priority) {
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+    default:
+      return 0;
   }
 }

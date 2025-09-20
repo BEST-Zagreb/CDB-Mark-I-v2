@@ -41,6 +41,26 @@ import {
 } from "@/types/collaboration";
 import { Separator } from "@/components/ui/separator";
 
+// Helper function to ensure priority is a valid string value
+function normalizePriority(
+  priority: string | number | null | undefined
+): "low" | "medium" | "high" {
+  if (typeof priority === "string") {
+    if (["low", "medium", "high"].includes(priority)) {
+      return priority as "low" | "medium" | "high";
+    }
+  }
+
+  if (typeof priority === "number") {
+    // Convert old numeric priorities to new string format
+    if (priority <= 2) return "low";
+    if (priority >= 4) return "high";
+    return "medium";
+  }
+
+  return "medium"; // Default fallback
+}
+
 interface CollaborationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,7 +89,7 @@ export function CollaborationDialog({
       comment: "",
       contacted: false,
       letter: false,
-      priority: 2,
+      priority: "medium",
       type: "financijska",
       contactInFuture: true,
     },
@@ -93,7 +113,7 @@ export function CollaborationDialog({
           successful: collaboration.successful || undefined,
           letter: collaboration.letter,
           meeting: collaboration.meeting || undefined,
-          priority: collaboration.priority,
+          priority: normalizePriority(collaboration.priority),
           amount: collaboration.amount || undefined,
           contactInFuture: collaboration.contactInFuture || undefined,
           type: collaboration.type as
@@ -109,7 +129,7 @@ export function CollaborationDialog({
           comment: "",
           contacted: false,
           letter: false,
-          priority: 2,
+          priority: "medium",
           type: "financijska",
           contactInFuture: true,
         });
@@ -263,12 +283,7 @@ export function CollaborationDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority *</FormLabel>
-                    <Select
-                      onValueChange={(value: string) =>
-                        field.onChange(parseInt(value))
-                      }
-                      value={field.value?.toString()}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -276,11 +291,9 @@ export function CollaborationDialog({
                       </FormControl>
 
                       <SelectContent>
-                        <SelectItem value="1">Very Low</SelectItem>
-                        <SelectItem value="2">Low</SelectItem>
-                        <SelectItem value="3">Medium</SelectItem>
-                        <SelectItem value="4">High</SelectItem>
-                        <SelectItem value="5">Very High</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

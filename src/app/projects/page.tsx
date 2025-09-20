@@ -81,7 +81,6 @@ export default function ProjectsPage() {
             projects={projects}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
-            isLoading={isSubmitting}
           />
         )}
       </div>

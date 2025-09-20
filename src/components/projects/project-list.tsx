@@ -63,15 +63,9 @@ interface ProjectListProps {
   projects: Project[];
   onEdit: (project: Project) => void;
   onDelete: (projectId: number) => Promise<void>;
-  isLoading?: boolean;
 }
 
-export function ProjectList({
-  projects,
-  onEdit,
-  onDelete,
-  isLoading = false,
-}: ProjectListProps) {
+export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 

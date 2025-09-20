@@ -43,30 +43,56 @@ const PERSON_FIELDS: Array<{
 }> = [
   { id: "id", label: "ID", required: false, sortable: true, center: true },
   { id: "name", label: "Name", required: true, sortable: true, center: false },
-  { id: "email", label: "Email", required: false, sortable: true, center: false },
-  { id: "phone", label: "Phone", required: false, sortable: true, center: false },
-  { id: "function", label: "Function", required: false, sortable: true, center: false },
-  { id: "companyName", label: "Company", required: false, sortable: true, center: false },
-  { id: "createdAt", label: "Created", required: false, sortable: true, center: false },
+  {
+    id: "email",
+    label: "Email",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "phone",
+    label: "Phone",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "function",
+    label: "Function",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "companyName",
+    label: "Company",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "createdAt",
+    label: "Created",
+    required: false,
+    sortable: true,
+    center: false,
+  },
 ];
 
 interface PeopleListProps {
   people: Person[];
-  loading?: boolean;
   onEdit?: (person: Person) => void;
   onDelete?: (personId: number) => Promise<void>;
 }
 
-export function PeopleList({
-  people,
-  loading = false,
-  onEdit,
-  onDelete,
-}: PeopleListProps) {
+export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
   const { showDeleteAlert } = useDeleteAlert();
 
   // Consolidated table preferences state
-  const [tablePreferences, setTablePreferences] = useState<TablePreferences<Person>>({
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Person>
+  >({
     visibleColumns: ["name", "email", "phone", "function"], // Default visible columns
     sortField: "name", // Default sort field
     sortDirection: "asc", // Default sort direction
@@ -148,7 +174,9 @@ export function PeopleList({
             label: field.label,
             required: field.required,
           }))}
-          visibleColumns={visibleColumnsToStrings(tablePreferences.visibleColumns)}
+          visibleColumns={visibleColumnsToStrings(
+            tablePreferences.visibleColumns
+          )}
           onColumnsChange={handleUpdateVisibleColumns}
         />
       </div>
@@ -186,94 +214,79 @@ export function PeopleList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={
-                    PERSON_FIELDS.filter((field) =>
-                      isColumnVisible(field.id, tablePreferences)
-                    ).length + ((onEdit || onDelete) ? 1 : 0)
-                  }
-                  className="text-center py-8"
-                >
-                  Loading people...
-                </TableCell>
+            {sortedPeople.map((person: Person) => (
+              <TableRow key={person.id}>
+                {PERSON_FIELDS.filter((field) =>
+                  isColumnVisible(field.id, tablePreferences)
+                ).map((field) => (
+                  <TableCell
+                    key={field.id}
+                    className={field.center ? "text-center" : ""}
+                  >
+                    {field.id === "id" && person.id}
+                    {field.id === "name" && (
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {person.name || "—"}
+                        </span>
+                      </div>
+                    )}
+                    {field.id === "email" &&
+                      (person.email ? (
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{person.email}</span>
+                        </div>
+                      ) : (
+                        "—"
+                      ))}
+                    {field.id === "phone" &&
+                      (person.phone ? (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{person.phone}</span>
+                        </div>
+                      ) : (
+                        "—"
+                      ))}
+                    {field.id === "function" &&
+                      (person.function ? (
+                        <Badge variant="outline">{person.function}</Badge>
+                      ) : (
+                        "—"
+                      ))}
+                    {field.id === "companyName" &&
+                      (person.companyName ? (
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span>{person.companyName}</span>
+                        </div>
+                      ) : (
+                        "—"
+                      ))}
+                    {field.id === "createdAt" && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {formatDate(person.createdAt)}
+                      </div>
+                    )}
+                  </TableCell>
+                ))}
+                {(onEdit || onDelete) && (
+                  <TableCell className="text-center">
+                    <TableActions
+                      item={person}
+                      onEdit={onEdit ? () => onEdit(person) : undefined}
+                      onDelete={
+                        onDelete ? () => handleDeletePerson(person) : undefined
+                      }
+                      viewDisabled={true} // Person view not implemented
+                    />
+                  </TableCell>
+                )}
               </TableRow>
-            ) : (
-              sortedPeople.map((person: Person) => (
-                <TableRow key={person.id}>
-                  {PERSON_FIELDS.filter((field) =>
-                    isColumnVisible(field.id, tablePreferences)
-                  ).map((field) => (
-                    <TableCell
-                      key={field.id}
-                      className={field.center ? "text-center" : ""}
-                    >
-                      {field.id === "id" && person.id}
-                      {field.id === "name" && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{person.name || "—"}</span>
-                        </div>
-                      )}
-                      {field.id === "email" && (
-                        person.email ? (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            <span>{person.email}</span>
-                          </div>
-                        ) : (
-                          "—"
-                        )
-                      )}
-                      {field.id === "phone" && (
-                        person.phone ? (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <span>{person.phone}</span>
-                          </div>
-                        ) : (
-                          "—"
-                        )
-                      )}
-                      {field.id === "function" && (
-                        person.function ? (
-                          <Badge variant="outline">{person.function}</Badge>
-                        ) : (
-                          "—"
-                        )
-                      )}
-                      {field.id === "companyName" && (
-                        person.companyName ? (
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span>{person.companyName}</span>
-                          </div>
-                        ) : (
-                          "—"
-                        )
-                      )}
-                      {field.id === "createdAt" && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(person.createdAt)}
-                        </div>
-                      )}
-                    </TableCell>
-                  ))}
-                  {(onEdit || onDelete) && (
-                    <TableCell className="text-center">
-                      <TableActions
-                        item={person}
-                        onEdit={onEdit ? () => onEdit(person) : undefined}
-                        onDelete={onDelete ? () => handleDeletePerson(person) : undefined}
-                        viewDisabled={true} // Person view not implemented
-                      />
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>

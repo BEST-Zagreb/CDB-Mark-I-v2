@@ -125,7 +125,6 @@ export default function CompaniesPage() {
               companies={companies}
               onEdit={handleEditCompany}
               onDelete={handleDeleteCompany}
-              isLoading={isSubmitting}
             />
           </>
         )}

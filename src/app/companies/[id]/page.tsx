@@ -375,7 +375,6 @@ export default function CompanyDetailPage() {
           <CardContent>
             <PeopleList
               people={people}
-              loading={peopleLoading}
               onEdit={handleEditPerson}
               onDelete={handleDeletePerson}
             />
@@ -404,7 +403,6 @@ export default function CompanyDetailPage() {
           <CardContent>
             <CollaborationList
               collaborations={collaborations}
-              isLoading={collaborationsLoading}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
               showProjectNames={true}
