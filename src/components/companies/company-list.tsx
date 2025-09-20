@@ -11,49 +11,128 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  MultiSelect,
+  MultiSelectTrigger,
+  MultiSelectValue,
+  MultiSelectContent,
+  MultiSelectItem,
+} from "@/components/ui/multi-select";
+import { DeleteAlert } from "@/components/ui/delete-alert";
 import { Company } from "@/types/company";
-import {
-  Pencil,
-  Trash2,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  ExternalLink,
-  Eye,
-} from "lucide-react";
+import { type TablePreferences } from "@/types/table";
+import { Pencil, Trash2, ExternalLink, Eye, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { TableActions } from "@/components/ui/table-actions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  isColumnVisible,
+  updateVisibleColumns,
+  handleSort,
+  getSortIcon,
+  formatUrl,
+  visibleColumnsToStrings,
+} from "@/lib/table-utils";
+
+// Define available columns for the table using Company type
+const COMPANY_FIELDS: Array<{
+  id: keyof Company;
+  label: string;
+  required: boolean;
+  sortable: boolean;
+  center: boolean;
+}> = [
+  { id: "id", label: "ID", required: false, sortable: true, center: true },
+  { id: "name", label: "Name", required: true, sortable: true, center: false },
+  {
+    id: "url",
+    label: "Website",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "address",
+    label: "Address",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  { id: "city", label: "City", required: false, sortable: true, center: false },
+  {
+    id: "zip",
+    label: "ZIP Code",
+    required: false,
+    sortable: true,
+    center: true,
+  },
+  {
+    id: "country",
+    label: "Country",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "phone",
+    label: "Phone",
+    required: false,
+    sortable: false,
+    center: false,
+  },
+  {
+    id: "budgeting_month",
+    label: "Budgeting Month",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+  {
+    id: "comment",
+    label: "Comment",
+    required: false,
+    sortable: true,
+    center: false,
+  },
+];
 
 interface CompanyListProps {
   companies: Company[];
   onEdit: (company: Company) => void;
   onDelete: (companyId: number) => Promise<void>;
-  isLoading?: boolean;
 }
 
-type SortField = "name" | "city" | "country";
-type SortDirection = "asc" | "desc";
-
-export function CompanyList({
-  companies,
-  onEdit,
-  onDelete,
-  isLoading = false,
-}: CompanyListProps) {
+export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Consolidated table preferences state
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Company>
+  >({
+    visibleColumns: ["name", "url", "city", "country"], // Default visible columns
+    sortField: COMPANY_FIELDS[1].id, // Default to second column (name)
+    sortDirection: "asc", // Default sort direction
+  });
+
+  function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
+    const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
+    setTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  }
+
+  function handleSortColumn(field: keyof Company) {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  }
 
   // Sort companies based on current sort field and direction
   const sortedCompanies = useMemo(() => {
@@ -61,51 +140,24 @@ export function CompanyList({
       let aValue: any;
       let bValue: any;
 
-      switch (sortField) {
-        case "name":
-        case "city":
-        case "country":
-          aValue = a[sortField]?.toLowerCase() || "";
-          bValue = b[sortField]?.toLowerCase() || "";
-          break;
-        default:
-          return 0;
-      }
+      const { sortField, sortDirection } = tablePreferences;
+
+      // For all sortable fields, convert to lowercase for case-insensitive sorting
+      aValue = String(a[sortField as keyof Company] || "").toLowerCase();
+      bValue = String(b[sortField as keyof Company] || "").toLowerCase();
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [companies, sortField, sortDirection]);
+  }, [companies, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      // Toggle direction if same field
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      // Set new field with ascending direction
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return <ArrowUpDown className="h-4 w-4" />;
-    }
-    return sortDirection === "asc" ? (
-      <ArrowUp className="h-4 w-4" />
-    ) : (
-      <ArrowDown className="h-4 w-4" />
-    );
-  };
-
-  const handleDeleteClick = (company: Company) => {
+  function handleDeleteClick(company: Company) {
     setCompanyToDelete(company);
     setDeleteDialogOpen(true);
-  };
+  }
 
-  const handleDeleteConfirm = async () => {
+  async function handleDeleteConfirm() {
     if (!companyToDelete) return;
 
     setDeleting(true);
@@ -118,21 +170,12 @@ export function CompanyList({
     } finally {
       setDeleting(false);
     }
-  };
+  }
 
-  const handleDeleteCancel = () => {
+  function handleDeleteCancel() {
     setDeleteDialogOpen(false);
     setCompanyToDelete(null);
-  };
-
-  const formatUrl = (url: string) => {
-    if (!url || url === "null" || url === "") return null;
-    // Add https:// if no protocol is specified
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      return `https://${url}`;
-    }
-    return url;
-  };
+  }
 
   if (companies.length === 0) {
     return (
@@ -144,122 +187,156 @@ export function CompanyList({
 
   return (
     <>
+      <DeleteAlert
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        entity="company"
+        entityName={companyToDelete?.name || ""}
+        isLoading={deleting}
+        onCancel={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Column Selector */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Columns:</span>
+          <MultiSelect
+            values={visibleColumnsToStrings(tablePreferences.visibleColumns)}
+            onValuesChange={handleUpdateVisibleColumns}
+          >
+            <MultiSelectTrigger className="min-w-[200px]">
+              <MultiSelectValue placeholder="Select columns" />
+            </MultiSelectTrigger>
+            <MultiSelectContent>
+              {COMPANY_FIELDS.map((column) => (
+                <MultiSelectItem
+                  key={column.id}
+                  value={column.id}
+                  badgeLabel={column.label}
+                  disabled={column.required}
+                >
+                  {column.label}
+                  {column.required && " (Required)"}
+                </MultiSelectItem>
+              ))}
+            </MultiSelectContent>
+          </MultiSelect>
+        </div>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("name")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    Company Name
-                    {getSortIcon("name")}
-                  </span>
-                </Button>
-              </TableHead>
-              <TableHead className="hidden md:table-cell">Website</TableHead>
-              <TableHead className="hidden sm:table-cell">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("city")}
-                  className="h-auto p-0 font-medium hover:bg-transparent"
-                >
-                  <span className="flex items-center gap-2">
-                    City
-                    {getSortIcon("city")}
-                  </span>
-                </Button>
-              </TableHead>
+              {COMPANY_FIELDS.map((column) => {
+                if (!isColumnVisible(column.id, tablePreferences)) return null;
+
+                return (
+                  <TableHead
+                    key={column.id}
+                    className={column.center ? "text-center" : ""}
+                  >
+                    {column.sortable ? (
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleSortColumn(column.id)}
+                        className="h-auto p-0 font-medium hover:bg-transparent"
+                      >
+                        <span className="flex items-center gap-2">
+                          {column.label}
+                          {getSortIcon(column.id, tablePreferences)}
+                        </span>
+                      </Button>
+                    ) : (
+                      column.label
+                    )}
+                  </TableHead>
+                );
+              })}
+
+              {/* Actions - Always visible */}
               <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedCompanies.map((company) => (
               <TableRow key={company.id}>
-                <TableCell className="font-medium w-full sm:w-auto whitespace-normal">
-                  {company.name}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {formatUrl(company.url) ? (
-                    <a
-                      href={formatUrl(company.url)!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                {COMPANY_FIELDS.map((column) => {
+                  if (
+                    !isColumnVisible(column.id, tablePreferences) &&
+                    !column.required
+                  )
+                    return null;
+
+                  if (column.id === "url") {
+                    return (
+                      <TableCell key={column.id}>
+                        {formatUrl(company.url) ? (
+                          <a
+                            href={formatUrl(company.url)?.link!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                          >
+                            <span className="max-w-[200px] truncate">
+                              {formatUrl(company.url)?.label}
+                            </span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                    );
+                  } else if (column.id === "comment") {
+                    return (
+                      <TableCell key={column.id}>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="max-w-[150px] truncate cursor-help">
+                                {company.comment || "—"}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="whitespace-pre-wrap">
+                                {company.comment || "No comment"}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                    );
+                  }
+
+                  return (
+                    <TableCell
+                      key={column.id}
+                      className={
+                        column.center
+                          ? "text-center"
+                          : "font-medium whitespace-normal"
+                      }
                     >
-                      <span className="max-w-[200px] truncate">
-                        {company.url}
-                      </span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {company.city || "—"}
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => router.push(`/companies/${company.id}`)}
-                      disabled={isLoading}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(company)}
-                      disabled={isLoading}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => handleDeleteClick(company)}
-                      disabled={isLoading}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                      {company[column.id] || "—"}
+                    </TableCell>
+                  );
+                })}
+
+                {/* Actions - Always visible */}
+                <TableActions
+                  item={company}
+                  onView={(company) => router.push(`/companies/${company.id}`)}
+                  onEdit={onEdit}
+                  onDelete={handleDeleteClick}
+                />
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Company</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{companyToDelete?.name}
-              &quot;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
