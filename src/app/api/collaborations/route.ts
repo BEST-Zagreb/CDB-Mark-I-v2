@@ -55,10 +55,11 @@ export async function GET(request: NextRequest) {
     const db = new Database(dbPath, { readonly: true });
 
     let query = `
-      SELECT c.*, companies.name as companyName, people.name as personName
+      SELECT c.*, companies.name as companyName, people.name as personName, projects.name as projectName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
+      LEFT JOIN projects ON c.project_id = projects.id
     `;
     const params: any[] = [];
 
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
     const rows = db.prepare(query).all(...params) as (CollaborationDB & {
       companyName?: string;
       personName?: string;
+      projectName?: string;
     })[];
     db.close();
 
@@ -82,6 +84,7 @@ export async function GET(request: NextRequest) {
       const collaboration = transformCollaboration(row);
       collaboration.companyName = row.companyName || undefined;
       collaboration.personName = row.personName || undefined;
+      collaboration.projectName = row.projectName || undefined;
       return collaboration;
     });
 
@@ -137,10 +140,11 @@ export async function POST(request: NextRequest) {
 
     // Get the created collaboration with related data
     const getQuery = `
-      SELECT c.*, companies.name as companyName, people.name as personName
+      SELECT c.*, companies.name as companyName, people.name as personName, projects.name as projectName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
+      LEFT JOIN projects ON c.project_id = projects.id
       WHERE c.id = ?
     `;
 
@@ -149,12 +153,14 @@ export async function POST(request: NextRequest) {
       .get(result.lastInsertRowid) as CollaborationDB & {
       companyName?: string;
       personName?: string;
+      projectName?: string;
     };
     db.close();
 
     const collaboration = transformCollaboration(newRow);
     collaboration.companyName = newRow.companyName || undefined;
     collaboration.personName = newRow.personName || undefined;
+    collaboration.projectName = newRow.projectName || undefined;
 
     return NextResponse.json(collaboration, { status: 201 });
   } catch (error) {

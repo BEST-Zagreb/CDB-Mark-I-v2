@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import Header from "@/components/header";
 import QueryProvider from "@/providers/query-provider";
+import ReactScanProvider from "@/providers/react-scan-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,8 +19,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Company Database - Projects",
-  description: "CRUD application for managing projects",
+  title: "Company Database",
+  description:
+    "CRUD application for managing projects, companies, and collaborations",
 };
 
 export default function RootLayout({
@@ -32,12 +34,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
+        <ReactScanProvider />
         <QueryProvider>
           <SidebarProvider>
             <AppSidebar />
             <main className="w-full">
               <Header />
-              <div className="pt-24 max-w-5xl mx-auto">{children}</div>
+              <div className="pt-24 max-w-7xl mx-auto">{children}</div>
             </main>
           </SidebarProvider>
           <Toaster />

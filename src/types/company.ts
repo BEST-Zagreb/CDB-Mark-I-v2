@@ -38,7 +38,10 @@ export const companySchema = z.object({
   address: z.string().max(200, "Address must be 200 characters or less"),
   city: z.string().max(100, "City must be 100 characters or less"),
   zip: z.string().max(20, "ZIP code must be 20 characters or less"),
-  country: z.string().max(100, "Country must be 100 characters or less"),
+  country: z
+    .string()
+    .min(1, "Country is required")
+    .max(100, "Country must be 100 characters or less"),
   phone: z.string().max(50, "Phone must be 50 characters or less"),
   budgeting_month: z
     .string()

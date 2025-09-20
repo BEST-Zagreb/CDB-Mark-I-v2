@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CountrySelect } from "@/components/ui/country-select";
 import {
   companySchema,
   type CompanyFormData,
@@ -40,7 +41,7 @@ export function CompanyForm({
       address: initialData?.address || "",
       city: initialData?.city || "",
       zip: initialData?.zip || "",
-      country: initialData?.country || "",
+      country: initialData?.country || "Croatia", // Default to Croatia
       phone: initialData?.phone || "",
       budgeting_month: initialData?.budgeting_month || "",
       comment: initialData?.comment || "",
@@ -158,12 +159,13 @@ export function CompanyForm({
             name="country"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Country</FormLabel>
+                <FormLabel>Country *</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Country name"
-                    {...field}
+                  <CountrySelect
+                    value={field.value}
+                    onValueChange={field.onChange}
                     disabled={isLoading}
+                    className="w-full"
                   />
                 </FormControl>
                 <FormMessage />

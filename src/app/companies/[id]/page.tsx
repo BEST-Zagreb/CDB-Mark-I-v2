@@ -389,6 +389,7 @@ export default function CompanyDetailPage() {
               isLoading={collaborationsLoading}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
+              showProjectNames={true}
             />
           </CardContent>
         </Card>

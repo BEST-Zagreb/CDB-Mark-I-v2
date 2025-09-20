@@ -39,6 +39,7 @@ import {
   User,
   Calendar,
   DollarSign,
+  FolderOpen,
 } from "lucide-react";
 
 interface CollaborationListProps {
@@ -46,10 +47,12 @@ interface CollaborationListProps {
   onEdit: (collaboration: Collaboration) => void;
   onDelete: (collaborationId: number) => Promise<void>;
   isLoading?: boolean;
+  showProjectNames?: boolean; // New prop to show project names instead of company names
 }
 
 type SortField =
   | "companyName"
+  | "projectName"
   | "responsible"
   | "type"
   | "priority"
@@ -63,6 +66,7 @@ export function CollaborationList({
   onEdit,
   onDelete,
   isLoading = false,
+  showProjectNames = false,
 }: CollaborationListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [collaborationToDelete, setCollaborationToDelete] =
@@ -81,6 +85,10 @@ export function CollaborationList({
         case "companyName":
           aValue = a.companyName?.toLowerCase() || "";
           bValue = b.companyName?.toLowerCase() || "";
+          break;
+        case "projectName":
+          aValue = a.projectName?.toLowerCase() || "";
+          bValue = b.projectName?.toLowerCase() || "";
           break;
         case "responsible":
           aValue = a.responsible?.toLowerCase() || "";
@@ -209,12 +217,16 @@ export function CollaborationList({
               <TableHead>
                 <Button
                   variant="ghost"
-                  onClick={() => handleSort("companyName")}
+                  onClick={() =>
+                    handleSort(showProjectNames ? "projectName" : "companyName")
+                  }
                   className="h-auto p-0 font-medium hover:bg-transparent"
                 >
                   <span className="flex items-center gap-2">
-                    Company
-                    {getSortIcon("companyName")}
+                    {showProjectNames ? "Project" : "Company"}
+                    {getSortIcon(
+                      showProjectNames ? "projectName" : "companyName"
+                    )}
                   </span>
                 </Button>
               </TableHead>
@@ -287,13 +299,27 @@ export function CollaborationList({
               <TableRow key={collaboration.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <Link
-                      href={`/companies/${collaboration.companyId}`}
-                      className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {collaboration.companyName || "Unknown Company"}
-                    </Link>
+                    {showProjectNames ? (
+                      <>
+                        <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                        <Link
+                          href={`/projects/${collaboration.projectId}`}
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {collaboration.projectName || "Unknown Project"}
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <Link
+                          href={`/companies/${collaboration.companyId}`}
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {collaboration.companyName || "Unknown Company"}
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

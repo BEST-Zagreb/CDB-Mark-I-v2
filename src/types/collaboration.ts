@@ -41,6 +41,7 @@ export interface Collaboration {
   // Related data that might be joined
   companyName?: string;
   personName?: string;
+  projectName?: string;
 }
 
 // Validation schema for collaboration forms
