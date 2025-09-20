@@ -251,14 +251,15 @@ export function CompanyList({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="max-w-[150px] truncate cursor-help">
-                                {company.comment || "—"}
+                              <div className="max-w-[200px] truncate">
+                                {company.comment}
                               </div>
                             </TooltipTrigger>
+
                             <TooltipContent>
-                              <div className="whitespace-pre-wrap">
-                                {company.comment || "No comment"}
-                              </div>
+                              <p className="max-w-xs font-medium whitespace-pre-wrap p-1">
+                                {company.comment}
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

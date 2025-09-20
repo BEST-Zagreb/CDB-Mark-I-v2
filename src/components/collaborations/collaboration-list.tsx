@@ -351,12 +351,13 @@ export function CollaborationList({
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="max-w-[200px] truncate">
-                                  {collaboration.comment || "—"}
+                                  {collaboration.comment}
                                 </div>
                               </TooltipTrigger>
+
                               <TooltipContent>
-                                <p className="max-w-xs whitespace-normal">
-                                  {collaboration.comment || "No comment"}
+                                <p className="max-w-xs font-medium whitespace-pre-wrap p-1">
+                                  {collaboration.comment}
                                 </p>
                               </TooltipContent>
                             </Tooltip>
