@@ -13,6 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -57,6 +63,7 @@ type SortField =
   | "type"
   | "priority"
   | "amount"
+  | "comment"
   | "contacted"
   | "successful"
   | "updatedAt";
@@ -106,6 +113,10 @@ export function CollaborationList({
         case "amount":
           aValue = a.amount || 0;
           bValue = b.amount || 0;
+          break;
+        case "comment":
+          aValue = a.comment?.toLowerCase() || "";
+          bValue = b.comment?.toLowerCase() || "";
           break;
         case "contacted":
           aValue = a.contacted ? 1 : 0;
@@ -298,6 +309,18 @@ export function CollaborationList({
                   </span>
                 </Button>
               </TableHead>
+              <TableHead className="hidden sm:table-cell">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort("comment")}
+                  className="h-auto p-0 font-medium hover:bg-transparent"
+                >
+                  <span className="flex items-center gap-2">
+                    Comment
+                    {getSortIcon("comment")}
+                  </span>
+                </Button>
+              </TableHead>
               <TableHead className="hidden md:table-cell">
                 <Button
                   variant="ghost"
@@ -384,6 +407,29 @@ export function CollaborationList({
                     {getCollaborationStatusText(collaboration)}
                   </span>
                 </TableCell>
+
+                <TableCell className="hidden sm:table-cell">
+                  <TooltipProvider>
+                    {collaboration.comment ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="max-w-[150px] truncate text-sm cursor-help">
+                            {collaboration.comment}
+                          </div>
+                        </TooltipTrigger>
+
+                        <TooltipContent side="top" className="max-w-[300px]">
+                          <p className="whitespace-pre-wrap text-sm p-1">
+                            {collaboration.comment}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TooltipProvider>
+                </TableCell>
+
                 <TableCell className="hidden md:table-cell">
                   <div className="flex items-center gap-1">
                     {collaboration.amount && (
@@ -395,12 +441,14 @@ export function CollaborationList({
                     )}
                   </div>
                 </TableCell>
+
                 <TableCell className="hidden lg:table-cell">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4" />
                     {formatDate(collaboration.updatedAt)}
                   </div>
                 </TableCell>
+
                 <TableCell className="text-center">
                   <div className="flex justify-center items-center gap-2">
                     <Button
