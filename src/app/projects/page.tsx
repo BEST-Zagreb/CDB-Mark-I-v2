@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ProjectList, ProjectDialog } from "@/components/projects";
+import ProjectList from "@/components/projects/project-list";
+import ProjectDialog from "@/components/projects/project-dialog";
 import {
   useProjects,
   useCreateProject,

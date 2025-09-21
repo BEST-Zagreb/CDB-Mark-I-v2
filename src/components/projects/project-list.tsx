@@ -40,7 +40,11 @@ interface ProjectListProps {
   onDelete: (projectId: number) => Promise<void>;
 }
 
-export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
+export default function ProjectList({
+  projects,
+  onEdit,
+  onDelete,
+}: ProjectListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 

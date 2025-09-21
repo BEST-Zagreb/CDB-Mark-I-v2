@@ -18,7 +18,7 @@ interface ProjectDialogProps {
   isLoading?: boolean;
 }
 
-export function ProjectDialog({
+export default function ProjectDialog({
   open,
   onOpenChange,
   project,
