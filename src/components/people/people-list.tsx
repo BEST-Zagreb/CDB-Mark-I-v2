@@ -1,32 +1,21 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Person } from "@/types/person";
 import { type TablePreferences } from "@/types/table";
-import { TableActions } from "@/components/common/table/table-actions";
 import { ColumnSelector } from "@/components/common/table/column-selector";
+import { SearchBar } from "@/components/common/table/search-bar";
 import {
-  isColumnVisible,
   updateVisibleColumns,
   handleSort,
-  getSortIcon,
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
-import { formatDate } from "@/lib/format-utils";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import { PERSON_FIELDS } from "@/config/person-fields";
-import { User, Mail, Phone, Briefcase, Calendar } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
+import { PeopleTable } from "./people-table";
+import { User } from "lucide-react";
 
 // Default preferences (outside component to prevent recreation)
 const defaultPreferences: TablePreferences<Person> = {
@@ -39,10 +28,16 @@ interface PeopleListProps {
   people: Person[];
   onEdit?: (person: Person) => void;
   onDelete?: (personId: number) => Promise<void>;
+  hiddenColumns?: string[];
 }
 
-export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
-  const { showDeleteAlert } = useDeleteAlert();
+export function PeopleList({
+  people,
+  onEdit,
+  onDelete,
+  hiddenColumns = [],
+}: PeopleListProps) {
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Consolidated table preferences state with localStorage
   const [tablePreferences, setTablePreferences] = useState<
@@ -52,64 +47,30 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
     return getTablePreferences("people", defaultPreferences);
   });
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   // Save preferences to localStorage whenever they change
   useEffect(() => {
     saveTablePreferences("people", tablePreferences);
   }, [tablePreferences]);
 
-  function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
+  // Table handler functions
+  const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
     const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
     setTablePreferences((prev) => ({
       ...prev,
       visibleColumns: visibleColumns,
     }));
-  }
+  };
 
-  function handleSortColumn(field: keyof Person) {
+  const handleSortColumn = (field: keyof Person) => {
     const newPreferences = handleSort(tablePreferences, field);
     setTablePreferences(newPreferences);
-  }
+  };
 
-  // Sort people based on current sort field and direction
-  const sortedPeople = useMemo(() => {
-    return [...people].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      const { sortField, sortDirection } = tablePreferences;
-
-      // Handle different field types
-      switch (sortField) {
-        case "id":
-          aValue = a.id || 0;
-          bValue = b.id || 0;
-          break;
-        case "createdAt":
-          aValue = new Date(a.createdAt || 0).getTime();
-          bValue = new Date(b.createdAt || 0).getTime();
-          break;
-        default:
-          // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = String(a[sortField] || "").toLowerCase();
-          bValue = String(b[sortField] || "").toLowerCase();
-          break;
-      }
-
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [people, tablePreferences.sortField, tablePreferences.sortDirection]);
-
-  function handleDelete(person: Person) {
-    if (onDelete) {
-      showDeleteAlert({
-        entity: "person",
-        entityName: person.name || "Nepoznato",
-        onConfirm: () => onDelete(person.id),
-      });
-    }
-  }
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
 
   if (people.length === 0) {
     return (
@@ -121,104 +82,49 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
   }
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold">People</h2>
+    <div className="space-y-4">
+      {/* Header with count and controls */}
+      <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">People</h3>
           <Badge variant="secondary">{people.length}</Badge>
         </div>
-        <ColumnSelector
-          fields={PERSON_FIELDS.map((field) => ({
-            id: field.id as string,
-            label: field.label,
-            required: field.required,
-          }))}
-          visibleColumns={visibleColumnsToStrings(
-            tablePreferences.visibleColumns
-          )}
-          onColumnsChange={handleUpdateVisibleColumns}
-        />
+
+        <div className="flex flex-row flex-wrap gap-4 items-center">
+          <SearchBar
+            placeholder="Search people..."
+            onSearchChange={handleSearchChange}
+          />
+
+          <ColumnSelector
+            fields={PERSON_FIELDS.filter((field) => {
+              // Filter out any hidden columns
+              if (hiddenColumns.includes(field.id)) return false;
+              return true;
+            }).map((field) => ({
+              id: field.id as string,
+              label: field.label,
+              required: field.required,
+            }))}
+            visibleColumns={visibleColumnsToStrings(
+              tablePreferences.visibleColumns
+            )}
+            onColumnsChange={handleUpdateVisibleColumns}
+            placeholder="Select columns"
+          />
+        </div>
       </div>
 
-      <div className="rounded-sm border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {PERSON_FIELDS.filter((field) =>
-                isColumnVisible(field.id, tablePreferences)
-              ).map((field) => (
-                <TableHead
-                  key={field.id}
-                  className={field.center ? "text-center" : ""}
-                >
-                  {field.sortable ? (
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleSortColumn(field.id)}
-                      className="h-auto p-0 font-medium hover:bg-transparent"
-                    >
-                      <span className="flex items-center gap-2">
-                        {field.icon && (
-                          <field.icon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                        {field.label}
-                        {getSortIcon(field.id, tablePreferences)}
-                      </span>
-                    </Button>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      {field.icon && (
-                        <field.icon className="h-4 w-4 text-muted-foreground" />
-                      )}
-                      {field.label}
-                    </span>
-                  )}
-                </TableHead>
-              ))}
-              {(onEdit || onDelete) && (
-                <TableHead className="text-center w-[100px]">Actions</TableHead>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedPeople.map((person: Person) => (
-              <TableRow key={person.id}>
-                {PERSON_FIELDS.filter((field) =>
-                  isColumnVisible(field.id, tablePreferences)
-                ).map((field) => (
-                  <TableCell
-                    key={field.id}
-                    className={field.center ? "text-center" : ""}
-                  >
-                    {field.id === "id" && person.id}
-                    {field.id === "name" && (
-                      <span className="font-medium">{person.name || "—"}</span>
-                    )}
-                    {field.id === "email" && (person.email || "—")}
-                    {field.id === "phone" && (person.phone || "—")}
-                    {field.id === "function" &&
-                      (person.function ? (
-                        <Badge variant="outline">{person.function}</Badge>
-                      ) : (
-                        "—"
-                      ))}
-                    {field.id === "companyName" && (person.companyName || "—")}
-                    {field.id === "createdAt" && formatDate(person.createdAt)}
-                  </TableCell>
-                ))}
-
-                {(onEdit || onDelete) && (
-                  <TableActions
-                    item={person}
-                    onEdit={onEdit}
-                    onDelete={handleDelete}
-                  />
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </>
+      {/* People Table */}
+      <PeopleTable
+        people={people}
+        searchQuery={debouncedSearchQuery}
+        tablePreferences={tablePreferences}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onSortColumn={handleSortColumn}
+        hiddenColumns={hiddenColumns}
+      />
+    </div>
   );
 }

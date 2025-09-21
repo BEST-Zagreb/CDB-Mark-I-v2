@@ -64,7 +64,7 @@ export const PERSON_FIELDS: Array<{
     label: "Created",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Calendar,
   },
 ];

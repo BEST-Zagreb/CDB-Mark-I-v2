@@ -135,7 +135,10 @@ export function CollaborationsTable({
   }
 
   return (
-    <div ref={containerRef} className="rounded-sm border bg-zinc-50">
+    <div
+      ref={containerRef}
+      className="rounded-sm border bg-zinc-50 overflow-hidden"
+    >
       <Table>
         <TableHeader className="bg-zinc-100">
           <TableRow>

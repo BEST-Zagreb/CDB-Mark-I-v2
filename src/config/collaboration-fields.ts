@@ -151,7 +151,7 @@ export const COLLABORATION_FIELDS: Array<{
     label: "Created",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Calendar,
   },
   {
@@ -159,7 +159,7 @@ export const COLLABORATION_FIELDS: Array<{
     label: "Last update",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: CalendarDays,
   },
 ];

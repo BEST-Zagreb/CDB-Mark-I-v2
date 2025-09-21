@@ -17,7 +17,7 @@ import {
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
 import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
-import { CollaborationForm } from "@/components/collaborations/collaboration-form";
+import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import {

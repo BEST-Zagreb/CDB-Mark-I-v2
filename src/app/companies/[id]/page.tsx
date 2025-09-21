@@ -26,11 +26,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
-import { PeopleList } from "@/components/people/people-list";
+import { PeopleTable } from "@/components/people/people-table";
 import { formatUrl } from "@/lib/format-utils";
 import { PersonForm } from "@/components/people/person-form";
 import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
-import { CollaborationForm } from "@/components/collaborations/collaboration-form";
+import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import {
@@ -56,6 +56,7 @@ import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
 import { useDebounce } from "@/hooks/use-debounce";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
+import { PERSON_FIELDS } from "@/config/person-fields";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import {
   updateVisibleColumns,
@@ -80,6 +81,7 @@ export default function CompanyDetailPage() {
     Collaboration | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
+  const [peopleSearchQuery, setPeopleSearchQuery] = useState("");
 
   // Table preferences state for collaborations
   const defaultPreferences: TablePreferences<
@@ -104,7 +106,19 @@ export default function CompanyDetailPage() {
     return getTablePreferences("collaborations-companies", defaultPreferences);
   });
 
+  // Table preferences state for people
+  const peopleDefaultPreferences: TablePreferences<Person> = {
+    visibleColumns: ["name", "email", "phone", "function", "createdAt"],
+    sortField: "name",
+    sortDirection: "asc",
+  };
+
+  const [peopleTablePreferences, setPeopleTablePreferences] = useState(() => {
+    return getTablePreferences("people", peopleDefaultPreferences);
+  });
+
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedPeopleSearchQuery = useDebounce(peopleSearchQuery, 300);
 
   // React Query hooks
   const {
@@ -153,6 +167,10 @@ export default function CompanyDetailPage() {
     saveTablePreferences("collaborations-companies", tablePreferences);
   }, [tablePreferences]);
 
+  useEffect(() => {
+    saveTablePreferences("people", peopleTablePreferences);
+  }, [peopleTablePreferences]);
+
   // Table handler functions
   const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
     const visibleColumns = updateVisibleColumns(
@@ -178,6 +196,24 @@ export default function CompanyDetailPage() {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+  };
+
+  // People table handler functions
+  const handlePeopleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
+    const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
+    setPeopleTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  };
+
+  const handlePeopleSortColumn = (field: keyof Person) => {
+    const newPreferences = handleSort(peopleTablePreferences, field);
+    setPeopleTablePreferences(newPreferences);
+  };
+
+  const handlePeopleSearchChange = (query: string) => {
+    setPeopleSearchQuery(query);
   };
 
   const handleEditCompany = () => {
@@ -457,6 +493,7 @@ export default function CompanyDetailPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   People
+                  <Badge variant="secondary">{people.length}</Badge>
                 </CardTitle>
                 <CardDescription>
                   People associated with this company
@@ -468,11 +505,35 @@ export default function CompanyDetailPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <PeopleList
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search people..."
+                onSearchChange={handlePeopleSearchChange}
+              />
+
+              <ColumnSelector
+                fields={PERSON_FIELDS.map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  peopleTablePreferences.visibleColumns
+                )}
+                onColumnsChange={handlePeopleUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            <PeopleTable
               people={people}
+              searchQuery={debouncedPeopleSearchQuery}
+              tablePreferences={peopleTablePreferences}
               onEdit={handleEditPerson}
               onDelete={handleDeletePerson}
+              onSortColumn={handlePeopleSortColumn}
             />
           </CardContent>
         </Card>
