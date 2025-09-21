@@ -4,14 +4,20 @@ import { type TablePreferences } from "@/types/table";
 const APP_STORAGE_KEY = "Company_Database_app";
 
 // Table type identifiers
-export type TableType = "projects" | "companies" | "collaborations" | "people";
+export type TableType =
+  | "projects"
+  | "companies"
+  | "people"
+  | "collaborations-companies"
+  | "collaborations-projects";
 
 // Structure for all table preferences
 interface AppTablePreferences {
   projects?: TablePreferences<any>;
   companies?: TablePreferences<any>;
-  collaborations?: TablePreferences<any>;
   people?: TablePreferences<any>;
+  "collaborations-companies"?: TablePreferences<any>;
+  "collaborations-projects"?: TablePreferences<any>;
 }
 
 /**
@@ -19,7 +25,7 @@ interface AppTablePreferences {
  */
 function getAllTablePreferences(): AppTablePreferences {
   if (typeof window === "undefined") return {};
-  
+
   try {
     const stored = localStorage.getItem(APP_STORAGE_KEY);
     return stored ? JSON.parse(stored) : {};
@@ -34,7 +40,7 @@ function getAllTablePreferences(): AppTablePreferences {
  */
 function saveAllTablePreferences(preferences: AppTablePreferences): void {
   if (typeof window === "undefined") return;
-  
+
   try {
     localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(preferences));
   } catch (error) {
@@ -51,11 +57,11 @@ export function getTablePreferences<T>(
 ): TablePreferences<T> {
   const allPreferences = getAllTablePreferences();
   const tablePreferences = allPreferences[tableType];
-  
+
   if (!tablePreferences) {
     return defaultPreferences;
   }
-  
+
   // Merge with defaults to ensure all required properties exist
   return {
     ...defaultPreferences,

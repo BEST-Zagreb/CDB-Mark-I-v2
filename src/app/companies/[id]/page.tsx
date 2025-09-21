@@ -432,7 +432,6 @@ export default function CompanyDetailPage() {
               collaborations={collaborations}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
-              showProjectNames={true}
             />
           </CardContent>
         </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Table,
@@ -46,16 +47,25 @@ interface CollaborationListProps {
   collaborations: Collaboration[];
   onEdit?: (collaboration: Collaboration) => void;
   onDelete?: (collaborationId: number) => Promise<void>;
-  showProjectNames?: boolean; // New prop to show project names instead of company names
 }
 
 export function CollaborationList({
   collaborations,
   onEdit,
   onDelete,
-  showProjectNames = false,
 }: CollaborationListProps) {
   const { showDeleteAlert } = useDeleteAlert();
+  const pathname = usePathname();
+
+  // Determine if we should show project names based on pathname
+  // If on a company page (/companies/[id]), show project names
+  // If on a project page (/projects/[id]), show company names
+  const showProjectNames = pathname.startsWith("/companies/");
+
+  // Generate localStorage key based on context
+  const storageKey = showProjectNames
+    ? "collaborations-companies"
+    : "collaborations-projects";
 
   // Default preferences (using useMemo since it depends on showProjectNames)
   const defaultPreferences = useMemo(() => {
@@ -86,22 +96,22 @@ export function CollaborationList({
     >
   >(() => {
     // Initialize with saved preferences on first render
-    return getTablePreferences("collaborations", defaultPreferences as any);
+    return getTablePreferences(storageKey, defaultPreferences as any);
   });
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
-    saveTablePreferences("collaborations", tablePreferences);
-  }, [tablePreferences]);
+    saveTablePreferences(storageKey, tablePreferences);
+  }, [storageKey, tablePreferences]);
 
   // Update preferences when showProjectNames changes
   useEffect(() => {
     const savedPreferences = getTablePreferences(
-      "collaborations",
+      storageKey,
       defaultPreferences as any
     );
     setTablePreferences(savedPreferences);
-  }, [defaultPreferences]);
+  }, [storageKey, defaultPreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const requiredColumn = showProjectNames ? "projectName" : "companyName";
@@ -205,7 +215,12 @@ export function CollaborationList({
           <Badge variant="secondary">{collaborations.length}</Badge>
         </div>
         <ColumnSelector
-          fields={COLLABORATION_FIELDS.map((field) => ({
+          fields={COLLABORATION_FIELDS.filter((field) => {
+            // Filter out the column that shouldn't be shown based on pathname
+            if (showProjectNames && field.id === "companyName") return false;
+            if (!showProjectNames && field.id === "projectName") return false;
+            return true;
+          }).map((field) => ({
             id: field.id as string,
             label: field.label,
             required: field.required,
@@ -221,9 +236,14 @@ export function CollaborationList({
         <Table>
           <TableHeader>
             <TableRow>
-              {COLLABORATION_FIELDS.filter((field) =>
-                isColumnVisible(field.id, tablePreferences)
-              ).map((field) => (
+              {COLLABORATION_FIELDS.filter((field) => {
+                // Filter out the column that shouldn't be shown based on pathname
+                if (showProjectNames && field.id === "companyName")
+                  return false;
+                if (!showProjectNames && field.id === "projectName")
+                  return false;
+                return isColumnVisible(field.id, tablePreferences);
+              }).map((field) => (
                 <TableHead
                   key={field.id}
                   className={field.center ? "text-center" : ""}
@@ -265,9 +285,14 @@ export function CollaborationList({
                 }
               ) => (
                 <TableRow key={collaboration.id}>
-                  {COLLABORATION_FIELDS.filter((field) =>
-                    isColumnVisible(field.id, tablePreferences)
-                  ).map((field) => (
+                  {COLLABORATION_FIELDS.filter((field) => {
+                    // Filter out the column that shouldn't be shown based on pathname
+                    if (showProjectNames && field.id === "companyName")
+                      return false;
+                    if (!showProjectNames && field.id === "projectName")
+                      return false;
+                    return isColumnVisible(field.id, tablePreferences);
+                  }).map((field) => (
                     <TableCell
                       key={field.id}
                       className={field.center ? "text-center" : ""}
