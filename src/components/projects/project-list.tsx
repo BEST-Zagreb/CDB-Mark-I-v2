@@ -137,7 +137,7 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
         placeholder="Select columns"
       />
 
-      <div className="rounded-md border">
+      <div className="rounded-sm border">
         <Table>
           <TableHeader>
             <TableRow>

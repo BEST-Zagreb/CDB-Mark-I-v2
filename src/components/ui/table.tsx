@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { memo } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,10 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+const TableHeader = memo(function TableHeader({
+  className,
+  ...props
+}: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
@@ -27,9 +31,12 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
       {...props}
     />
   );
-}
+});
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+const TableBody = memo(function TableBody({
+  className,
+  ...props
+}: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
@@ -37,7 +44,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
       {...props}
     />
   );
-}
+});
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
@@ -52,7 +59,10 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+const TableRow = memo(function TableRow({
+  className,
+  ...props
+}: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -63,7 +73,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
       {...props}
     />
   );
-}
+});
 
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
@@ -78,7 +88,10 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+const TableCell = memo(function TableCell({
+  className,
+  ...props
+}: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
@@ -89,7 +102,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
       {...props}
     />
   );
-}
+});
 
 function TableCaption({
   className,

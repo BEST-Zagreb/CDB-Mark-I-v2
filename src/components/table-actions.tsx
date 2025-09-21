@@ -1,3 +1,4 @@
+import { memo, ReactElement } from "react";
 import { Button } from "@/components/ui/button";
 import { TableCell } from "@/components/ui/table";
 import { Eye, Pencil, Trash2 } from "lucide-react";
@@ -9,7 +10,7 @@ interface TableActionsProps<T> {
   onDelete?: (item: T) => void;
 }
 
-export function TableActions<T>({
+export const TableActions = memo(function TableActions<T>({
   item,
   onView,
   onEdit,
@@ -41,4 +42,4 @@ export function TableActions<T>({
       </div>
     </TableCell>
   );
-}
+}) as <T>(props: TableActionsProps<T>) => ReactElement;

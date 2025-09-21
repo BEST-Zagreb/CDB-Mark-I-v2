@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Search, X } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CompanyList } from "@/components/companies/company-list";
+import { CompaniesTable } from "@/components/companies/companies-table";
 import { CompanyDialog } from "@/components/companies/company-dialog";
+import { ColumnSelector } from "@/components/ui/column-selector";
+import { SearchBar } from "@/components/ui/search-bar";
 import {
   useCompanies,
   useCreateCompany,
@@ -13,29 +14,83 @@ import {
   useDeleteCompany,
 } from "@/hooks/useCompanies";
 import { Company, CompanyFormData } from "@/types/company";
+import { type TablePreferences } from "@/types/table";
 import { useDebounce } from "@/hooks/useDebounce";
+import { COMPANY_FIELDS } from "@/config/company-fields";
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import {
+  updateVisibleColumns,
+  visibleColumnsToStrings,
+} from "@/lib/table-utils";
+
+// Default preferences (outside component to prevent recreation)
+const defaultPreferences: TablePreferences<Company> = {
+  visibleColumns: ["name", "url", "budgeting_month", "city", "comment"],
+  sortField: "name",
+  sortDirection: "asc",
+};
 
 export default function CompaniesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Debounce search query to avoid too many API calls
+  // Table preferences state
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Company>
+  >(() => {
+    // Initialize with saved preferences on first render
+    return getTablePreferences("companies", defaultPreferences);
+  });
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    saveTablePreferences("companies", tablePreferences);
+  }, [tablePreferences]);
+
+  // Debounce search query for client-side filtering
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // React Query hooks
-  const {
-    data: companies = [],
-    isLoading: loading,
-    error,
-  } = useCompanies(debouncedSearchQuery);
+  // Fetch ALL companies at once (no server-side search filtering)
+  const { data: companies = [], isLoading: loading, error } = useCompanies(); // No search parameter - fetch all companies
+
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
   const deleteMutation = useDeleteCompany();
 
-  function clearSearch() {
-    setSearchQuery("");
-  }
+  // Memoize column selector handler
+  const handleUpdateVisibleColumns = useCallback(
+    (newVisibleColumns: string[]) => {
+      const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
+      setTablePreferences((prev) => ({
+        ...prev,
+        visibleColumns: visibleColumns,
+      }));
+    },
+    []
+  );
+
+  // Memoize column selector fields to prevent recreation
+  const columnSelectorFields = useMemo(
+    () =>
+      COMPANY_FIELDS.map((field) => ({
+        id: field.id,
+        label: field.label,
+        required: field.required,
+      })),
+    []
+  );
+
+  // Memoize visible columns to prevent recreation
+  const visibleColumnsString = useMemo(
+    () => visibleColumnsToStrings(tablePreferences.visibleColumns),
+    [tablePreferences.visibleColumns]
+  );
+
+  // Handle search query updates from SearchBar component
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
 
   function handleCreateCompany() {
     setEditingCompany(undefined);
@@ -70,9 +125,6 @@ export default function CompaniesPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-            <p className="text-muted-foreground">
-              Manage your company database
-            </p>
           </div>
           <Button onClick={handleCreateCompany}>
             <Plus className="mr-2 h-4 w-4" />
@@ -80,25 +132,19 @@ export default function CompaniesPage() {
           </Button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search companies by name, city, country..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-10"
+        {/* Search Bar and Column Selector */}
+        <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+          <SearchBar
+            placeholder="Search companies..."
+            onSearchChange={handleSearchChange}
           />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearSearch}
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+
+          <ColumnSelector
+            fields={columnSelectorFields}
+            visibleColumns={visibleColumnsString}
+            onColumnsChange={handleUpdateVisibleColumns}
+            placeholder="Select columns"
+          />
         </div>
 
         {loading ? (
@@ -106,20 +152,13 @@ export default function CompaniesPage() {
             Loading companies...
           </div>
         ) : (
-          <>
-            {/* Search Results Info */}
-            {debouncedSearchQuery.trim() !== "" && (
-              <div className="text-sm text-muted-foreground">
-                Found {companies.length} companies matching "
-                {debouncedSearchQuery}"
-              </div>
-            )}
-            <CompanyList
-              companies={companies}
-              onEdit={handleEditCompany}
-              onDelete={handleDeleteCompany}
-            />
-          </>
+          <CompaniesTable
+            companies={companies}
+            searchQuery={debouncedSearchQuery}
+            tablePreferences={tablePreferences}
+            onEdit={handleEditCompany}
+            onDelete={handleDeleteCompany}
+          />
         )}
       </div>
 

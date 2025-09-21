@@ -17,33 +17,12 @@ export async function GET(request: NextRequest) {
     let stmt;
     let companies: CompanyDB[];
 
-    if (searchQuery && searchQuery.trim() !== "") {
-      // Search across name, city, country, and address
-      stmt = db.prepare(`
-        SELECT * FROM companies 
-        WHERE name LIKE ? 
-           OR city LIKE ? 
-           OR country LIKE ? 
-           OR address LIKE ?
-           OR comment LIKE ?
-        ORDER BY name ASC
-      `);
-      const searchPattern = `%${searchQuery.trim()}%`;
-      companies = stmt.all(
-        searchPattern,
-        searchPattern,
-        searchPattern,
-        searchPattern,
-        searchPattern
-      ) as CompanyDB[];
-    } else {
-      // Get all companies if no search query
-      stmt = db.prepare(`
+    // Get all companies
+    stmt = db.prepare(`
         SELECT * FROM companies 
         ORDER BY name ASC
       `);
-      companies = stmt.all() as CompanyDB[];
-    }
+    companies = stmt.all() as CompanyDB[];
 
     const formattedCompanies: Company[] = companies.map(dbCompanyToCompany);
 

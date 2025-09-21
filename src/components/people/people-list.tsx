@@ -140,7 +140,7 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
         />
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-sm border">
         <Table>
           <TableHeader>
             <TableRow>

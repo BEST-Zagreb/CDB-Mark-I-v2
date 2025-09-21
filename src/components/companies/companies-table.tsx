@@ -1,0 +1,154 @@
+"use client";
+
+import { useRef, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Company } from "@/types/company";
+import { type TablePreferences } from "@/types/table";
+import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
+import { COMPANY_FIELDS } from "@/config/company-fields";
+import { CompaniesTableRow } from "./companies-table-row";
+import { useVirtualizedCompanies } from "@/hooks/useVirtualizedCompanies";
+
+interface VirtualizedCompanyListProps {
+  companies: Company[];
+  searchQuery: string;
+  tablePreferences: TablePreferences<Company>;
+  onEdit: (company: Company) => void;
+  onDelete: (companyId: number) => Promise<void>;
+}
+
+export function CompaniesTable({
+  companies,
+  searchQuery,
+  tablePreferences,
+  onEdit,
+  onDelete,
+}: VirtualizedCompanyListProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sort companies based on current sort field and direction
+  const sortedCompanies = useMemo(() => {
+    return [...companies].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      const { sortField, sortDirection } = tablePreferences;
+
+      // For all sortable fields, convert to lowercase for case-insensitive sorting
+      aValue = String(a[sortField as keyof Company] || "").toLowerCase();
+      bValue = String(b[sortField as keyof Company] || "").toLowerCase();
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [companies, tablePreferences.sortField, tablePreferences.sortDirection]);
+
+  // Use virtualization hook
+  const {
+    visibleCompanies,
+    rowVirtualizer,
+    hasMore,
+    totalCount,
+    visibleCount,
+  } = useVirtualizedCompanies({
+    companies: sortedCompanies,
+    searchQuery,
+    containerRef: containerRef as React.RefObject<HTMLElement>,
+  });
+
+  if (totalCount === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        {searchQuery
+          ? `No companies found matching "${searchQuery}"`
+          : "No companies found. Create your first company to get started."}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="rounded-sm border">
+      <Table>
+        {/* Sticky Header */}
+        <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableRow>
+            {COMPANY_FIELDS.map((column) => {
+              if (!isColumnVisible(column.id, tablePreferences)) return null;
+
+              return (
+                <TableHead
+                  key={column.id}
+                  className={column.center ? "text-center" : ""}
+                >
+                  <span className="flex items-center gap-2">
+                    {column.icon && (
+                      <column.icon className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    {column.label}
+                    {getSortIcon(column.id, tablePreferences)}
+                  </span>
+                </TableHead>
+              );
+            })}
+            {/* Actions - Always visible */}
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        {/* Virtualized Table Body */}
+        <TableBody>
+          {/* Spacer for non-visible items above */}
+          {rowVirtualizer.getVirtualItems().length > 0 && (
+            <tr
+              style={{
+                height: `${rowVirtualizer.getVirtualItems()[0]?.start || 0}px`,
+              }}
+            >
+              <td></td>
+            </tr>
+          )}
+
+          {/* Render visible items */}
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const company = visibleCompanies[virtualRow.index];
+            if (!company) return null;
+
+            return (
+              <CompaniesTableRow
+                key={company.id}
+                company={company}
+                tablePreferences={tablePreferences}
+                onEdit={onEdit}
+                onDeleteConfirm={onDelete}
+              />
+            );
+          })}
+
+          {/* Spacer for non-visible items below */}
+          {rowVirtualizer.getVirtualItems().length > 0 && (
+            <tr
+              style={{
+                height: `${
+                  rowVirtualizer.getTotalSize() -
+                  (rowVirtualizer.getVirtualItems()[
+                    rowVirtualizer.getVirtualItems().length - 1
+                  ]?.end || 0)
+                }px`,
+              }}
+            >
+              <td></td>
+            </tr>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
