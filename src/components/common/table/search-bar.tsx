@@ -11,19 +11,21 @@ interface SearchBarProps {
   placeholder?: string;
   className?: string;
   onSearchChange?: (query: string) => void;
+  searchParam?: string;
 }
 
 export function SearchBar({
   placeholder = "Search...",
   className = "",
   onSearchChange,
+  searchParam = "search",
 }: SearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Initialize search query from URL params
   const [searchQuery, setSearchQuery] = useState(
-    () => searchParams.get("search") || ""
+    () => searchParams.get(searchParam) || ""
   );
 
   // Debounce the search query for URL updates
@@ -34,14 +36,14 @@ export function SearchBar({
     const params = new URLSearchParams(searchParams);
 
     if (debouncedSearchQuery) {
-      params.set("search", debouncedSearchQuery);
+      params.set(searchParam, debouncedSearchQuery);
     } else {
-      params.delete("search");
+      params.delete(searchParam);
     }
 
     // Update URL without triggering a page reload
     router.replace(`?${params.toString()}`, { scroll: false });
-  }, [debouncedSearchQuery, router, searchParams]);
+  }, [debouncedSearchQuery, router, searchParams, searchParam]);
 
   // Notify parent component of search changes
   useEffect(() => {

@@ -511,6 +511,7 @@ export default function CompanyDetailPage() {
               <SearchBar
                 placeholder="Search people..."
                 onSearchChange={handlePeopleSearchChange}
+                searchParam="people_search"
               />
 
               <ColumnSelector
@@ -564,6 +565,7 @@ export default function CompanyDetailPage() {
               <SearchBar
                 placeholder="Search collaborations..."
                 onSearchChange={handleSearchChange}
+                searchParam="collaborations_search"
               />
 
               <ColumnSelector

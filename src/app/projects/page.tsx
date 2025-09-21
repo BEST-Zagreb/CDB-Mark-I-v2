@@ -150,6 +150,7 @@ export default function ProjectsPage() {
           <SearchBar
             placeholder="Search projects..."
             onSearchChange={handleSearchChange}
+            searchParam="projects_search"
           />
 
           <ColumnSelector

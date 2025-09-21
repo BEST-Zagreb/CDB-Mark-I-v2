@@ -150,6 +150,7 @@ export default function CompaniesPage() {
           <SearchBar
             placeholder="Search companies..."
             onSearchChange={handleSearchChange}
+            searchParam="companies_search"
           />
 
           <ColumnSelector

@@ -453,6 +453,7 @@ export default function ProjectDetailPage() {
               <SearchBar
                 placeholder="Search collaborations..."
                 onSearchChange={handleSearchChange}
+                searchParam="collaborations_search"
               />
 
               <ColumnSelector

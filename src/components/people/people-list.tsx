@@ -94,6 +94,7 @@ export function PeopleList({
           <SearchBar
             placeholder="Search people..."
             onSearchChange={handleSearchChange}
+            searchParam="people_search"
           />
 
           <ColumnSelector
