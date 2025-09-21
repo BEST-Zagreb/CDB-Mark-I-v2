@@ -5,8 +5,8 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompaniesTable } from "@/components/companies/companies-table";
 import { CompanyDialog } from "@/components/companies/company-dialog";
-import { ColumnSelector } from "@/components/common/column-selector";
-import { SearchBar } from "@/components/common/search-bar";
+import { ColumnSelector } from "@/components/common/table/column-selector";
+import { SearchBar } from "@/components/common/table/search-bar";
 import {
   useCompanies,
   useCreateCompany,

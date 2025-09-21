@@ -28,8 +28,8 @@ import {
   getPriorityOrder,
 } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
-import { TableActions } from "@/components/common/table-actions";
-import { ColumnSelector } from "@/components/common/column-selector";
+import { TableActions } from "@/components/common/table/table-actions";
+import { ColumnSelector } from "@/components/common/table/column-selector";
 import {
   isColumnVisible,
   updateVisibleColumns,

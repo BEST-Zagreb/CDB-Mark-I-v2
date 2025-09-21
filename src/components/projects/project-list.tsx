@@ -14,8 +14,8 @@ import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
 import { useRouter } from "next/navigation";
-import { TableActions } from "@/components/common/table-actions";
-import { ColumnSelector } from "@/components/common/column-selector";
+import { TableActions } from "@/components/common/table/table-actions";
+import { ColumnSelector } from "@/components/common/table/column-selector";
 import {
   isColumnVisible,
   updateVisibleColumns,
