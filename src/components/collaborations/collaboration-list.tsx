@@ -39,6 +39,10 @@ import {
   Hash,
   Tag,
   Phone,
+  Mail,
+  Users,
+  CalendarDays,
+  ClockIcon,
 } from "lucide-react";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -53,7 +57,7 @@ import { formatDate, formatAmount } from "@/lib/format-utils";
 
 // Define available columns for the table using Collaboration type
 const COLLABORATION_FIELDS: Array<{
-  id: keyof Collaboration | "companyName" | "projectName";
+  id: keyof Collaboration | "companyName" | "projectName" | "personName";
   label: string;
   required: boolean;
   sortable: boolean;
@@ -66,7 +70,9 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
+    icon: Hash,
   },
+
   {
     id: "companyName",
     label: "Company",
@@ -78,11 +84,12 @@ const COLLABORATION_FIELDS: Array<{
   {
     id: "projectName",
     label: "Project",
-    required: false,
+    required: true,
     sortable: true,
     center: false,
     icon: Briefcase,
   },
+
   {
     id: "type",
     label: "Type",
@@ -107,14 +114,16 @@ const COLLABORATION_FIELDS: Array<{
     center: true,
     icon: Target,
   },
+
   {
-    id: "successful",
-    label: "Successful",
+    id: "personName",
+    label: "Person",
     required: false,
     sortable: true,
-    center: true,
-    icon: Trophy,
+    center: false,
+    icon: Users,
   },
+
   {
     id: "comment",
     label: "Comment",
@@ -123,6 +132,40 @@ const COLLABORATION_FIELDS: Array<{
     center: false,
     icon: MessageCircle,
   },
+
+  {
+    id: "contacted",
+    label: "Contacted",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Phone,
+  },
+  {
+    id: "letter",
+    label: "Letter",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Mail,
+  },
+  {
+    id: "meeting",
+    label: "Meeting",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Users,
+  },
+  {
+    id: "successful",
+    label: "Successful",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Trophy,
+  },
+
   {
     id: "amount",
     label: "Amount",
@@ -131,21 +174,31 @@ const COLLABORATION_FIELDS: Array<{
     center: false,
     icon: DollarSign,
   },
+
   {
-    id: "contacted",
-    label: "Contacted",
+    id: "contactInFuture",
+    label: "Future Contact",
     required: false,
     sortable: true,
-    center: false,
-    icon: Phone,
+    center: true,
+    icon: ClockIcon,
   },
+
   {
-    id: "updatedAt",
-    label: "Updated",
+    id: "createdAt",
+    label: "Created at",
     required: false,
     sortable: true,
     center: false,
     icon: Calendar,
+  },
+  {
+    id: "updatedAt",
+    label: "Updated at",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: CalendarDays,
   },
 ];
 
@@ -167,7 +220,11 @@ export function CollaborationList({
   // Consolidated table preferences state
   const [tablePreferences, setTablePreferences] = useState<
     TablePreferences<
-      Collaboration & { companyName?: string; projectName?: string }
+      Collaboration & {
+        companyName?: string;
+        projectName?: string;
+        personName?: string;
+      }
     >
   >({
     visibleColumns: showProjectNames
@@ -193,6 +250,7 @@ export function CollaborationList({
     field: keyof (Collaboration & {
       companyName?: string;
       projectName?: string;
+      personName?: string;
     })
   ) {
     const newPreferences = handleSort(tablePreferences, field);
@@ -214,20 +272,25 @@ export function CollaborationList({
           bValue = getPriorityOrder(b.priority || "low");
           break;
         case "amount":
-          aValue = a.amount || 0;
-          bValue = b.amount || 0;
+        case "personId":
+          aValue = (a as any)[sortField] || 0;
+          bValue = (b as any)[sortField] || 0;
           break;
         case "successful":
-          aValue = a.successful ? 1 : 0;
-          bValue = b.successful ? 1 : 0;
+        case "contacted":
+        case "letter":
+        case "meeting":
+        case "contactInFuture":
+          // Handle boolean fields - null values come last
+          const aBool = (a as any)[sortField];
+          const bBool = (b as any)[sortField];
+          aValue = aBool === null ? -1 : aBool ? 1 : 0;
+          bValue = bBool === null ? -1 : bBool ? 1 : 0;
           break;
         case "updatedAt":
+        case "createdAt":
           aValue = new Date((a as any)[sortField] || 0).getTime();
           bValue = new Date((b as any)[sortField] || 0).getTime();
-          break;
-        case "contacted":
-          aValue = a.contacted ? 1 : 0;
-          bValue = b.contacted ? 1 : 0;
           break;
         default:
           // For string fields, convert to lowercase for case-insensitive sorting
@@ -329,6 +392,7 @@ export function CollaborationList({
                 collaboration: Collaboration & {
                   companyName?: string;
                   projectName?: string;
+                  personName?: string;
                 }
               ) => (
                 <TableRow key={collaboration.id}>
@@ -344,6 +408,10 @@ export function CollaborationList({
                         (collaboration.companyName || "—")}
                       {field.id === "projectName" &&
                         (collaboration.projectName || "—")}
+                      {field.id === "personId" &&
+                        (collaboration.personId || "—")}
+                      {field.id === "personName" &&
+                        (collaboration.personName || "—")}
                       {field.id === "type" && (
                         <Badge variant="outline">
                           {getCollaborationTypeDisplay(collaboration.type)}
@@ -367,10 +435,70 @@ export function CollaborationList({
                       {field.id === "successful" && (
                         <Badge
                           variant={
-                            collaboration.successful ? "default" : "secondary"
+                            collaboration.successful === null
+                              ? "secondary"
+                              : collaboration.successful
+                              ? "default"
+                              : "destructive"
                           }
                         >
-                          {collaboration.successful ? "Yes" : "No"}
+                          {collaboration.successful === null
+                            ? "Unknown"
+                            : collaboration.successful
+                            ? "Yes"
+                            : "No"}
+                        </Badge>
+                      )}
+                      {field.id === "letter" && (
+                        <Badge
+                          variant={
+                            collaboration.letter ? "default" : "secondary"
+                          }
+                        >
+                          {collaboration.letter ? "Yes" : "No"}
+                        </Badge>
+                      )}
+                      {field.id === "meeting" && (
+                        <Badge
+                          variant={
+                            collaboration.meeting === null
+                              ? "secondary"
+                              : collaboration.meeting
+                              ? "default"
+                              : "destructive"
+                          }
+                        >
+                          {collaboration.meeting === null
+                            ? "Unknown"
+                            : collaboration.meeting
+                            ? "Yes"
+                            : "No"}
+                        </Badge>
+                      )}
+                      {field.id === "contacted" && (
+                        <Badge
+                          variant={
+                            collaboration.contacted ? "default" : "secondary"
+                          }
+                        >
+                          {collaboration.contacted ? "Yes" : "No"}
+                        </Badge>
+                      )}
+                      {field.id === "contactInFuture" && (
+                        <Badge
+                          variant={
+                            collaboration.contactInFuture === null
+                              ? "secondary"
+                              : collaboration.contactInFuture
+                              ? "default"
+                              : "destructive"
+                          }
+                        >
+                          {collaboration.contactInFuture === null
+                            ? "Unknown"
+                            : collaboration.contactInFuture
+                            ? "Yes"
+                            : "No"}
                         </Badge>
                       )}
                       {field.id === "comment" && (
@@ -395,15 +523,8 @@ export function CollaborationList({
                           collaboration.amount,
                           collaboration.updatedAt
                         )}
-                      {field.id === "contacted" && (
-                        <Badge
-                          variant={
-                            collaboration.contacted ? "default" : "secondary"
-                          }
-                        >
-                          {collaboration.contacted ? "Yes" : "No"}
-                        </Badge>
-                      )}
+                      {field.id === "createdAt" &&
+                        formatDate(collaboration.createdAt)}
                       {field.id === "updatedAt" &&
                         formatDate(collaboration.updatedAt)}
                     </TableCell>
