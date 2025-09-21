@@ -24,12 +24,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CompanyDialog } from "@/components/companies/company-dialog";
+import { FormDialog } from "@/components/common/form-dialog";
+import { CompanyForm } from "@/components/companies/form/company-form";
 import { PeopleList } from "@/components/people/people-list";
 import { formatUrl } from "@/lib/format-utils";
-import { PersonDialog } from "@/components/people/person-dialog";
+import { PersonForm } from "@/components/people/person-form";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
-import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
+import { CollaborationForm } from "@/components/collaborations/collaboration-form";
 import {
   useCompany,
   useDeleteCompany,
@@ -63,9 +64,10 @@ export default function CompanyDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [personDialogOpen, setPersonDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [selectedCollaboration, setSelectedCollaboration] =
-    useState<Collaboration | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<Person | undefined>();
+  const [selectedCollaboration, setSelectedCollaboration] = useState<
+    Collaboration | undefined
+  >();
 
   // React Query hooks
   const {
@@ -128,7 +130,7 @@ export default function CompanyDetailPage() {
   };
 
   const handleAddPerson = () => {
-    setSelectedPerson(null);
+    setSelectedPerson(undefined);
     setPersonDialogOpen(true);
   };
 
@@ -156,7 +158,7 @@ export default function CompanyDetailPage() {
   };
 
   const handleAddCollaboration = () => {
-    setSelectedCollaboration(null);
+    setSelectedCollaboration(undefined);
     setCollaborationDialogOpen(true);
   };
 
@@ -436,31 +438,58 @@ export default function CompanyDetailPage() {
         </Card>
       </div>
 
-      <CompanyDialog
+      <FormDialog<Company>
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        company={company}
+        entity="Company"
+        initialData={company}
         onSubmit={handleSubmitCompany}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <CompanyForm
+            initialData={formProps.initialData}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
 
-      <PersonDialog
+      <FormDialog<Person>
         open={personDialogOpen}
         onOpenChange={setPersonDialogOpen}
-        person={selectedPerson}
-        companyId={companyId}
+        entity="Person"
+        initialData={selectedPerson}
         onSubmit={handleSubmitPerson}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <PersonForm
+            initialData={formProps.initialData}
+            companyId={companyId}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
 
-      <CollaborationDialog
+      <FormDialog<Collaboration>
         open={collaborationDialogOpen}
         onOpenChange={setCollaborationDialogOpen}
-        collaboration={selectedCollaboration}
-        companyId={companyId}
+        entity="Collaboration"
+        initialData={selectedCollaboration}
         onSubmit={handleSubmitCollaboration}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <CollaborationForm
+            initialData={formProps.initialData}
+            companyId={companyId}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
     </div>
   );
 }

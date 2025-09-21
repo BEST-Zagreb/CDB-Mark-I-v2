@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,14 +20,12 @@ import {
 interface ProjectFormProps {
   initialData?: Project;
   onSubmit: (data: ProjectFormData) => Promise<void>;
-  onCancel?: () => void;
   isLoading?: boolean;
 }
 
 export function ProjectForm({
   initialData,
   onSubmit,
-  onCancel,
   isLoading = false,
 }: ProjectFormProps) {
   const form = useForm<ProjectFormData>({
@@ -53,7 +50,11 @@ export function ProjectForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form
+        id="form-dialog-form"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -98,22 +99,6 @@ export function ProjectForm({
             </FormItem>
           )}
         />
-
-        <div className="flex gap-2 justify-end">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : initialData ? "Update" : "Create"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

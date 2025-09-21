@@ -24,14 +24,12 @@ import {
 interface CompanyFormProps {
   initialData?: Company;
   onSubmit: (data: CompanyFormData) => Promise<void>;
-  onCancel?: () => void;
   isLoading?: boolean;
 }
 
 export function CompanyForm({
   initialData,
   onSubmit,
-  onCancel,
   isLoading = false,
 }: CompanyFormProps) {
   const form = useForm<CompanyFormData>({
@@ -63,26 +61,30 @@ export function CompanyForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company Name *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter company name"
-                    {...field}
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form
+        id="form-dialog-form"
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-6"
+      >
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Company Name *</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter company name"
+                  {...field}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="url"
@@ -101,6 +103,26 @@ export function CompanyForm({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Phone number"
+                    {...field}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="address"
@@ -173,44 +195,26 @@ export function CompanyForm({
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Phone number"
-                    {...field}
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="budgeting_month"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budgeting Month</FormLabel>
-                <FormControl>
-                  <MonthSelect
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isLoading}
-                    className="w-full"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
+
+        <FormField
+          control={form.control}
+          name="budgeting_month"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Budgeting Month</FormLabel>
+              <FormControl>
+                <MonthSelect
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={isLoading}
+                  className="w-full"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -230,22 +234,6 @@ export function CompanyForm({
             </FormItem>
           )}
         />
-
-        <div className="flex items-center justify-between gap-2">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Saving..." : initialData ? "Update" : "Create"}
-          </Button>
-        </div>
       </form>
     </Form>
   );

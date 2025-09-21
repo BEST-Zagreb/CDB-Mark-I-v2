@@ -1,20 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CROATIAN_MONTHS } from "@/constants/months";
 
 interface MonthSelectProps {
@@ -32,60 +27,34 @@ export function MonthSelect({
   disabled = false,
   className,
 }: MonthSelectProps) {
-  const [open, setOpen] = React.useState(false);
+  const handleValueChange = (selectedValue: string) => {
+    // Convert "unknown" back to empty string for the form
+    if (selectedValue === "unknown") {
+      onValueChange("");
+    } else {
+      onValueChange(selectedValue);
+    }
+  };
+
+  // Convert empty string to "unknown" for the select component
+  const selectValue = value === "" || !value ? "unknown" : value;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("justify-between", className)}
-          disabled={disabled}
-        >
-          {value ? value : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandList>
-            <CommandGroup>
-              <CommandItem
-                className={cn(
-                  "cursor-pointer",
-                  value === "" || (!value && "bg-muted  font-bold")
-                )}
-                value=""
-                onSelect={() => {
-                  onValueChange("");
-                  setOpen(false);
-                }}
-              >
-                Unknown
-              </CommandItem>
-              {CROATIAN_MONTHS.map((month) => (
-                <CommandItem
-                  key={month}
-                  className={cn(
-                    "cursor-pointer",
-                    value === month && "bg-muted font-bold"
-                  )}
-                  value={month}
-                  onSelect={(currentValue: string) => {
-                    onValueChange(currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  {month}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <Select value={selectValue} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger className={className}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          <SelectLabel>Months</SelectLabel>
+          <SelectItem value="unknown">Unknown</SelectItem>
+          {CROATIAN_MONTHS.map((month) => (
+            <SelectItem key={month} value={month}>
+              {month}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }

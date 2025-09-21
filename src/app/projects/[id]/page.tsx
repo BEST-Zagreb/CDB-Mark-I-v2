@@ -13,9 +13,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ProjectDialog } from "@/components/projects/project-dialog";
+import { FormDialog } from "@/components/common/form-dialog";
+import { ProjectForm } from "@/components/projects/project-form";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
-import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
+import { CollaborationForm } from "@/components/collaborations/collaboration-form";
 import {
   useDeleteProject,
   useProject,
@@ -41,8 +42,9 @@ export default function ProjectDetailPage() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
-  const [editingCollaboration, setEditingCollaboration] =
-    useState<Collaboration | null>(null);
+  const [editingCollaboration, setEditingCollaboration] = useState<
+    Collaboration | undefined
+  >();
 
   // React Query hooks
   const {
@@ -118,7 +120,7 @@ export default function ProjectDetailPage() {
   };
 
   const handleAddCollaboration = () => {
-    setEditingCollaboration(null);
+    setEditingCollaboration(undefined);
     setCollaborationDialogOpen(true);
   };
 
@@ -382,22 +384,40 @@ export default function ProjectDetailPage() {
         </Card>
       </div>
 
-      <ProjectDialog
+      <FormDialog<Project>
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        project={project}
+        entity="Project"
+        initialData={project}
         onSubmit={handleSubmitProject}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <ProjectForm
+            initialData={formProps.initialData}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
 
-      <CollaborationDialog
+      <FormDialog<Collaboration>
         open={collaborationDialogOpen}
         onOpenChange={setCollaborationDialogOpen}
-        collaboration={editingCollaboration}
-        projectId={projectId}
+        entity="Collaboration"
+        initialData={editingCollaboration}
         onSubmit={handleSubmitCollaboration}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <CollaborationForm
+            initialData={formProps.initialData}
+            projectId={projectId}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
     </div>
   );
 }

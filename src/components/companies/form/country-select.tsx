@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useCountries } from "@/hooks/use-countries";
-import { CountryOption } from "@/types/country";
 
 interface CountrySelectProps {
   value?: string;
@@ -36,13 +35,11 @@ export function CountrySelect({
   className,
 }: CountrySelectProps) {
   const [open, setOpen] = React.useState(false);
-  const [searchValue, setSearchValue] = React.useState("");
-
-  const { data: countries, isLoading, error } = useCountries();
+  const { data: countries = [], isLoading } = useCountries();
 
   // Default to Croatia if no value is provided
   React.useEffect(() => {
-    if (!value && countries && countries.length > 0) {
+    if (!value && countries.length > 0) {
       const croatia = countries.find((country) => country.value === "Croatia");
       if (croatia) {
         onValueChange(croatia.value);
@@ -50,74 +47,48 @@ export function CountrySelect({
     }
   }, [countries, value, onValueChange]);
 
-  const selectedCountry = countries?.find((country) => country.value === value);
-
-  // Filter countries based on search
-  const filteredCountries = React.useMemo(() => {
-    if (!countries) return [];
-    if (!searchValue) return countries;
-
-    const search = searchValue.toLowerCase();
-    return countries.filter((country) =>
-      country.searchTerms.some((term) => term.toLowerCase().includes(search))
-    );
-  }, [countries, searchValue]);
-
-  if (error) {
-    return (
-      <div className="text-sm text-red-500">
-        Failed to load countries. Please try again.
-      </div>
-    );
-  }
+  const selectedCountry = countries.find((country) => country.value === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild className="">
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("justify-between", className)}
+          className={cn(
+            "justify-between",
+            !value && "text-muted-foreground",
+            className
+          )}
           disabled={disabled || isLoading}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading countries...
-            </>
-          ) : selectedCountry ? (
-            selectedCountry.label
-          ) : (
-            placeholder
-          )}
+          {isLoading
+            ? "Loading countries..."
+            : selectedCountry
+            ? selectedCountry.label
+            : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-min p-0" align="start">
+      <PopoverContent className="w-[70dvw] sm:max-w-56 p-0">
         <Command>
-          <CommandInput
-            className="w-fit"
-            placeholder="Search countries..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
+          <CommandInput placeholder="Search countries..." className="h-9" />
           <CommandList>
             <CommandEmpty>No country found.</CommandEmpty>
             <CommandGroup>
-              {filteredCountries.map((country) => (
+              {countries.map((country) => (
                 <CommandItem
                   key={country.value}
                   className={cn(
                     "cursor-pointer",
                     value === country.value && "bg-muted font-bold"
                   )}
-                  value={country.value}
-                  onSelect={(currentValue: string) => {
-                    onValueChange(currentValue === value ? "" : currentValue);
+                  value={country.label}
+                  onSelect={() => {
+                    onValueChange(country.value);
                     setOpen(false);
-                    setSearchValue("");
                   }}
                 >
                   {country.label}

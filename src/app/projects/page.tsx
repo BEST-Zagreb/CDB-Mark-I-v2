@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProjectList from "@/components/projects/project-list";
-import ProjectDialog from "@/components/projects/project-dialog";
+import { FormDialog } from "@/components/common/form-dialog";
+import { ProjectForm } from "@/components/projects/project-form";
 import {
   useProjects,
   useCreateProject,
@@ -79,13 +80,22 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      <ProjectDialog
+      <FormDialog<Project>
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        project={editingProject}
+        entity="Project"
+        initialData={editingProject}
         onSubmit={handleSubmitProject}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <ProjectForm
+            initialData={formProps.initialData}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
     </div>
   );
 }

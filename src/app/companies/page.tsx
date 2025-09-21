@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CompaniesTable } from "@/components/companies/companies-table";
-import { CompanyDialog } from "@/components/companies/company-dialog";
+import { FormDialog } from "@/components/common/form-dialog";
+import { CompanyForm } from "@/components/companies/form/company-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import {
@@ -162,13 +163,22 @@ export default function CompaniesPage() {
         )}
       </div>
 
-      <CompanyDialog
+      <FormDialog<Company>
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        company={editingCompany}
+        entity="Company"
+        initialData={editingCompany}
         onSubmit={handleSubmitCompany}
         isLoading={isSubmitting}
-      />
+      >
+        {(formProps) => (
+          <CompanyForm
+            initialData={formProps.initialData}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
     </div>
   );
 }
