@@ -71,7 +71,7 @@ const PROJECT_FIELDS: Array<{
 
   {
     id: "created_at",
-    label: "Created at",
+    label: "Created",
     required: false,
     sortable: true,
     center: false,
@@ -79,7 +79,7 @@ const PROJECT_FIELDS: Array<{
   },
   {
     id: "updated_at",
-    label: "Updated at",
+    label: "Last update",
     required: false,
     sortable: true,
     center: false,

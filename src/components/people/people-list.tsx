@@ -86,7 +86,7 @@ const PERSON_FIELDS: Array<{
 
   {
     id: "createdAt",
-    label: "Created at",
+    label: "Created",
     required: false,
     sortable: true,
     center: false,

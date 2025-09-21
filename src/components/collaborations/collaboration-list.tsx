@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -186,7 +187,7 @@ const COLLABORATION_FIELDS: Array<{
 
   {
     id: "createdAt",
-    label: "Created at",
+    label: "Created",
     required: false,
     sortable: true,
     center: false,
@@ -194,7 +195,7 @@ const COLLABORATION_FIELDS: Array<{
   },
   {
     id: "updatedAt",
-    label: "Updated at",
+    label: "Last update",
     required: false,
     sortable: true,
     center: false,
@@ -410,9 +411,29 @@ export function CollaborationList({
                     >
                       {field.id === "id" && collaboration.id}
                       {field.id === "companyName" &&
-                        (collaboration.companyName || "—")}
+                        (collaboration.companyName &&
+                        collaboration.companyId ? (
+                          <Link
+                            href={`/companies/${collaboration.companyId}`}
+                            className="text-primary hover:underline"
+                          >
+                            {collaboration.companyName}
+                          </Link>
+                        ) : (
+                          collaboration.companyName || "—"
+                        ))}
                       {field.id === "projectName" &&
-                        (collaboration.projectName || "—")}
+                        (collaboration.projectName &&
+                        collaboration.projectId ? (
+                          <Link
+                            href={`/projects/${collaboration.projectId}`}
+                            className="text-primary hover:underline"
+                          >
+                            {collaboration.projectName}
+                          </Link>
+                        ) : (
+                          collaboration.projectName || "—"
+                        ))}
                       {field.id === "personId" &&
                         (collaboration.personId || "—")}
                       {field.id === "personName" &&

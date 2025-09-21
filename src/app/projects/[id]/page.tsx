@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -16,7 +16,11 @@ import {
 import { ProjectDialog } from "@/components/projects/project-dialog";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
 import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
-import { useProject, useUpdateProject } from "@/hooks/useProjects";
+import {
+  useDeleteProject,
+  useProject,
+  useUpdateProject,
+} from "@/hooks/useProjects";
 import {
   useCollaborationsByProject,
   useCreateCollaboration,
@@ -25,11 +29,15 @@ import {
 } from "@/hooks/useCollaborations";
 import { Project, ProjectFormData } from "@/types/project";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = parseInt(params.id as string);
+  const { showDeleteAlert } = useDeleteAlert();
+  const isMobile = useIsMobile();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
@@ -47,6 +55,7 @@ export default function ProjectDetailPage() {
 
   // Mutation hooks
   const updateProjectMutation = useUpdateProject();
+  const deleteProjectMutation = useDeleteProject();
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
@@ -93,6 +102,14 @@ export default function ProjectDetailPage() {
   const handleEditProject = () => {
     setEditDialogOpen(true);
   };
+
+  function handleDeleteProject(project: Project) {
+    showDeleteAlert({
+      entity: "project",
+      entityName: project.name,
+      onConfirm: () => deleteProjectMutation.mutate(project.id),
+    });
+  }
 
   const handleSubmitProject = async (data: ProjectFormData) => {
     if (!project) return;
@@ -179,25 +196,31 @@ export default function ProjectDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/projects")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Projects
-          </Button>
-          <div className="flex-1">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/companies")}
+            >
+              <ArrowLeft className="size-6" />
+            </Button>
             <h1 className="text-3xl font-bold tracking-tight">
               {project.name}
             </h1>
-            <p className="text-muted-foreground">Project Details</p>
           </div>
-          <Button onClick={handleEditProject}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Project
-          </Button>
+
+          <div className="space-x-2 sm:space-x-4">
+            <Button onClick={handleEditProject}>
+              <Pencil className="size-4" />
+              {!isMobile && "Edit project"}
+            </Button>
+
+            <Button onClick={() => handleDeleteProject(project)}>
+              <Trash2 className="size-4" />
+              {!isMobile && " Delete project"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
