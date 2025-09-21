@@ -15,7 +15,7 @@ import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
 import { Pencil, Trash2, ExternalLink, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { TableActions } from "@/components/ui/table-actions";
+import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
   Tooltip,
@@ -144,7 +144,7 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
     });
   }, [companies, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  function handleDeleteClick(company: Company) {
+  function handleDelete(company: Company) {
     showDeleteAlert({
       entity: "company",
       entityName: company.name,
@@ -280,7 +280,7 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
                   item={company}
                   onView={(company) => router.push(`/companies/${company.id}`)}
                   onEdit={onEdit}
-                  onDelete={handleDeleteClick}
+                  onDelete={handleDelete}
                 />
               </TableRow>
             ))}

@@ -10,6 +10,8 @@ import {
   Handshake,
   Plus,
   AlertTriangle,
+  Delete,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,7 +30,11 @@ import { formatUrl } from "@/lib/format-utils";
 import { PersonDialog } from "@/components/people/person-dialog";
 import { CollaborationList } from "@/components/collaborations/collaboration-list";
 import { CollaborationDialog } from "@/components/collaborations/collaboration-dialog";
-import { useCompany, useUpdateCompany } from "@/hooks/useCompanies";
+import {
+  useCompany,
+  useDeleteCompany,
+  useUpdateCompany,
+} from "@/hooks/useCompanies";
 import {
   usePeopleByCompany,
   useCreatePerson,
@@ -44,11 +50,15 @@ import {
 import { Company, CompanyFormData } from "@/types/company";
 import { Person, PersonFormData } from "@/types/person";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function CompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const companyId = parseInt(params.id as string);
+  const { showDeleteAlert } = useDeleteAlert();
+  const isMobile = useIsMobile();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [personDialogOpen, setPersonDialogOpen] = useState(false);
@@ -70,6 +80,7 @@ export default function CompanyDetailPage() {
 
   // Mutation hooks
   const updateCompanyMutation = useUpdateCompany();
+  const deleteCompanyMutation = useDeleteCompany();
   const createPersonMutation = useCreatePerson();
   const updatePersonMutation = useUpdatePerson();
   const deletePersonMutation = useDeletePerson();
@@ -101,6 +112,14 @@ export default function CompanyDetailPage() {
   const handleEditCompany = () => {
     setEditDialogOpen(true);
   };
+
+  function handleDeleteCompany(company: Company) {
+    showDeleteAlert({
+      entity: "company",
+      entityName: company.name,
+      onConfirm: () => deleteCompanyMutation.mutate(company.id),
+    });
+  }
 
   const handleSubmitCompany = async (data: CompanyFormData) => {
     if (!company) return;
@@ -199,25 +218,31 @@ export default function CompanyDetailPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/companies")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Companies
-          </Button>
-          <div className="flex-1">
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/companies")}
+            >
+              <ArrowLeft className="size-6" />
+            </Button>
             <h1 className="text-3xl font-bold tracking-tight">
               {company.name}
             </h1>
-            <p className="text-muted-foreground">Company Details</p>
           </div>
-          <Button onClick={handleEditCompany}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Company
-          </Button>
+
+          <div className="space-x-2 sm:space-x-4">
+            <Button onClick={handleEditCompany}>
+              <Pencil className="size-4" />
+              {!isMobile && "Edit Company"}
+            </Button>
+
+            <Button onClick={() => handleDeleteCompany(company)}>
+              <Trash2 className="size-4" />
+              {!isMobile && " Delete Company"}
+            </Button>
+          </div>
         </div>
 
         {/* Do Not Contact Warning */}

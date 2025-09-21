@@ -39,24 +39,29 @@ export function DeleteAlert({
             <AlertTriangle className="h-6 w-6 text-destructive shrink-0" />
             <AlertDialogTitle>Delete {entity}</AlertDialogTitle>
           </div>
+
           <AlertDialogDescription>
             Are you sure you want to delete "{entityName}"? This action cannot
             be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              "Delete"
-            )}
-          </AlertDialogAction>
+          <div className="w-full flex flex-row items-center justify-between gap-2">
+            <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={onConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </div>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -28,7 +28,7 @@ import {
 } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
 import { User, Calendar, DollarSign, Building2 } from "lucide-react";
-import { TableActions } from "@/components/ui/table-actions";
+import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
   isColumnVisible,
@@ -116,8 +116,8 @@ const COLLABORATION_FIELDS: Array<{
 
 interface CollaborationListProps {
   collaborations: Collaboration[];
-  onEdit: (collaboration: Collaboration) => void;
-  onDelete: (collaborationId: number) => Promise<void>;
+  onEdit?: (collaboration: Collaboration) => void;
+  onDelete?: (collaborationId: number) => Promise<void>;
   showProjectNames?: boolean; // New prop to show project names instead of company names
 }
 
@@ -211,12 +211,14 @@ export function CollaborationList({
     tablePreferences.sortDirection,
   ]);
 
-  function handleDeleteCollaboration(collaboration: Collaboration) {
-    showDeleteAlert({
-      entity: "collaboration",
-      entityName: collaboration.responsible || "Nepoznato",
-      onConfirm: () => onDelete(collaboration.id),
-    });
+  function handleDelete(collaboration: Collaboration) {
+    if (onDelete) {
+      showDeleteAlert({
+        entity: "collaboration",
+        entityName: collaboration.responsible || "Nepoznato",
+        onConfirm: () => onDelete(collaboration.id),
+      });
+    }
   }
 
   if (collaborations.length === 0) {
@@ -375,13 +377,14 @@ export function CollaborationList({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell className="text-center">
+
+                  {(onEdit || onDelete) && (
                     <TableActions
                       item={collaboration}
-                      onEdit={() => onEdit(collaboration)}
-                      onDelete={() => handleDeleteCollaboration(collaboration)}
+                      onEdit={onEdit}
+                      onDelete={handleDelete}
                     />
-                  </TableCell>
+                  )}
                 </TableRow>
               )
             )}

@@ -15,7 +15,7 @@ import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
 import { Pencil, Trash2, Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { TableActions } from "@/components/ui/table-actions";
+import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
   isColumnVisible,
@@ -126,7 +126,7 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
     });
   }, [projects, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  function handleDeleteClick(project: Project) {
+  function handleDelete(project: Project) {
     showDeleteAlert({
       entity: "project",
       entityName: project.name,
@@ -242,7 +242,7 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
                   item={project}
                   onView={(project) => router.push(`/projects/${project.id}`)}
                   onEdit={onEdit}
-                  onDelete={handleDeleteClick}
+                  onDelete={handleDelete}
                 />
               </TableRow>
             ))}

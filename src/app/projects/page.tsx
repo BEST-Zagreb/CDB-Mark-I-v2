@@ -3,13 +3,6 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ProjectList, ProjectDialog } from "@/components/projects";
 import {
   useProjects,
@@ -29,17 +22,17 @@ export default function ProjectsPage() {
   const updateMutation = useUpdateProject();
   const deleteMutation = useDeleteProject();
 
-  const handleCreateProject = () => {
+  function handleCreateProject() {
     setEditingProject(undefined);
     setDialogOpen(true);
-  };
+  }
 
-  const handleEditProject = (project: Project) => {
+  function handleEditProject(project: Project) {
     setEditingProject(project);
     setDialogOpen(true);
-  };
+  }
 
-  const handleSubmitProject = async (data: ProjectFormData) => {
+  async function handleSubmitProject(data: ProjectFormData) {
     if (editingProject) {
       // Update existing project
       await updateMutation.mutateAsync({ id: editingProject.id, data });
@@ -48,11 +41,11 @@ export default function ProjectsPage() {
       await createMutation.mutateAsync(data);
     }
     setDialogOpen(false);
-  };
+  }
 
-  const handleDeleteProject = async (projectId: number) => {
+  async function handleDeleteProject(projectId: number) {
     await deleteMutation.mutateAsync(projectId);
-  };
+  }
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 

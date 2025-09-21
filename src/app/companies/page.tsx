@@ -4,13 +4,6 @@ import { useState, useEffect } from "react";
 import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { CompanyList } from "@/components/companies/company-list";
 import { CompanyDialog } from "@/components/companies/company-dialog";
 import {
@@ -40,21 +33,21 @@ export default function CompaniesPage() {
   const updateMutation = useUpdateCompany();
   const deleteMutation = useDeleteCompany();
 
-  const clearSearch = () => {
+  function clearSearch() {
     setSearchQuery("");
-  };
+  }
 
-  const handleCreateCompany = () => {
+  function handleCreateCompany() {
     setEditingCompany(undefined);
     setDialogOpen(true);
-  };
+  }
 
-  const handleEditCompany = (company: Company) => {
+  function handleEditCompany(company: Company) {
     setEditingCompany(company);
     setDialogOpen(true);
-  };
+  }
 
-  const handleSubmitCompany = async (data: CompanyFormData) => {
+  async function handleSubmitCompany(data: CompanyFormData) {
     if (editingCompany) {
       // Update existing company
       await updateMutation.mutateAsync({ id: editingCompany.id, data });
@@ -63,11 +56,11 @@ export default function CompaniesPage() {
       await createMutation.mutateAsync(data);
     }
     setDialogOpen(false);
-  };
+  }
 
-  const handleDeleteCompany = async (companyId: number) => {
+  async function handleDeleteCompany(companyId: number) {
     await deleteMutation.mutateAsync(companyId);
-  };
+  }
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 

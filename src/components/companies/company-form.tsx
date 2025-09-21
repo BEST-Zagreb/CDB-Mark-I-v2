@@ -231,7 +231,7 @@ export function CompanyForm({
           )}
         />
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex items-center justify-between gap-2">
           {onCancel && (
             <Button
               type="button"

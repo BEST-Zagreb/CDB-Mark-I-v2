@@ -22,7 +22,7 @@ import {
   Calendar,
   Building2,
 } from "lucide-react";
-import { TableActions } from "@/components/ui/table-actions";
+import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
   isColumnVisible,
@@ -142,7 +142,7 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
     });
   }, [people, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  function handleDeletePerson(person: Person) {
+  function handleDelete(person: Person) {
     if (onDelete) {
       showDeleteAlert({
         entity: "person",
@@ -273,16 +273,13 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
                     )}
                   </TableCell>
                 ))}
+
                 {(onEdit || onDelete) && (
-                  <TableCell className="text-center">
-                    <TableActions
-                      item={person}
-                      onEdit={onEdit ? () => onEdit(person) : undefined}
-                      onDelete={
-                        onDelete ? () => handleDeletePerson(person) : undefined
-                      }
-                    />
-                  </TableCell>
+                  <TableActions
+                    item={person}
+                    onEdit={onEdit}
+                    onDelete={handleDelete}
+                  />
                 )}
               </TableRow>
             ))}

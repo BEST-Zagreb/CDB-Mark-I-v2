@@ -33,7 +33,7 @@ export function TableActions<T>({
             variant="outline"
             size="icon"
             onClick={() => onDelete(item)}
-            className="text-destructive hover:text-destructive"
+            className="text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

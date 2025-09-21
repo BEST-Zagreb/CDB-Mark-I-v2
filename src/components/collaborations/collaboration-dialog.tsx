@@ -464,7 +464,7 @@ export function CollaborationDialog({
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex items-center justify-between gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -473,6 +473,7 @@ export function CollaborationDialog({
               >
                 Cancel
               </Button>
+
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Saving..." : isEditing ? "Update" : "Create"}
               </Button>

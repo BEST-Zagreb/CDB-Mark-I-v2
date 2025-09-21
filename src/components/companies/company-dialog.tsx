@@ -43,12 +43,14 @@ export function CompanyDialog({
           <DialogTitle>
             {isEditing ? "Edit Company" : "Create New Company"}
           </DialogTitle>
+
           <DialogDescription>
             {isEditing
               ? "Update the company information below."
               : "Fill in the details to create a new company."}
           </DialogDescription>
         </DialogHeader>
+
         <CompanyForm
           initialData={company}
           onSubmit={handleSubmit}
