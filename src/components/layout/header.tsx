@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { Database, FolderOpen, Users, Building } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Database, FolderOpen, Users, Building, Home } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -9,6 +10,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function Header(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
+  const pathname = usePathname();
+
+  // Helper function to check if a path is active
+  const isActivePath = (path: string) => {
+    return pathname === path || pathname.startsWith(path + "/");
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,8 +42,18 @@ export default function Header(): JSX.Element {
                   <SidebarTrigger />
 
                   <Link href="/" className="flex items-center space-x-2">
-                    <Database className="size-6 sm:size-8 text-primary" />
-                    <span className="font-bold text-lg sm:text-xl text-primary">
+                    <Database
+                      className={cn(
+                        "size-6 sm:size-8 transition-colors",
+                        pathname === "/" ? "text-primary" : "text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "font-bold text-lg sm:text-xl transition-colors",
+                        pathname === "/" ? "text-primary" : "text-primary"
+                      )}
+                    >
                       Company Database
                     </span>
                   </Link>
@@ -46,11 +63,61 @@ export default function Header(): JSX.Element {
               <ul className="hidden sm:flex gap-8 text-sm ">
                 <li>
                   <Link
-                    href="/projects"
-                    className="flex items-center space-x-2 text-muted-foreground hover:text-accent-foreground block duration-150 group hover:scale-110"
+                    href="/"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      pathname === "/"
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
                   >
-                    <FolderOpen className="size-4 group-hover:text-primary transition-colors" />
-                    <span className="group-hover:text-primary transition-colors">
+                    <Home
+                      className={cn(
+                        "size-4 transition-colors",
+                        pathname === "/"
+                          ? "text-primary"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        pathname === "/"
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    >
+                      Dashboard
+                    </span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/projects"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/projects")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <FolderOpen
+                      className={cn(
+                        "size-4 transition-colors",
+                        isActivePath("/projects")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/projects")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    >
                       Projects
                     </span>
                   </Link>
@@ -59,10 +126,29 @@ export default function Header(): JSX.Element {
                 <li>
                   <Link
                     href="/companies"
-                    className="flex items-center space-x-2 text-muted-foreground hover:text-accent-foreground block duration-150 group hover:scale-110"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/companies")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
                   >
-                    <Building className="size-4 group-hover:text-primary transition-colors" />
-                    <span className="group-hover:text-primary transition-colors">
+                    <Building
+                      className={cn(
+                        "size-4 transition-colors",
+                        isActivePath("/companies")
+                          ? "text-primary"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/companies")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    >
                       Companies
                     </span>
                   </Link>

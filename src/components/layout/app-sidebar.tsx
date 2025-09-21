@@ -9,6 +9,7 @@ import {
   Building,
   Handshake,
   FileText,
+  Home,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -48,6 +49,11 @@ export const AppSidebar = memo(function AppSidebar() {
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const { setOpen, open, state } = useSidebar();
   const pathname = usePathname();
+
+  // Helper function to check if a path is active
+  const isActivePath = (path: string) => {
+    return pathname === path || pathname.startsWith(path + "/");
+  };
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -90,6 +96,21 @@ export const AppSidebar = memo(function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* Dashboard/Home */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    href="/"
+                    className={`flex items-center gap-2 ${
+                      pathname === "/" ? "text-primary bg-accent font-bold" : ""
+                    }`}
+                  >
+                    <Home />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Projects with collapsible list */}
               <SidebarMenuItem>
                 <Collapsible
@@ -102,7 +123,11 @@ export const AppSidebar = memo(function AppSidebar() {
                     <SidebarMenuButton asChild className="flex-1">
                       <Link
                         href="/projects"
-                        className="flex items-center gap-2"
+                        className={`flex items-center gap-2 ${
+                          isActivePath("/projects")
+                            ? "text-primary bg-accent font-bold"
+                            : ""
+                        }`}
                       >
                         <FolderOpen />
                         <span>Projects</span>
@@ -135,7 +160,11 @@ export const AppSidebar = memo(function AppSidebar() {
                           <SidebarMenuSubItem key={project.id}>
                             <Link
                               href={`/projects/${project.id}`}
-                              className="flex items-center space-x-2 w-full hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
+                              className={`flex items-center space-x-2 w-full rounded-md px-2 py-1 ${
+                                pathname === `/projects/${project.id}`
+                                  ? "bg-accent text-accent-foreground font-bold"
+                                  : "hover:bg-accent hover:text-accent-foreground"
+                              }`}
                             >
                               {/* <FileText className="h-4 w-4" /> */}
                               <div className="flex flex-col min-w-0">
@@ -165,7 +194,11 @@ export const AppSidebar = memo(function AppSidebar() {
                     <SidebarMenuButton asChild className="flex-1">
                       <Link
                         href="/companies"
-                        className="flex items-center gap-2"
+                        className={`flex items-center gap-2 ${
+                          isActivePath("/companies")
+                            ? "text-primary bg-accent font-medium"
+                            : ""
+                        }`}
                       >
                         <Building />
                         <span>Companies</span>
@@ -198,7 +231,11 @@ export const AppSidebar = memo(function AppSidebar() {
                           <SidebarMenuSubItem key={company.id}>
                             <Link
                               href={`/companies/${company.id}`}
-                              className="flex items-center space-x-2 w-full hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1"
+                              className={`flex items-center space-x-2 w-full rounded-md px-2 py-1 ${
+                                pathname === `/companies/${company.id}`
+                                  ? "bg-accent text-accent-foreground font-medium"
+                                  : "hover:bg-accent hover:text-accent-foreground"
+                              }`}
                             >
                               <div className="flex flex-col min-w-0">
                                 <span className="truncate text-sm">
