@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/card";
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
-import { CollaborationList } from "@/components/collaborations/collaboration-list";
+import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
 import { CollaborationForm } from "@/components/collaborations/collaboration-form";
+import { ColumnSelector } from "@/components/common/table/column-selector";
+import { SearchBar } from "@/components/common/table/search-bar";
 import {
   useDeleteProject,
   useProject,
@@ -28,9 +30,18 @@ import {
   useCreateCollaboration,
   useUpdateCollaboration,
   useDeleteCollaboration,
-} from "@/hooks/useCollaborations";
+} from "@/hooks/use-collaborations";
 import { Project, ProjectFormData } from "@/types/project";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { type TablePreferences } from "@/types/table";
+import { useDebounce } from "@/hooks/use-debounce";
+import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import {
+  updateVisibleColumns,
+  visibleColumnsToStrings,
+  handleSort,
+} from "@/lib/table-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 
@@ -46,6 +57,32 @@ export default function ProjectDetailPage() {
   const [editingCollaboration, setEditingCollaboration] = useState<
     Collaboration | undefined
   >();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Table preferences state for collaborations
+  const defaultPreferences: TablePreferences<
+    Collaboration & {
+      companyName?: string;
+      projectName?: string;
+      personName?: string;
+    }
+  > = {
+    visibleColumns: [
+      "companyName",
+      "responsible",
+      "priority",
+      "personName",
+      "comment",
+    ],
+    sortField: "priority",
+    sortDirection: "desc",
+  };
+
+  const [tablePreferences, setTablePreferences] = useState(() => {
+    return getTablePreferences("collaborations-projects", defaultPreferences);
+  });
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // React Query hooks
   const {
@@ -101,6 +138,38 @@ export default function ProjectDetailPage() {
       router.push("/projects");
     }
   }, [projectError, router]);
+
+  // Save table preferences to localStorage
+  useEffect(() => {
+    saveTablePreferences("collaborations-projects", tablePreferences);
+  }, [tablePreferences]);
+
+  // Table handler functions
+  const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
+    const visibleColumns = updateVisibleColumns(
+      newVisibleColumns,
+      "companyName"
+    );
+    setTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  };
+
+  const handleSortColumn = (
+    field: keyof (Collaboration & {
+      companyName?: string;
+      projectName?: string;
+      personName?: string;
+    })
+  ) => {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
 
   const handleEditProject = () => {
     setEditDialogOpen(true);
@@ -378,11 +447,40 @@ export default function ProjectDetailPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <CollaborationList
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search collaborations..."
+                onSearchChange={handleSearchChange}
+              />
+
+              <ColumnSelector
+                fields={COLLABORATION_FIELDS.filter((field) => {
+                  // Filter out project name column since we're on a project page
+                  if (field.id === "projectName") return false;
+                  return true;
+                }).map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  tablePreferences.visibleColumns
+                )}
+                onColumnsChange={handleUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            <CollaborationsTable
               collaborations={collaborations}
+              searchQuery={debouncedSearchQuery}
+              tablePreferences={tablePreferences}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
+              onSortColumn={handleSortColumn}
+              hiddenColumns={["projectName"]}
             />
           </CardContent>
         </Card>

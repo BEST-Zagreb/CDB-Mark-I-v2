@@ -29,8 +29,10 @@ import { CompanyForm } from "@/components/companies/form/company-form";
 import { PeopleList } from "@/components/people/people-list";
 import { formatUrl } from "@/lib/format-utils";
 import { PersonForm } from "@/components/people/person-form";
-import { CollaborationList } from "@/components/collaborations/collaboration-list";
+import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
 import { CollaborationForm } from "@/components/collaborations/collaboration-form";
+import { ColumnSelector } from "@/components/common/table/column-selector";
+import { SearchBar } from "@/components/common/table/search-bar";
 import {
   useCompany,
   useDeleteCompany,
@@ -47,10 +49,19 @@ import {
   useCreateCollaboration,
   useUpdateCollaboration,
   useDeleteCollaboration,
-} from "@/hooks/useCollaborations";
+} from "@/hooks/use-collaborations";
 import { Company, CompanyFormData } from "@/types/company";
 import { Person, PersonFormData } from "@/types/person";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { type TablePreferences } from "@/types/table";
+import { useDebounce } from "@/hooks/use-debounce";
+import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import {
+  updateVisibleColumns,
+  visibleColumnsToStrings,
+  handleSort,
+} from "@/lib/table-utils";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -68,6 +79,32 @@ export default function CompanyDetailPage() {
   const [selectedCollaboration, setSelectedCollaboration] = useState<
     Collaboration | undefined
   >();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Table preferences state for collaborations
+  const defaultPreferences: TablePreferences<
+    Collaboration & {
+      companyName?: string;
+      projectName?: string;
+      personName?: string;
+    }
+  > = {
+    visibleColumns: [
+      "projectName",
+      "responsible",
+      "priority",
+      "personName",
+      "comment",
+    ],
+    sortField: "priority",
+    sortDirection: "desc",
+  };
+
+  const [tablePreferences, setTablePreferences] = useState(() => {
+    return getTablePreferences("collaborations-companies", defaultPreferences);
+  });
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // React Query hooks
   const {
@@ -110,6 +147,38 @@ export default function CompanyDetailPage() {
       router.push("/companies");
     }
   }, [companyError, router]);
+
+  // Save table preferences to localStorage
+  useEffect(() => {
+    saveTablePreferences("collaborations-companies", tablePreferences);
+  }, [tablePreferences]);
+
+  // Table handler functions
+  const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
+    const visibleColumns = updateVisibleColumns(
+      newVisibleColumns,
+      "projectName"
+    );
+    setTablePreferences((prev) => ({
+      ...prev,
+      visibleColumns: visibleColumns,
+    }));
+  };
+
+  const handleSortColumn = (
+    field: keyof (Collaboration & {
+      companyName?: string;
+      projectName?: string;
+      personName?: string;
+    })
+  ) => {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
 
   const handleEditCompany = () => {
     setEditDialogOpen(true);
@@ -428,11 +497,40 @@ export default function CompanyDetailPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <CollaborationList
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search collaborations..."
+                onSearchChange={handleSearchChange}
+              />
+
+              <ColumnSelector
+                fields={COLLABORATION_FIELDS.filter((field) => {
+                  // Filter out company name column since we're on a company page
+                  if (field.id === "companyName") return false;
+                  return true;
+                }).map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  tablePreferences.visibleColumns
+                )}
+                onColumnsChange={handleUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            <CollaborationsTable
               collaborations={collaborations}
+              searchQuery={debouncedSearchQuery}
+              tablePreferences={tablePreferences}
               onEdit={handleEditCollaboration}
               onDelete={handleDeleteCollaboration}
+              onSortColumn={handleSortColumn}
+              hiddenColumns={["companyName"]}
             />
           </CardContent>
         </Card>

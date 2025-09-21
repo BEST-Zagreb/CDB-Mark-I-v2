@@ -255,6 +255,23 @@ export const AppSidebar = memo(function AppSidebar() {
                   </CollapsibleContent>
                 </Collapsible>
               </SidebarMenuItem>
+
+              {/* Collaborations */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link
+                    href="/collaborations"
+                    className={`flex items-center gap-2 ${
+                      isActivePath("/collaborations")
+                        ? "text-primary bg-accent font-bold"
+                        : ""
+                    }`}
+                  >
+                    <Handshake className="size-5" />
+                    <span>Collaborations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
