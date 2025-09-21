@@ -13,7 +13,20 @@ import { Button } from "@/components/ui/button";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
-import { Pencil, Trash2, ExternalLink, Eye } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  ExternalLink,
+  Eye,
+  Building2,
+  Globe,
+  MapPin,
+  MapPinIcon,
+  Hash,
+  Phone,
+  Calendar,
+  MessageCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -39,15 +52,30 @@ const COMPANY_FIELDS: Array<{
   required: boolean;
   sortable: boolean;
   center: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "id", label: "ID", required: false, sortable: true, center: true },
-  { id: "name", label: "Name", required: true, sortable: true, center: false },
+  {
+    id: "id",
+    label: "ID",
+    required: false,
+    sortable: true,
+    center: true,
+  },
+  {
+    id: "name",
+    label: "Name",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: Building2,
+  },
   {
     id: "url",
     label: "Website",
     required: false,
     sortable: true,
     center: false,
+    icon: Globe,
   },
   {
     id: "address",
@@ -55,14 +83,23 @@ const COMPANY_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: MapPin,
   },
-  { id: "city", label: "City", required: false, sortable: true, center: false },
+  {
+    id: "city",
+    label: "City",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MapPinIcon,
+  },
   {
     id: "zip",
     label: "ZIP Code",
     required: false,
     sortable: true,
     center: true,
+    icon: Hash,
   },
   {
     id: "country",
@@ -70,6 +107,7 @@ const COMPANY_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Globe,
   },
   {
     id: "phone",
@@ -77,6 +115,7 @@ const COMPANY_FIELDS: Array<{
     required: false,
     sortable: false,
     center: false,
+    icon: Phone,
   },
   {
     id: "budgeting_month",
@@ -84,6 +123,7 @@ const COMPANY_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Calendar,
   },
   {
     id: "comment",
@@ -91,6 +131,7 @@ const COMPANY_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: MessageCircle,
   },
 ];
 
@@ -194,12 +235,20 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
                         className="h-auto p-0 font-medium hover:bg-transparent"
                       >
                         <span className="flex items-center gap-2">
+                          {column.icon && (
+                            <column.icon className="h-4 w-4 text-muted-foreground" />
+                          )}
                           {column.label}
                           {getSortIcon(column.id, tablePreferences)}
                         </span>
                       </Button>
                     ) : (
-                      column.label
+                      <span className="flex items-center gap-2">
+                        {column.icon && (
+                          <column.icon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {column.label}
+                      </span>
                     )}
                   </TableHead>
                 );

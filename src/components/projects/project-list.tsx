@@ -13,7 +13,16 @@ import { Button } from "@/components/ui/button";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Eye,
+  Briefcase,
+  Target,
+  Calendar,
+  CalendarDays,
+  Hash,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -33,15 +42,30 @@ const PROJECT_FIELDS: Array<{
   required: boolean;
   sortable: boolean;
   center: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "id", label: "ID", required: false, sortable: true, center: true },
-  { id: "name", label: "Name", required: true, sortable: true, center: false },
+  {
+    id: "id",
+    label: "ID",
+    required: false,
+    sortable: true,
+    center: true,
+  },
+  {
+    id: "name",
+    label: "Name",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: Briefcase,
+  },
   {
     id: "frGoal",
     label: "FR Goal",
     required: false,
     sortable: true,
     center: true,
+    icon: Target,
   },
   {
     id: "created_at",
@@ -49,6 +73,7 @@ const PROJECT_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Calendar,
   },
   {
     id: "updated_at",
@@ -56,6 +81,7 @@ const PROJECT_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: CalendarDays,
   },
 ];
 
@@ -177,12 +203,20 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
                         className="h-auto p-0 font-medium hover:bg-transparent"
                       >
                         <span className="flex items-center gap-2">
+                          {column.icon && (
+                            <column.icon className="h-4 w-4 text-muted-foreground" />
+                          )}
                           {column.label}
                           {getSortIcon(column.id, tablePreferences)}
                         </span>
                       </Button>
                     ) : (
-                      column.label
+                      <span className="flex items-center gap-2">
+                        {column.icon && (
+                          <column.icon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {column.label}
+                      </span>
                     )}
                   </TableHead>
                 );

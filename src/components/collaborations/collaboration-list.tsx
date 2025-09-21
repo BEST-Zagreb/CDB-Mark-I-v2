@@ -27,7 +27,19 @@ import {
   getPriorityOrder,
 } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
-import { User, Calendar, DollarSign, Building2 } from "lucide-react";
+import {
+  User,
+  Calendar,
+  DollarSign,
+  Building2,
+  Trophy,
+  MessageCircle,
+  Target,
+  Briefcase,
+  Hash,
+  Tag,
+  Phone,
+} from "lucide-react";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
@@ -46,14 +58,22 @@ const COLLABORATION_FIELDS: Array<{
   required: boolean;
   sortable: boolean;
   center: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "id", label: "ID", required: false, sortable: true, center: true },
+  {
+    id: "id",
+    label: "ID",
+    required: false,
+    sortable: true,
+    center: true,
+  },
   {
     id: "companyName",
     label: "Company",
     required: true,
     sortable: true,
     center: false,
+    icon: Building2,
   },
   {
     id: "projectName",
@@ -61,14 +81,23 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Briefcase,
   },
-  { id: "type", label: "Type", required: false, sortable: true, center: false },
+  {
+    id: "type",
+    label: "Type",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Tag,
+  },
   {
     id: "responsible",
     label: "Responsible",
     required: false,
     sortable: true,
     center: false,
+    icon: User,
   },
   {
     id: "priority",
@@ -76,6 +105,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
+    icon: Target,
   },
   {
     id: "successful",
@@ -83,6 +113,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
+    icon: Trophy,
   },
   {
     id: "comment",
@@ -90,6 +121,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: MessageCircle,
   },
   {
     id: "amount",
@@ -97,6 +129,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: DollarSign,
   },
   {
     id: "contacted",
@@ -104,6 +137,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Phone,
   },
   {
     id: "updatedAt",
@@ -111,6 +145,7 @@ const COLLABORATION_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Calendar,
   },
 ];
 
@@ -268,12 +303,20 @@ export function CollaborationList({
                       className="h-auto p-0 font-medium hover:bg-transparent"
                     >
                       <span className="flex items-center gap-2">
+                        {field.icon && (
+                          <field.icon className="h-4 w-4 text-muted-foreground" />
+                        )}
                         {field.label}
                         {getSortIcon(field.id, tablePreferences)}
                       </span>
                     </Button>
                   ) : (
-                    field.label
+                    <span className="flex items-center gap-2">
+                      {field.icon && (
+                        <field.icon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      {field.label}
+                    </span>
                   )}
                 </TableHead>
               ))}
@@ -306,12 +349,8 @@ export function CollaborationList({
                           {getCollaborationTypeDisplay(collaboration.type)}
                         </Badge>
                       )}
-                      {field.id === "responsible" && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          {collaboration.responsible || "—"}
-                        </div>
-                      )}
+                      {field.id === "responsible" &&
+                        (collaboration.responsible || "—")}
                       {field.id === "priority" && (
                         <Badge
                           variant={
@@ -351,15 +390,11 @@ export function CollaborationList({
                           </Tooltip>
                         </TooltipProvider>
                       )}
-                      {field.id === "amount" && (
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          {formatAmount(
-                            collaboration.amount,
-                            collaboration.updatedAt
-                          )}
-                        </div>
-                      )}
+                      {field.id === "amount" &&
+                        formatAmount(
+                          collaboration.amount,
+                          collaboration.updatedAt
+                        )}
                       {field.id === "contacted" && (
                         <Badge
                           variant={
@@ -369,12 +404,8 @@ export function CollaborationList({
                           {collaboration.contacted ? "Yes" : "No"}
                         </Badge>
                       )}
-                      {field.id === "updatedAt" && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(collaboration.updatedAt)}
-                        </div>
-                      )}
+                      {field.id === "updatedAt" &&
+                        formatDate(collaboration.updatedAt)}
                     </TableCell>
                   ))}
 

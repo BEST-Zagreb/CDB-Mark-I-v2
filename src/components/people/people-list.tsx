@@ -21,6 +21,7 @@ import {
   Briefcase,
   Calendar,
   Building2,
+  Hash,
 } from "lucide-react";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -40,29 +41,14 @@ const PERSON_FIELDS: Array<{
   required: boolean;
   sortable: boolean;
   center: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
 }> = [
-  { id: "id", label: "ID", required: false, sortable: true, center: true },
-  { id: "name", label: "Name", required: true, sortable: true, center: false },
   {
-    id: "email",
-    label: "Email",
+    id: "id",
+    label: "ID",
     required: false,
     sortable: true,
-    center: false,
-  },
-  {
-    id: "phone",
-    label: "Phone",
-    required: false,
-    sortable: true,
-    center: false,
-  },
-  {
-    id: "function",
-    label: "Function",
-    required: false,
-    sortable: true,
-    center: false,
+    center: true,
   },
   {
     id: "companyName",
@@ -70,13 +56,47 @@ const PERSON_FIELDS: Array<{
     required: false,
     sortable: true,
     center: false,
+    icon: Building2,
   },
   {
-    id: "createdAt",
-    label: "Created",
+    id: "name",
+    label: "Name",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: User,
+  },
+  {
+    id: "email",
+    label: "Email",
     required: false,
     sortable: true,
     center: false,
+    icon: Mail,
+  },
+  {
+    id: "phone",
+    label: "Phone",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Phone,
+  },
+  {
+    id: "function",
+    label: "Function",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Briefcase,
+  },
+  {
+    id: "createdAt",
+    label: "Created at",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Calendar,
   },
 ];
 
@@ -199,12 +219,20 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
                       className="h-auto p-0 font-medium hover:bg-transparent"
                     >
                       <span className="flex items-center gap-2">
+                        {field.icon && (
+                          <field.icon className="h-4 w-4 text-muted-foreground" />
+                        )}
                         {field.label}
                         {getSortIcon(field.id, tablePreferences)}
                       </span>
                     </Button>
                   ) : (
-                    field.label
+                    <span className="flex items-center gap-2">
+                      {field.icon && (
+                        <field.icon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      {field.label}
+                    </span>
                   )}
                 </TableHead>
               ))}
@@ -225,52 +253,18 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
                   >
                     {field.id === "id" && person.id}
                     {field.id === "name" && (
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          {person.name || "—"}
-                        </span>
-                      </div>
+                      <span className="font-medium">{person.name || "—"}</span>
                     )}
-                    {field.id === "email" &&
-                      (person.email ? (
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{person.email}</span>
-                        </div>
-                      ) : (
-                        "—"
-                      ))}
-                    {field.id === "phone" &&
-                      (person.phone ? (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{person.phone}</span>
-                        </div>
-                      ) : (
-                        "—"
-                      ))}
+                    {field.id === "email" && (person.email || "—")}
+                    {field.id === "phone" && (person.phone || "—")}
                     {field.id === "function" &&
                       (person.function ? (
                         <Badge variant="outline">{person.function}</Badge>
                       ) : (
                         "—"
                       ))}
-                    {field.id === "companyName" &&
-                      (person.companyName ? (
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span>{person.companyName}</span>
-                        </div>
-                      ) : (
-                        "—"
-                      ))}
-                    {field.id === "createdAt" && (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(person.createdAt)}
-                      </div>
-                    )}
+                    {field.id === "companyName" && (person.companyName || "—")}
+                    {field.id === "createdAt" && formatDate(person.createdAt)}
                   </TableCell>
                 ))}
 
