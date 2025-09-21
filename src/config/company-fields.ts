@@ -25,7 +25,6 @@ export const COMPANY_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
-    icon: Hash,
   },
   {
     id: "name",
@@ -35,41 +34,10 @@ export const COMPANY_FIELDS: Array<{
     center: false,
     icon: Building2,
   },
+
   {
     id: "url",
     label: "Website",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Globe,
-  },
-  {
-    id: "address",
-    label: "Address",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPin,
-  },
-  {
-    id: "city",
-    label: "City",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPinIcon,
-  },
-  {
-    id: "zip",
-    label: "ZIP Code",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Hash,
-  },
-  {
-    id: "country",
-    label: "Country",
     required: false,
     sortable: true,
     center: false,
@@ -83,6 +51,7 @@ export const COMPANY_FIELDS: Array<{
     center: false,
     icon: Phone,
   },
+
   {
     id: "budgeting_month",
     label: "Budgeting Month",
@@ -91,6 +60,40 @@ export const COMPANY_FIELDS: Array<{
     center: false,
     icon: Calendar,
   },
+
+  {
+    id: "country",
+    label: "Country",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Globe,
+  },
+  {
+    id: "zip",
+    label: "ZIP Code",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Hash,
+  },
+  {
+    id: "city",
+    label: "City",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MapPinIcon,
+  },
+  {
+    id: "address",
+    label: "Address",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MapPin,
+  },
+
   {
     id: "comment",
     label: "Comment",

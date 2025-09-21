@@ -24,24 +24,8 @@ export const PERSON_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
-    icon: Hash,
   },
-  {
-    id: "companyId",
-    label: "Company ID",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Hash,
-  },
-  {
-    id: "companyName",
-    label: "Company",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Building2,
-  },
+
   {
     id: "name",
     label: "Name",
@@ -71,9 +55,10 @@ export const PERSON_FIELDS: Array<{
     label: "Function",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Briefcase,
   },
+
   {
     id: "createdAt",
     label: "Created",

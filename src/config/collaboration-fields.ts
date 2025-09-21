@@ -148,7 +148,7 @@ export const COLLABORATION_FIELDS: Array<{
 
   {
     id: "createdAt",
-    label: "Created at",
+    label: "Created",
     required: false,
     sortable: true,
     center: false,
@@ -156,7 +156,7 @@ export const COLLABORATION_FIELDS: Array<{
   },
   {
     id: "updatedAt",
-    label: "Updated at",
+    label: "Last update",
     required: false,
     sortable: true,
     center: false,
