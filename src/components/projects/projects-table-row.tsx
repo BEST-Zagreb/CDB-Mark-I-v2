@@ -57,7 +57,9 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
           return (
             <TableCell
               key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : "font-medium"}`}
+              className={`max-w-50 ${
+                column.center ? "text-center" : "font-medium"
+              }`}
             >
               <Link
                 href={`/projects/${project.id}`}
@@ -81,12 +83,9 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
               </div>
             </TableCell>
           );
-        } else if (
-          column.id === "created_at" ||
-          column.id === "updated_at"
-        ) {
+        } else if (column.id === "created_at" || column.id === "updated_at") {
           return (
-            <TableCell 
+            <TableCell
               key={column.id}
               className={`max-w-50 ${column.center ? "text-center" : ""}`}
             >
@@ -104,9 +103,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
               column.center ? "text-center" : "font-medium"
             }`}
           >
-            <div className="text-pretty">
-              {project[column.id] || "—"}
-            </div>
+            <div className="text-pretty">{project[column.id] || "—"}</div>
           </TableCell>
         );
       })}

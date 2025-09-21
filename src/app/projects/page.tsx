@@ -73,10 +73,13 @@ export default function ProjectsPage() {
   );
 
   // Handle sorting functionality
-  const handleSortColumn = useCallback((field: keyof Project) => {
-    const newPreferences = handleSort(tablePreferences, field);
-    setTablePreferences(newPreferences);
-  }, [tablePreferences]);
+  const handleSortColumn = useCallback(
+    (field: keyof Project) => {
+      const newPreferences = handleSort(tablePreferences, field);
+      setTablePreferences(newPreferences);
+    },
+    [tablePreferences]
+  );
 
   // Memoize column selector fields to prevent recreation
   const columnSelectorFields = useMemo(

@@ -73,10 +73,13 @@ export default function CompaniesPage() {
   );
 
   // Handle sorting functionality
-  const handleSortColumn = useCallback((field: keyof Company) => {
-    const newPreferences = handleSort(tablePreferences, field);
-    setTablePreferences(newPreferences);
-  }, [tablePreferences]);
+  const handleSortColumn = useCallback(
+    (field: keyof Company) => {
+      const newPreferences = handleSort(tablePreferences, field);
+      setTablePreferences(newPreferences);
+    },
+    [tablePreferences]
+  );
 
   // Memoize column selector fields to prevent recreation
   const columnSelectorFields = useMemo(

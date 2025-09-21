@@ -53,8 +53,8 @@ export function formatAmount(
 
 /**
  * Format URL to separate display label and actual link
- * If URL contains protocol, keep link same but remove protocol from label
- * If URL doesn't contain protocol, add https:// to link but keep original as label
+ * If URL contains protocol, keep link same but remove protocol and www from label
+ * If URL doesn't contain protocol, add https:// to link but keep original as label (minus www)
  */
 export function formatUrl(url: string): { label: string; link: string } | null {
   if (!url || url === "null" || url === "") return null;
@@ -71,6 +71,9 @@ export function formatUrl(url: string): { label: string; link: string } | null {
     label = url;
     link = `https://${url}`;
   }
+
+  // Remove "www." from label for cleaner display
+  label = label.replace(/^www\./, "");
 
   return { label, link };
 }
