@@ -28,6 +28,13 @@ import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import { PERSON_FIELDS } from "@/config/person-fields";
 import { User, Mail, Phone, Briefcase, Calendar } from "lucide-react";
 
+// Default preferences (outside component to prevent recreation)
+const defaultPreferences: TablePreferences<Person> = {
+  visibleColumns: ["name", "email", "phone", "function", "createdAt"],
+  sortField: "name",
+  sortDirection: "asc",
+};
+
 interface PeopleListProps {
   people: Person[];
   onEdit?: (person: Person) => void;
@@ -37,22 +44,13 @@ interface PeopleListProps {
 export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Default preferences
-  const defaultPreferences: TablePreferences<Person> = {
-    visibleColumns: ["name", "email", "phone", "function", "createdAt"],
-    sortField: "name",
-    sortDirection: "asc",
-  };
-
   // Consolidated table preferences state with localStorage
-  const [tablePreferences, setTablePreferences] =
-    useState<TablePreferences<Person>>(defaultPreferences);
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedPreferences = getTablePreferences("people", defaultPreferences);
-    setTablePreferences(savedPreferences);
-  }, []);
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Person>
+  >(() => {
+    // Initialize with saved preferences on first render
+    return getTablePreferences("people", defaultPreferences);
+  });
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {

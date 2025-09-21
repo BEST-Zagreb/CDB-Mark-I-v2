@@ -57,25 +57,23 @@ export function CollaborationList({
 }: CollaborationListProps) {
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Default preferences
-  const defaultPreferences: TablePreferences<
-    Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      personName?: string;
-    }
-  > = {
-    visibleColumns: [
+  // Default preferences (using useMemo since it depends on showProjectNames)
+  const defaultPreferences = useMemo(() => {
+    const defaultColumns = [
       showProjectNames ? "projectName" : "companyName",
       "responsible",
       "priority",
       "personName",
       "comment",
       "contacted",
-    ],
-    sortField: "priority",
-    sortDirection: "desc",
-  };
+    ] as const;
+
+    return {
+      visibleColumns: defaultColumns as any,
+      sortField: "priority" as any,
+      sortDirection: "desc" as const,
+    };
+  }, [showProjectNames]);
 
   // Consolidated table preferences state with localStorage
   const [tablePreferences, setTablePreferences] = useState<
@@ -86,21 +84,24 @@ export function CollaborationList({
         personName?: string;
       }
     >
-  >(defaultPreferences);
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedPreferences = getTablePreferences(
-      "collaborations",
-      defaultPreferences
-    );
-    setTablePreferences(savedPreferences);
-  }, []);
+  >(() => {
+    // Initialize with saved preferences on first render
+    return getTablePreferences("collaborations", defaultPreferences as any);
+  });
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
     saveTablePreferences("collaborations", tablePreferences);
   }, [tablePreferences]);
+
+  // Update preferences when showProjectNames changes
+  useEffect(() => {
+    const savedPreferences = getTablePreferences(
+      "collaborations",
+      defaultPreferences as any
+    );
+    setTablePreferences(savedPreferences);
+  }, [defaultPreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const requiredColumn = showProjectNames ? "projectName" : "companyName";

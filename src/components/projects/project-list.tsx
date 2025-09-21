@@ -27,6 +27,13 @@ import { formatDate, formatAmount } from "@/lib/format-utils";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import { PROJECT_FIELDS } from "@/config/project-fields";
 
+// Default preferences (outside component to prevent recreation)
+const defaultPreferences: TablePreferences<Project> = {
+  visibleColumns: ["name", "frGoal", "created_at"],
+  sortField: "name",
+  sortDirection: "asc",
+};
+
 interface ProjectListProps {
   projects: Project[];
   onEdit: (project: Project) => void;
@@ -37,25 +44,13 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Default preferences
-  const defaultPreferences: TablePreferences<Project> = {
-    visibleColumns: ["name", "frGoal", "created_at"],
-    sortField: "name",
-    sortDirection: "asc",
-  };
-
   // Consolidated table preferences state with localStorage
-  const [tablePreferences, setTablePreferences] =
-    useState<TablePreferences<Project>>(defaultPreferences);
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedPreferences = getTablePreferences(
-      "projects",
-      defaultPreferences
-    );
-    setTablePreferences(savedPreferences);
-  }, []);
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Project>
+  >(() => {
+    // Initialize with saved preferences on first render
+    return getTablePreferences("projects", defaultPreferences);
+  });
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {

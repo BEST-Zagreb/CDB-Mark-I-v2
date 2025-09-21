@@ -34,6 +34,13 @@ import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import { COMPANY_FIELDS } from "@/config/company-fields";
 import { ExternalLink } from "lucide-react";
 
+// Default preferences (outside component to prevent recreation)
+const defaultPreferences: TablePreferences<Company> = {
+  visibleColumns: ["name", "url", "budgeting_month", "city", "comment"],
+  sortField: "name",
+  sortDirection: "asc",
+};
+
 interface CompanyListProps {
   companies: Company[];
   onEdit: (company: Company) => void;
@@ -44,25 +51,13 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Default preferences
-  const defaultPreferences: TablePreferences<Company> = {
-    visibleColumns: ["name", "url", "budgeting_month", "city", "comment"],
-    sortField: "name",
-    sortDirection: "asc",
-  };
-
   // Consolidated table preferences state with localStorage
-  const [tablePreferences, setTablePreferences] =
-    useState<TablePreferences<Company>>(defaultPreferences);
-
-  // Load preferences from localStorage on mount
-  useEffect(() => {
-    const savedPreferences = getTablePreferences(
-      "companies",
-      defaultPreferences
-    );
-    setTablePreferences(savedPreferences);
-  }, []);
+  const [tablePreferences, setTablePreferences] = useState<
+    TablePreferences<Company>
+  >(() => {
+    // Initialize with saved preferences on first render
+    return getTablePreferences("companies", defaultPreferences);
+  });
 
   // Save preferences to localStorage whenever they change
   useEffect(() => {
