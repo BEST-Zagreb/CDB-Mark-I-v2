@@ -69,7 +69,7 @@ export function SearchBar({
         placeholder={placeholder}
         value={searchQuery}
         onChange={handleInputChange}
-        className="pl-10 pr-10"
+        className="pl-10 pr-10 bg-zinc-50"
       />
 
       {searchQuery && (

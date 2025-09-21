@@ -22,6 +22,7 @@ import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import {
   updateVisibleColumns,
   visibleColumnsToStrings,
+  handleSort,
 } from "@/lib/table-utils";
 
 // Default preferences (outside component to prevent recreation)
@@ -70,6 +71,12 @@ export default function CompaniesPage() {
     },
     []
   );
+
+  // Handle sorting functionality
+  const handleSortColumn = useCallback((field: keyof Company) => {
+    const newPreferences = handleSort(tablePreferences, field);
+    setTablePreferences(newPreferences);
+  }, [tablePreferences]);
 
   // Memoize column selector fields to prevent recreation
   const columnSelectorFields = useMemo(
@@ -159,6 +166,7 @@ export default function CompaniesPage() {
             tablePreferences={tablePreferences}
             onEdit={handleEditCompany}
             onDelete={handleDeleteCompany}
+            onSortColumn={handleSortColumn}
           />
         )}
       </div>

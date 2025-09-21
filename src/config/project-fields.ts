@@ -31,7 +31,7 @@ export const PROJECT_FIELDS: Array<{
     label: "FR Goal",
     required: false,
     sortable: true,
-    center: true,
+    center: false,
     icon: Target,
   },
 
@@ -40,7 +40,7 @@ export const PROJECT_FIELDS: Array<{
     label: "Created",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Calendar,
   },
   {
@@ -48,7 +48,7 @@ export const PROJECT_FIELDS: Array<{
     label: "Last update",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: CalendarDays,
   },
 ];

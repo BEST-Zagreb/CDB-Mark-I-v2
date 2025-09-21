@@ -9,69 +9,81 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Company } from "@/types/company";
+import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
-import { COMPANY_FIELDS } from "@/config/company-fields";
-import { CompaniesTableRow } from "./companies-table-row";
-import { useVirtualizedCompanies } from "@/hooks/useVirtualizedCompanies";
+import { PROJECT_FIELDS } from "@/config/project-fields";
+import { ProjectsTableRow } from "@/components/projects/projects-table-row";
+import { useVirtualizedProjects } from "@/hooks/useVirtualizedProjects";
 
-interface VirtualizedCompanyListProps {
-  companies: Company[];
+interface VirtualizedProjectListProps {
+  projects: Project[];
   searchQuery: string;
-  tablePreferences: TablePreferences<Company>;
-  onEdit: (company: Company) => void;
-  onDelete: (companyId: number) => Promise<void>;
-  onSortColumn: (field: keyof Company) => void;
+  tablePreferences: TablePreferences<Project>;
+  onEdit: (project: Project) => void;
+  onDelete: (projectId: number) => Promise<void>;
+  onSortColumn: (field: keyof Project) => void;
 }
 
-export function CompaniesTable({
-  companies,
+export function ProjectsTable({
+  projects,
   searchQuery,
   tablePreferences,
   onEdit,
   onDelete,
   onSortColumn,
-}: VirtualizedCompanyListProps) {
+}: VirtualizedProjectListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sort companies based on current sort field and direction
-  const sortedCompanies = useMemo(() => {
-    return [...companies].sort((a, b) => {
+  // Sort projects based on current sort field and direction
+  const sortedProjects = useMemo(() => {
+    return [...projects].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
       const { sortField, sortDirection } = tablePreferences;
 
-      // For all sortable fields, convert to lowercase for case-insensitive sorting
-      aValue = String(a[sortField as keyof Company] || "").toLowerCase();
-      bValue = String(b[sortField as keyof Company] || "").toLowerCase();
+      // Handle different field types
+      switch (sortField) {
+        case "name":
+          aValue = String(a.name || "").toLowerCase();
+          bValue = String(b.name || "").toLowerCase();
+          break;
+        case "frGoal":
+          aValue = a.frGoal || 0;
+          bValue = b.frGoal || 0;
+          break;
+        case "created_at":
+        case "updated_at":
+          // Handle null dates by putting them at the end
+          aValue = a[sortField] ? new Date(a[sortField]!).getTime() : 0;
+          bValue = b[sortField] ? new Date(b[sortField]!).getTime() : 0;
+          break;
+        default:
+          aValue = String(a[sortField as keyof Project] || "").toLowerCase();
+          bValue = String(b[sortField as keyof Project] || "").toLowerCase();
+      }
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [companies, tablePreferences.sortField, tablePreferences.sortDirection]);
+  }, [projects, tablePreferences.sortField, tablePreferences.sortDirection]);
 
   // Use virtualization hook
-  const {
-    visibleCompanies,
-    rowVirtualizer,
-    hasMore,
-    totalCount,
-    visibleCount,
-  } = useVirtualizedCompanies({
-    companies: sortedCompanies,
-    searchQuery,
-    containerRef: containerRef as React.RefObject<HTMLElement>,
-  });
+  const { visibleProjects, rowVirtualizer, hasMore, totalCount, visibleCount } =
+    useVirtualizedProjects({
+      projects: sortedProjects,
+      searchQuery,
+      containerRef: containerRef as React.RefObject<HTMLElement>,
+    });
 
   if (totalCount === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
-          ? `No companies found matching "${searchQuery}"`
-          : "No companies found. Create your first company to get started."}
+          ? `No projects found matching "${searchQuery}"`
+          : "No projects found. Create your first project to get started."}
       </div>
     );
   }
@@ -81,7 +93,7 @@ export function CompaniesTable({
       <Table>
         <TableHeader className="bg-zinc-100">
           <TableRow>
-            {COMPANY_FIELDS.map((column) => {
+            {PROJECT_FIELDS.map((column) => {
               if (!isColumnVisible(column.id, tablePreferences)) return null;
 
               return (
@@ -134,13 +146,13 @@ export function CompaniesTable({
 
           {/* Render visible items */}
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const company = visibleCompanies[virtualRow.index];
-            if (!company) return null;
+            const project = visibleProjects[virtualRow.index];
+            if (!project) return null;
 
             return (
-              <CompaniesTableRow
-                key={company.id}
-                company={company}
+              <ProjectsTableRow
+                key={project.id}
+                project={project}
                 tablePreferences={tablePreferences}
                 onEdit={onEdit}
                 onDeleteConfirm={onDelete}

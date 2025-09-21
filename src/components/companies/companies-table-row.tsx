@@ -2,6 +2,7 @@
 
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { TableActions } from "@/components/common/table/table-actions";
@@ -58,35 +59,54 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
         if (!isColumnVisible(column.id, tablePreferences) && !column.required)
           return null;
 
-        if (column.id === "url") {
+        if (column.id === "name") {
           return (
-            <TableCell key={column.id}>
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${
+                column.center ? "text-center" : "font-medium"
+              }`}
+            >
+              <Link
+                href={`/companies/${company.id}`}
+                className="text-primary hover:underline text-pretty"
+              >
+                {company.name || "—"}
+              </Link>
+            </TableCell>
+          );
+        } else if (column.id === "url") {
+          return (
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+            >
               {formatUrl(company.url) ? (
-                <a
-                  href={formatUrl(company.url)?.link!}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                >
-                  <span className="max-w-[200px] truncate">
-                    {formatUrl(company.url)?.label}
-                  </span>
-                  <ExternalLink className="h-3 w-3" />
-                </a>
+                <div className="truncate">
+                  <a
+                    href={formatUrl(company.url)?.link!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {formatUrl(company.url)?.label || "—"}
+                  </a>
+                </div>
               ) : (
-                "—"
+                <div className="truncate">—</div>
               )}
             </TableCell>
           );
         } else if (column.id === "comment") {
           return (
-            <TableCell key={column.id}>
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+            >
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="max-w-[200px] truncate">
-                      {company.comment}
-                    </div>
+                    <div className="truncate">{company.comment}</div>
                   </TooltipTrigger>
 
                   <TooltipContent>
@@ -103,11 +123,11 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
         return (
           <TableCell
             key={column.id}
-            className={
-              column.center ? "text-center" : "font-medium whitespace-normal"
-            }
+            className={`max-w-50 ${
+              column.center ? "text-center" : "font-medium"
+            }`}
           >
-            {company[column.id] || "—"}
+            <div className="text-pretty">{company[column.id] || "—"}</div>
           </TableCell>
         );
       })}
