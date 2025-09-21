@@ -14,10 +14,10 @@ import {
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
-} from "@/hooks/useProjects";
+} from "@/hooks/use-projects";
 import { Project, ProjectFormData } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { PROJECT_FIELDS } from "@/config/project-fields";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import {

@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CompanySelect } from "@/components/collaborations/company-select";
 import { ProjectSelect } from "@/components/collaborations/project-select";
-import { usePeopleByCompany } from "@/hooks/usePeople";
+import { usePeopleByCompany } from "@/hooks/use-people";
 import {
   Collaboration,
   CollaborationFormData,

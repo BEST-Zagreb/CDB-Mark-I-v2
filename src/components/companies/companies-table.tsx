@@ -14,7 +14,7 @@ import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
 import { COMPANY_FIELDS } from "@/config/company-fields";
 import { CompaniesTableRow } from "./companies-table-row";
-import { useVirtualizedCompanies } from "@/hooks/useVirtualizedCompanies";
+import { useVirtualizedCompanies } from "@/hooks/use-virtualized-companies";
 
 interface VirtualizedCompanyListProps {
   companies: Company[];

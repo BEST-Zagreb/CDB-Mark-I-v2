@@ -14,7 +14,7 @@ import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
 import { PROJECT_FIELDS } from "@/config/project-fields";
 import { ProjectsTableRow } from "@/components/projects/projects-table-row";
-import { useVirtualizedProjects } from "@/hooks/useVirtualizedProjects";
+import { useVirtualizedProjects } from "@/hooks/use-virtualized-projects";
 
 interface VirtualizedProjectListProps {
   projects: Project[];

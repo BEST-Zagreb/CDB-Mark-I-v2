@@ -22,7 +22,7 @@ import {
   useDeleteProject,
   useProject,
   useUpdateProject,
-} from "@/hooks/useProjects";
+} from "@/hooks/use-projects";
 import {
   useCollaborationsByProject,
   useCreateCollaboration,

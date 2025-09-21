@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useCompanies } from "@/hooks/useCompanies";
+import { useCompanies } from "@/hooks/use-companies";
 
 interface CompanySelectProps {
   value?: number;

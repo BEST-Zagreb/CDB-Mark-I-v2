@@ -35,13 +35,13 @@ import {
   useCompany,
   useDeleteCompany,
   useUpdateCompany,
-} from "@/hooks/useCompanies";
+} from "@/hooks/use-companies";
 import {
   usePeopleByCompany,
   useCreatePerson,
   useUpdatePerson,
   useDeletePerson,
-} from "@/hooks/usePeople";
+} from "@/hooks/use-people";
 import {
   useCollaborationsByCompany,
   useCreateCollaboration,

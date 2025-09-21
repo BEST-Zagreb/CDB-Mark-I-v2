@@ -14,10 +14,10 @@ import {
   useCreateCompany,
   useUpdateCompany,
   useDeleteCompany,
-} from "@/hooks/useCompanies";
+} from "@/hooks/use-companies";
 import { Company, CompanyFormData } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { COMPANY_FIELDS } from "@/config/company-fields";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import {
