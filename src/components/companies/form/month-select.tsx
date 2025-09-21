@@ -40,7 +40,11 @@ export function MonthSelect({
   const selectValue = value === "" || !value ? "unknown" : value;
 
   return (
-    <Select value={selectValue} onValueChange={handleValueChange} disabled={disabled}>
+    <Select
+      value={selectValue}
+      onValueChange={handleValueChange}
+      disabled={disabled}
+    >
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
