@@ -1,0 +1,165 @@
+import {
+  User,
+  Calendar,
+  DollarSign,
+  Building2,
+  Trophy,
+  MessageCircle,
+  Target,
+  Briefcase,
+  Hash,
+  Tag,
+  Phone,
+  Mail,
+  Users,
+  CalendarDays,
+  ClockIcon,
+} from "lucide-react";
+import { Collaboration } from "@/types/collaboration";
+
+// Define available columns for the collaboration table
+export const COLLABORATION_FIELDS: Array<{
+  id: keyof Collaboration | "companyName" | "projectName" | "personName";
+  label: string;
+  required: boolean;
+  sortable: boolean;
+  center: boolean;
+  icon?: React.ComponentType<{ className?: string }>;
+}> = [
+  {
+    id: "id",
+    label: "ID",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Hash,
+  },
+
+  {
+    id: "companyName",
+    label: "Company",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: Building2,
+  },
+  {
+    id: "projectName",
+    label: "Project",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: Briefcase,
+  },
+
+  {
+    id: "type",
+    label: "Type",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Tag,
+  },
+  {
+    id: "responsible",
+    label: "Responsible",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: User,
+  },
+  {
+    id: "priority",
+    label: "Priority",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Target,
+  },
+
+  {
+    id: "personName",
+    label: "Contact",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Users,
+  },
+
+  {
+    id: "comment",
+    label: "Comment",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MessageCircle,
+  },
+
+  {
+    id: "contacted",
+    label: "Contacted",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Phone,
+  },
+  {
+    id: "letter",
+    label: "Letter",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Mail,
+  },
+  {
+    id: "meeting",
+    label: "Meeting",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Users,
+  },
+  {
+    id: "successful",
+    label: "Successful",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Trophy,
+  },
+
+  {
+    id: "amount",
+    label: "Amount",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: DollarSign,
+  },
+
+  {
+    id: "contactInFuture",
+    label: "Future Contact",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: ClockIcon,
+  },
+
+  {
+    id: "createdAt",
+    label: "Created at",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Calendar,
+  },
+  {
+    id: "updatedAt",
+    label: "Updated at",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: CalendarDays,
+  },
+];

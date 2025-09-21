@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   Table,
@@ -28,23 +28,6 @@ import {
   getPriorityOrder,
 } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
-import {
-  User,
-  Calendar,
-  DollarSign,
-  Building2,
-  Trophy,
-  MessageCircle,
-  Target,
-  Briefcase,
-  Hash,
-  Tag,
-  Phone,
-  Mail,
-  Users,
-  CalendarDays,
-  ClockIcon,
-} from "lucide-react";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
@@ -55,153 +38,9 @@ import {
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
 import { formatDate, formatAmount } from "@/lib/format-utils";
-
-// Define available columns for the table using Collaboration type
-const COLLABORATION_FIELDS: Array<{
-  id: keyof Collaboration | "companyName" | "projectName" | "personName";
-  label: string;
-  required: boolean;
-  sortable: boolean;
-  center: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-}> = [
-  {
-    id: "id",
-    label: "ID",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Hash,
-  },
-
-  {
-    id: "companyName",
-    label: "Company",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: Building2,
-  },
-  {
-    id: "projectName",
-    label: "Project",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: Briefcase,
-  },
-
-  {
-    id: "type",
-    label: "Type",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Tag,
-  },
-  {
-    id: "responsible",
-    label: "Responsible",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: User,
-  },
-  {
-    id: "priority",
-    label: "Priority",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Target,
-  },
-
-  {
-    id: "personName",
-    label: "Contact",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Users,
-  },
-
-  {
-    id: "comment",
-    label: "Comment",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MessageCircle,
-  },
-
-  {
-    id: "contacted",
-    label: "Contacted",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Phone,
-  },
-  {
-    id: "letter",
-    label: "Letter",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Mail,
-  },
-  {
-    id: "meeting",
-    label: "Meeting",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Users,
-  },
-  {
-    id: "successful",
-    label: "Successful",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Trophy,
-  },
-
-  {
-    id: "amount",
-    label: "Amount",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: DollarSign,
-  },
-
-  {
-    id: "contactInFuture",
-    label: "Future Contact",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: ClockIcon,
-  },
-
-  {
-    id: "createdAt",
-    label: "Created",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Calendar,
-  },
-  {
-    id: "updatedAt",
-    label: "Last update",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: CalendarDays,
-  },
-];
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
+import { Building2 } from "lucide-react";
 
 interface CollaborationListProps {
   collaborations: Collaboration[];
@@ -218,7 +57,27 @@ export function CollaborationList({
 }: CollaborationListProps) {
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Consolidated table preferences state
+  // Default preferences
+  const defaultPreferences: TablePreferences<
+    Collaboration & {
+      companyName?: string;
+      projectName?: string;
+      personName?: string;
+    }
+  > = {
+    visibleColumns: [
+      showProjectNames ? "projectName" : "companyName",
+      "responsible",
+      "priority",
+      "personName",
+      "comment",
+      "contacted",
+    ],
+    sortField: "priority",
+    sortDirection: "desc",
+  };
+
+  // Consolidated table preferences state with localStorage
   const [tablePreferences, setTablePreferences] = useState<
     TablePreferences<
       Collaboration & {
@@ -227,18 +86,21 @@ export function CollaborationList({
         personName?: string;
       }
     >
-  >({
-    visibleColumns: [
-      showProjectNames ? "projectName" : "companyName",
-      "responsible",
-      "priority",
-      "personName",
-      "comment",
-      "contacted",
-    ], // Default visible columns
-    sortField: "priority", // Default sort field
-    sortDirection: "desc", // Default sort direction
-  });
+  >(defaultPreferences);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedPreferences = getTablePreferences(
+      "collaborations",
+      defaultPreferences
+    );
+    setTablePreferences(savedPreferences);
+  }, []);
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    saveTablePreferences("collaborations", tablePreferences);
+  }, [tablePreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const requiredColumn = showProjectNames ? "projectName" : "companyName";

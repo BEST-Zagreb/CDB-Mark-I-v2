@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -13,16 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
-import {
-  Pencil,
-  Trash2,
-  Eye,
-  Briefcase,
-  Target,
-  Calendar,
-  CalendarDays,
-  Hash,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -34,58 +24,8 @@ import {
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
 import { formatDate, formatAmount } from "@/lib/format-utils";
-
-// Define available columns for the table using Project type
-const PROJECT_FIELDS: Array<{
-  id: keyof Project;
-  label: string;
-  required: boolean;
-  sortable: boolean;
-  center: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-}> = [
-  {
-    id: "id",
-    label: "ID",
-    required: false,
-    sortable: true,
-    center: true,
-  },
-  {
-    id: "name",
-    label: "Name",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: Briefcase,
-  },
-
-  {
-    id: "frGoal",
-    label: "FR Goal",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Target,
-  },
-
-  {
-    id: "created_at",
-    label: "Created",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Calendar,
-  },
-  {
-    id: "updated_at",
-    label: "Last update",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: CalendarDays,
-  },
-];
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import { PROJECT_FIELDS } from "@/config/project-fields";
 
 interface ProjectListProps {
   projects: Project[];
@@ -97,14 +37,30 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Consolidated table preferences state
-  const [tablePreferences, setTablePreferences] = useState<
-    TablePreferences<Project>
-  >({
-    visibleColumns: ["name", "frGoal", "created_at"], // Default visible columns
-    sortField: PROJECT_FIELDS[1].id, // Default to second column (name)
-    sortDirection: "asc", // Default sort direction
-  });
+  // Default preferences
+  const defaultPreferences: TablePreferences<Project> = {
+    visibleColumns: ["name", "frGoal", "created_at"],
+    sortField: "name",
+    sortDirection: "asc",
+  };
+
+  // Consolidated table preferences state with localStorage
+  const [tablePreferences, setTablePreferences] =
+    useState<TablePreferences<Project>>(defaultPreferences);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedPreferences = getTablePreferences(
+      "projects",
+      defaultPreferences
+    );
+    setTablePreferences(savedPreferences);
+  }, []);
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    saveTablePreferences("projects", tablePreferences);
+  }, [tablePreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");

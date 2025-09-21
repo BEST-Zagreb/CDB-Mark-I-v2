@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -13,20 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
-import {
-  Pencil,
-  Trash2,
-  ExternalLink,
-  Eye,
-  Building2,
-  Globe,
-  MapPin,
-  MapPinIcon,
-  Hash,
-  Phone,
-  Calendar,
-  MessageCircle,
-} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
@@ -44,100 +30,9 @@ import {
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
 import { formatUrl } from "@/lib/format-utils";
-
-// Define available columns for the table using Company type
-const COMPANY_FIELDS: Array<{
-  id: keyof Company;
-  label: string;
-  required: boolean;
-  sortable: boolean;
-  center: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-}> = [
-  {
-    id: "id",
-    label: "ID",
-    required: false,
-    sortable: true,
-    center: true,
-  },
-  {
-    id: "name",
-    label: "Name",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: Building2,
-  },
-
-  {
-    id: "url",
-    label: "Website",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Globe,
-  },
-  {
-    id: "phone",
-    label: "Phone",
-    required: false,
-    sortable: false,
-    center: false,
-    icon: Phone,
-  },
-
-  {
-    id: "budgeting_month",
-    label: "Budgeting Month",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Calendar,
-  },
-
-  {
-    id: "country",
-    label: "Country",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Globe,
-  },
-  {
-    id: "zip",
-    label: "ZIP Code",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Hash,
-  },
-  {
-    id: "city",
-    label: "City",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPinIcon,
-  },
-  {
-    id: "address",
-    label: "Address",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPin,
-  },
-
-  {
-    id: "comment",
-    label: "Comment",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MessageCircle,
-  },
-];
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import { COMPANY_FIELDS } from "@/config/company-fields";
+import { ExternalLink } from "lucide-react";
 
 interface CompanyListProps {
   companies: Company[];
@@ -149,14 +44,30 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Consolidated table preferences state
-  const [tablePreferences, setTablePreferences] = useState<
-    TablePreferences<Company>
-  >({
-    visibleColumns: ["name", "url", "budgeting_month", "city", "comment"], // Default visible columns
-    sortField: COMPANY_FIELDS[1].id, // Default to second column (name)
-    sortDirection: "asc", // Default sort direction
-  });
+  // Default preferences
+  const defaultPreferences: TablePreferences<Company> = {
+    visibleColumns: ["name", "url", "budgeting_month", "city", "comment"],
+    sortField: "name",
+    sortDirection: "asc",
+  };
+
+  // Consolidated table preferences state with localStorage
+  const [tablePreferences, setTablePreferences] =
+    useState<TablePreferences<Company>>(defaultPreferences);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedPreferences = getTablePreferences(
+      "companies",
+      defaultPreferences
+    );
+    setTablePreferences(savedPreferences);
+  }, []);
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    saveTablePreferences("companies", tablePreferences);
+  }, [tablePreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -14,15 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { Person } from "@/types/person";
 import { type TablePreferences } from "@/types/table";
-import {
-  User,
-  Mail,
-  Phone,
-  Briefcase,
-  Calendar,
-  Building2,
-  Hash,
-} from "lucide-react";
 import { TableActions } from "@/components/table-actions";
 import { ColumnSelector } from "@/components/ui/column-selector";
 import {
@@ -33,66 +24,9 @@ import {
   visibleColumnsToStrings,
 } from "@/lib/table-utils";
 import { formatDate } from "@/lib/format-utils";
-
-// Define available columns for the table using Person type
-const PERSON_FIELDS: Array<{
-  id: keyof Person;
-  label: string;
-  required: boolean;
-  sortable: boolean;
-  center: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
-}> = [
-  {
-    id: "id",
-    label: "ID",
-    required: false,
-    sortable: true,
-    center: true,
-  },
-
-  {
-    id: "name",
-    label: "Name",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: User,
-  },
-  {
-    id: "email",
-    label: "Email",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Mail,
-  },
-  {
-    id: "phone",
-    label: "Phone",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Phone,
-  },
-  {
-    id: "function",
-    label: "Function",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Briefcase,
-  },
-
-  {
-    id: "createdAt",
-    label: "Created",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Calendar,
-  },
-];
+import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
+import { PERSON_FIELDS } from "@/config/person-fields";
+import { User, Mail, Phone, Briefcase, Calendar } from "lucide-react";
 
 interface PeopleListProps {
   people: Person[];
@@ -103,14 +37,27 @@ interface PeopleListProps {
 export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
   const { showDeleteAlert } = useDeleteAlert();
 
-  // Consolidated table preferences state
-  const [tablePreferences, setTablePreferences] = useState<
-    TablePreferences<Person>
-  >({
-    visibleColumns: ["name", "email", "phone", "function", "createdAt"], // Default visible columns
-    sortField: "name", // Default sort field
-    sortDirection: "asc", // Default sort direction
-  });
+  // Default preferences
+  const defaultPreferences: TablePreferences<Person> = {
+    visibleColumns: ["name", "email", "phone", "function", "createdAt"],
+    sortField: "name",
+    sortDirection: "asc",
+  };
+
+  // Consolidated table preferences state with localStorage
+  const [tablePreferences, setTablePreferences] =
+    useState<TablePreferences<Person>>(defaultPreferences);
+
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    const savedPreferences = getTablePreferences("people", defaultPreferences);
+    setTablePreferences(savedPreferences);
+  }, []);
+
+  // Save preferences to localStorage whenever they change
+  useEffect(() => {
+    saveTablePreferences("people", tablePreferences);
+  }, [tablePreferences]);
 
   function handleUpdateVisibleColumns(newVisibleColumns: string[]) {
     const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
