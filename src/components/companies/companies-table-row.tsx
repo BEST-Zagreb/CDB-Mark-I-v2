@@ -4,7 +4,7 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { TableActions } from "@/components/table-actions";
+import { TableActions } from "@/components/common/table-actions";
 import {
   Tooltip,
   TooltipContent,

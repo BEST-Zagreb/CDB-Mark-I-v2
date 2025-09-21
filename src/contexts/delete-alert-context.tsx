@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { DeleteAlert } from "@/components/delete-alert";
+import { DeleteAlert } from "@/components/common/delete-alert";
 
 interface DeleteAlertConfig {
   entity: string;
