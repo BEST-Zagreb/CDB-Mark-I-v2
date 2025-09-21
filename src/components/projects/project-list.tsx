@@ -101,7 +101,7 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
   const [tablePreferences, setTablePreferences] = useState<
     TablePreferences<Project>
   >({
-    visibleColumns: ["name", "frGoal", "created_at", "updated_at"], // Default visible columns
+    visibleColumns: ["name", "frGoal", "created_at"], // Default visible columns
     sortField: PROJECT_FIELDS[1].id, // Default to second column (name)
     sortDirection: "asc", // Default sort direction
   });
@@ -241,7 +241,10 @@ export function ProjectList({ projects, onEdit, onDelete }: ProjectListProps) {
                   // Handle special formatting for specific columns
                   if (column.id === "frGoal") {
                     return (
-                      <TableCell key={column.id}>
+                      <TableCell
+                        key={column.id}
+                        className={column.center ? "text-center" : ""}
+                      >
                         {formatAmount(
                           project.frGoal,
                           project.created_at || project.updated_at

@@ -80,7 +80,7 @@ const PERSON_FIELDS: Array<{
     label: "Function",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Briefcase,
   },
 
@@ -107,7 +107,7 @@ export function PeopleList({ people, onEdit, onDelete }: PeopleListProps) {
   const [tablePreferences, setTablePreferences] = useState<
     TablePreferences<Person>
   >({
-    visibleColumns: ["name", "email", "phone", "function"], // Default visible columns
+    visibleColumns: ["name", "email", "phone", "function", "createdAt"], // Default visible columns
     sortField: "name", // Default sort field
     sortDirection: "asc", // Default sort direction
   });

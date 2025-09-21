@@ -95,7 +95,7 @@ const COLLABORATION_FIELDS: Array<{
     label: "Type",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Tag,
   },
   {
@@ -103,7 +103,7 @@ const COLLABORATION_FIELDS: Array<{
     label: "Responsible",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: User,
   },
   {
@@ -117,10 +117,10 @@ const COLLABORATION_FIELDS: Array<{
 
   {
     id: "personName",
-    label: "Person",
+    label: "Contact",
     required: false,
     sortable: true,
-    center: false,
+    center: true,
     icon: Users,
   },
 
@@ -227,9 +227,14 @@ export function CollaborationList({
       }
     >
   >({
-    visibleColumns: showProjectNames
-      ? ["projectName", "type", "responsible", "priority", "successful"]
-      : ["companyName", "type", "responsible", "priority", "successful"], // Default visible columns
+    visibleColumns: [
+      showProjectNames ? "projectName" : "companyName",
+      "responsible",
+      "priority",
+      "personName",
+      "comment",
+      "contacted",
+    ], // Default visible columns
     sortField: "priority", // Default sort field
     sortDirection: "desc", // Default sort direction
   });
