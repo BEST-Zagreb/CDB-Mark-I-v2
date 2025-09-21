@@ -105,7 +105,7 @@ export const AppSidebar = memo(function AppSidebar() {
                       pathname === "/" ? "text-primary bg-accent font-bold" : ""
                     }`}
                   >
-                    <Home />
+                    <Home className="size-5" />
                     <span>Home</span>
                   </Link>
                 </SidebarMenuButton>
@@ -129,7 +129,7 @@ export const AppSidebar = memo(function AppSidebar() {
                             : ""
                         }`}
                       >
-                        <FolderOpen />
+                        <FolderOpen className="size-5" />
                         <span>Projects</span>
                       </Link>
                     </SidebarMenuButton>
@@ -200,7 +200,7 @@ export const AppSidebar = memo(function AppSidebar() {
                             : ""
                         }`}
                       >
-                        <Building />
+                        <Building className="size-5" />
                         <span>Companies</span>
                       </Link>
                     </SidebarMenuButton>

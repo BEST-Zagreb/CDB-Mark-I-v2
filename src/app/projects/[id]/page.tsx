@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Card,
@@ -363,7 +364,10 @@ export default function ProjectDetailPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Collaborations</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Collaborations</CardTitle>
+                  <Badge variant="secondary">{collaborations.length}</Badge>
+                </div>
                 <CardDescription>
                   Companies and organizations involved in this project
                 </CardDescription>

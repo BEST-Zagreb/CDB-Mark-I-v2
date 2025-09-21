@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ProjectsTable } from "@/components/projects/projects-table";
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
@@ -134,8 +135,9 @@ export default function ProjectsPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+            <Badge variant="secondary">{projects.length}</Badge>
           </div>
           <Button onClick={handleCreateProject}>
             <Plus className="mr-2 h-4 w-4" />

@@ -416,6 +416,7 @@ export default function CompanyDetailPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Handshake className="h-5 w-5" />
                   Collaborations
+                  <Badge variant="secondary">{collaborations.length}</Badge>
                 </CardTitle>
                 <CardDescription>
                   Collaboration history with this company

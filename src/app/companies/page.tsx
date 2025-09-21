@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CompaniesTable } from "@/components/companies/companies-table";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
@@ -134,8 +135,9 @@ export default function CompaniesPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+            <Badge variant="secondary">{companies.length}</Badge>
           </div>
           <Button onClick={handleCreateCompany}>
             <Plus className="mr-2 h-4 w-4" />

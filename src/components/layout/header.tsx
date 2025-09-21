@@ -73,7 +73,7 @@ export default function Header(): JSX.Element {
                   >
                     <Home
                       className={cn(
-                        "size-4 transition-colors",
+                        "size-5 transition-colors",
                         pathname === "/"
                           ? "text-primary"
                           : "group-hover:text-primary"
@@ -104,7 +104,7 @@ export default function Header(): JSX.Element {
                   >
                     <FolderOpen
                       className={cn(
-                        "size-4 transition-colors",
+                        "size-5 transition-colors",
                         isActivePath("/projects")
                           ? "text-primary font-bold"
                           : "group-hover:text-primary"
@@ -135,7 +135,7 @@ export default function Header(): JSX.Element {
                   >
                     <Building
                       className={cn(
-                        "size-4 transition-colors",
+                        "size-5 transition-colors",
                         isActivePath("/companies")
                           ? "text-primary"
                           : "group-hover:text-primary"
