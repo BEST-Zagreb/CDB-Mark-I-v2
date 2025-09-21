@@ -87,7 +87,7 @@ export default function Header(): JSX.Element {
                           : "group-hover:text-primary"
                       )}
                     >
-                      Dashboard
+                      Home
                     </span>
                   </Link>
                 </li>

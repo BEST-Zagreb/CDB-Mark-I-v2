@@ -96,7 +96,7 @@ export const AppSidebar = memo(function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Dashboard/Home */}
+              {/* Home */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link
@@ -106,7 +106,7 @@ export const AppSidebar = memo(function AppSidebar() {
                     }`}
                   >
                     <Home />
-                    <span>Dashboard</span>
+                    <span>Home</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
