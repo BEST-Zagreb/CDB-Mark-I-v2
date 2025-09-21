@@ -50,14 +50,7 @@ const PERSON_FIELDS: Array<{
     sortable: true,
     center: true,
   },
-  {
-    id: "companyName",
-    label: "Company",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Building2,
-  },
+
   {
     id: "name",
     label: "Name",
@@ -90,6 +83,7 @@ const PERSON_FIELDS: Array<{
     center: false,
     icon: Briefcase,
   },
+
   {
     id: "createdAt",
     label: "Created at",

@@ -59,6 +59,7 @@ const PROJECT_FIELDS: Array<{
     center: false,
     icon: Briefcase,
   },
+
   {
     id: "frGoal",
     label: "FR Goal",
@@ -67,6 +68,7 @@ const PROJECT_FIELDS: Array<{
     center: true,
     icon: Target,
   },
+
   {
     id: "created_at",
     label: "Created at",

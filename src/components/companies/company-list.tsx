@@ -69,41 +69,10 @@ const COMPANY_FIELDS: Array<{
     center: false,
     icon: Building2,
   },
+
   {
     id: "url",
     label: "Website",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Globe,
-  },
-  {
-    id: "address",
-    label: "Address",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPin,
-  },
-  {
-    id: "city",
-    label: "City",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: MapPinIcon,
-  },
-  {
-    id: "zip",
-    label: "ZIP Code",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Hash,
-  },
-  {
-    id: "country",
-    label: "Country",
     required: false,
     sortable: true,
     center: false,
@@ -117,6 +86,7 @@ const COMPANY_FIELDS: Array<{
     center: false,
     icon: Phone,
   },
+
   {
     id: "budgeting_month",
     label: "Budgeting Month",
@@ -125,6 +95,40 @@ const COMPANY_FIELDS: Array<{
     center: false,
     icon: Calendar,
   },
+
+  {
+    id: "country",
+    label: "Country",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: Globe,
+  },
+  {
+    id: "zip",
+    label: "ZIP Code",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: Hash,
+  },
+  {
+    id: "city",
+    label: "City",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MapPinIcon,
+  },
+  {
+    id: "address",
+    label: "Address",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: MapPin,
+  },
+
   {
     id: "comment",
     label: "Comment",
@@ -149,7 +153,7 @@ export function CompanyList({ companies, onEdit, onDelete }: CompanyListProps) {
   const [tablePreferences, setTablePreferences] = useState<
     TablePreferences<Company>
   >({
-    visibleColumns: ["name", "url", "city", "country"], // Default visible columns
+    visibleColumns: ["name", "url", "budgeting_month", "city", "comment"], // Default visible columns
     sortField: COMPANY_FIELDS[1].id, // Default to second column (name)
     sortDirection: "asc", // Default sort direction
   });
