@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
-import { usePeopleByCompany } from "@/hooks/use-people";
+import { useContactsByCompany } from "@/hooks/use-contacts";
 import {
   Collaboration,
   CollaborationFormData,
@@ -41,7 +41,7 @@ function normalizePriority(
       return priority as "low" | "medium" | "high";
     }
   }
-  return "medium"; // Default fallback
+  return "low"; // Default fallback
 }
 
 interface CollaborationFormProps {
@@ -68,15 +68,15 @@ export function CollaborationForm({
       comment: "",
       contacted: false,
       letter: false,
-      priority: "medium",
+      priority: "low",
       type: "financijska",
       contactInFuture: true,
     },
   });
 
-  // Watch the selected company ID to fetch people
+  // Watch the selected company ID to fetch contacts
   const selectedCompanyId = form.watch("companyId");
-  const { data: people = [] } = usePeopleByCompany(selectedCompanyId);
+  const { data: contacts = [] } = useContactsByCompany(selectedCompanyId);
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -84,7 +84,7 @@ export function CollaborationForm({
       form.reset({
         companyId: initialData.companyId,
         projectId: initialData.projectId,
-        personId: initialData.personId || undefined,
+        contactId: initialData.contactId || undefined,
         responsible: initialData.responsible || "",
         comment: initialData.comment || "",
         contacted: initialData.contacted,
@@ -104,7 +104,7 @@ export function CollaborationForm({
         comment: "",
         contacted: false,
         letter: false,
-        priority: "medium",
+        priority: "low",
         type: "financijska",
         contactInFuture: true,
       });
@@ -168,7 +168,7 @@ export function CollaborationForm({
 
         <FormField
           control={form.control}
-          name="personId"
+          name="contactId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Contact Person</FormLabel>
@@ -186,11 +186,11 @@ export function CollaborationForm({
 
                 <SelectContent>
                   <SelectItem value="none">Unknown/Not specified</SelectItem>
-                  {people.map((person) => (
-                    <SelectItem key={person.id} value={person.id.toString()}>
-                      {person.name}
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.id.toString()}>
+                      {contact.name}
                       <span className="text-muted-foreground">
-                        {person.function && `(${person.function})`}
+                        {contact.function && `(${contact.function})`}
                       </span>
                     </SelectItem>
                   ))}

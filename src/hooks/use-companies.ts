@@ -28,7 +28,7 @@ export function useCompany(id: number) {
   return useQuery({
     queryKey: companyKeys.detail(id),
     queryFn: () => companyService.getById(id),
-    enabled: !!id,
+    enabled: !!id && !isNaN(id) && id > 0,
   });
 }
 
@@ -36,7 +36,9 @@ export function useCreateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: companyService.create,
+    mutationFn: (data: any) => {
+      return companyService.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company created successfully");
@@ -73,7 +75,9 @@ export function useDeleteCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: companyService.delete,
+    mutationFn: (id: number) => {
+      return companyService.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company deleted successfully");

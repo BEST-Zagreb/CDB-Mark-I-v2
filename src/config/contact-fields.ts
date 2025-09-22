@@ -7,11 +7,11 @@ import {
   Building2,
   Hash,
 } from "lucide-react";
-import { Person } from "@/types/person";
+import { Contact } from "@/types/contact";
 
-// Define available columns for the person table
-export const PERSON_FIELDS: Array<{
-  id: keyof Person;
+// Define available columns for the contact table
+export const CONTACT_FIELDS: Array<{
+  id: keyof Contact;
   label: string;
   required: boolean;
   sortable: boolean;

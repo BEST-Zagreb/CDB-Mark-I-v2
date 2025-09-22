@@ -16,7 +16,7 @@ function transformCollaboration(
     id: dbCollaboration.id,
     companyId: dbCollaboration.company_id,
     projectId: dbCollaboration.project_id,
-    personId: dbCollaboration.person_id,
+    contactId: dbCollaboration.person_id,
     responsible: dbCollaboration.responsible,
     comment: dbCollaboration.comment,
     contacted: Boolean(dbCollaboration.contacted),
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const db = new Database(dbPath, { readonly: true });
 
     let query = `
-      SELECT c.*, companies.name as companyName, people.name as personName, projects.name as projectName
+      SELECT c.*, companies.name as companyName, people.name as contactName, projects.name as projectName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     const rows = db.prepare(query).all(...params) as (CollaborationDB & {
       companyName?: string;
-      personName?: string;
+      contactName?: string;
       projectName?: string;
     })[];
     db.close();
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     const collaborations = rows.map((row) => {
       const collaboration = transformCollaboration(row);
       collaboration.companyName = row.companyName || undefined;
-      collaboration.personName = row.personName || undefined;
+      collaboration.contactName = row.contactName || undefined;
       collaboration.projectName = row.projectName || undefined;
       return collaboration;
     });
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       .run(
         data.companyId,
         data.projectId,
-        data.personId || null,
+        data.contactId || null,
         data.responsible || null,
         data.comment || null,
         data.contacted ? 1 : 0,
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     // Get the created collaboration with related data
     const getQuery = `
-      SELECT c.*, companies.name as companyName, people.name as personName, projects.name as projectName
+      SELECT c.*, companies.name as companyName, people.name as contactName, projects.name as projectName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
@@ -152,14 +152,14 @@ export async function POST(request: NextRequest) {
       .prepare(getQuery)
       .get(result.lastInsertRowid) as CollaborationDB & {
       companyName?: string;
-      personName?: string;
+      contactName?: string;
       projectName?: string;
     };
     db.close();
 
     const collaboration = transformCollaboration(newRow);
     collaboration.companyName = newRow.companyName || undefined;
-    collaboration.personName = newRow.personName || undefined;
+    collaboration.contactName = newRow.contactName || undefined;
     collaboration.projectName = newRow.projectName || undefined;
 
     return NextResponse.json(collaboration, { status: 201 });

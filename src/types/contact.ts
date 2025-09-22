@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Database person interface
-export interface PersonDB {
+// Database contact interface
+export interface ContactDB {
   id: number;
   name: string | null;
   email: string | null;
@@ -11,8 +11,8 @@ export interface PersonDB {
   created_at: string | null;
 }
 
-// UI person interface (transformed from DB)
-export interface Person {
+// UI contact interface (transformed from DB)
+export interface Contact {
   id: number;
   name: string | null;
   email: string | null;
@@ -24,16 +24,20 @@ export interface Person {
   companyName?: string;
 }
 
-// Validation schema for person forms
-export const personSchema = z.object({
+// Validation schema for contact forms
+export const contactSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required").optional(),
+  email: z
+    .string()
+    .email("Valid email is required")
+    .or(z.literal(""))
+    .optional(),
   phone: z.string().optional(),
   companyId: z.number().positive("Company is required"),
   function: z.string().optional(),
 });
 
-// Form data for creating/updating persons
-export type PersonFormData = z.infer<typeof personSchema>;
+// Form data for creating/updating contacts
+export type ContactFormData = z.infer<typeof contactSchema>;
 
-export type PersonSchema = z.infer<typeof personSchema>;
+export type ContactSchema = z.infer<typeof contactSchema>;

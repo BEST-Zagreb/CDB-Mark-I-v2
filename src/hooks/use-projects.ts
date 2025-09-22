@@ -35,7 +35,9 @@ export function useCreateProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: projectService.create,
+    mutationFn: (data: any) => {
+      return projectService.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
       toast.success("Project created successfully");
@@ -72,7 +74,9 @@ export function useDeleteProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: projectService.delete,
+    mutationFn: (id: number) => {
+      return projectService.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
       toast.success("Project deleted successfully");

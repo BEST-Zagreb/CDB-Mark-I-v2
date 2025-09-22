@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
-import { Person, PersonDB } from "@/types/person";
+import { Contact, ContactDB } from "@/types/contact";
 
 const dbPath = path.join(process.cwd(), "db", "cdb.sqlite3");
 
-function transformPerson(dbPerson: PersonDB): Person {
+function transformContact(dbContact: ContactDB): Contact {
   return {
-    id: dbPerson.id,
-    name: dbPerson.name,
-    email: dbPerson.email,
-    phone: dbPerson.phone,
-    companyId: dbPerson.company_id,
-    function: dbPerson.function,
-    createdAt: dbPerson.created_at ? new Date(dbPerson.created_at) : null,
+    id: dbContact.id,
+    name: dbContact.name,
+    email: dbContact.email,
+    phone: dbContact.phone,
+    companyId: dbContact.company_id,
+    function: dbContact.function,
+    createdAt: dbContact.created_at ? new Date(dbContact.created_at) : null,
   };
 }
 
@@ -39,24 +39,24 @@ export async function GET(request: NextRequest) {
 
     query += " ORDER BY p.name ASC";
 
-    const rows = db.prepare(query).all(...params) as (PersonDB & {
+    const rows = db.prepare(query).all(...params) as (ContactDB & {
       companyName?: string;
     })[];
     db.close();
 
-    const people = rows.map((row) => {
-      const person = transformPerson(row);
+    const contacts = rows.map((row) => {
+      const contact = transformContact(row);
       if (row.companyName) {
-        person.companyName = row.companyName;
+        contact.companyName = row.companyName;
       }
-      return person;
+      return contact;
     });
 
-    return NextResponse.json(people);
+    return NextResponse.json(contacts);
   } catch (error) {
-    console.error("Error fetching people:", error);
+    console.error("Error fetching contacts:", error);
     return NextResponse.json(
-      { error: "Failed to fetch people" },
+      { error: "Failed to fetch contacts" },
       { status: 500 }
     );
   }
@@ -80,17 +80,19 @@ export async function POST(request: NextRequest) {
       data.function || null
     );
 
-    const insertedPerson = db
+    const insertedContact = db
       .prepare("SELECT * FROM people WHERE id = ?")
-      .get(result.lastInsertRowid) as PersonDB;
+      .get(result.lastInsertRowid) as ContactDB;
 
     db.close();
 
-    return NextResponse.json(transformPerson(insertedPerson), { status: 201 });
+    return NextResponse.json(transformContact(insertedContact), {
+      status: 201,
+    });
   } catch (error) {
-    console.error("Error creating person:", error);
+    console.error("Error creating contact:", error);
     return NextResponse.json(
-      { error: "Failed to create person" },
+      { error: "Failed to create contact" },
       { status: 500 }
     );
   }

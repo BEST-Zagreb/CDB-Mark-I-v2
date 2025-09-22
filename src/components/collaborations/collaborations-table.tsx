@@ -20,14 +20,14 @@ interface VirtualizedCollaborationListProps {
   collaborations: (Collaboration & {
     companyName?: string;
     projectName?: string;
-    personName?: string;
+    contactName?: string;
   })[];
   searchQuery: string;
   tablePreferences: TablePreferences<
     Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     }
   >;
   onEdit: (collaboration: Collaboration) => void;
@@ -36,7 +36,7 @@ interface VirtualizedCollaborationListProps {
     field: keyof (Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     })
   ) => void;
   hiddenColumns?: string[];
@@ -69,7 +69,7 @@ export function CollaborationsTable({
           bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
           break;
         case "amount":
-        case "personId":
+        case "contactId":
           aValue = (a as any)[sortField] || 0;
           bValue = (b as any)[sortField] || 0;
           break;

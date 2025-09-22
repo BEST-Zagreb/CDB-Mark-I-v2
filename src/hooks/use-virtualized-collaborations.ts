@@ -8,7 +8,7 @@ interface UseVirtualizedCollaborationsProps {
   collaborations: (Collaboration & {
     companyName?: string;
     projectName?: string;
-    personName?: string;
+    contactName?: string;
   })[];
   searchQuery: string;
   containerRef: React.RefObject<HTMLElement>;
@@ -32,7 +32,7 @@ export function useVirtualizedCollaborations({
       return (
         collaboration.companyName?.toLowerCase().includes(query) ||
         collaboration.projectName?.toLowerCase().includes(query) ||
-        collaboration.personName?.toLowerCase().includes(query) ||
+        collaboration.contactName?.toLowerCase().includes(query) ||
         collaboration.responsible?.toLowerCase().includes(query) ||
         collaboration.comment?.toLowerCase().includes(query) ||
         collaboration.type?.toLowerCase().includes(query)

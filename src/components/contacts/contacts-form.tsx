@@ -13,25 +13,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Person, PersonFormData, personSchema } from "@/types/person";
+import { Contact, ContactFormData, contactSchema } from "@/types/contact";
 
-interface PersonFormProps {
-  initialData?: Person | null;
+interface ContactFormProps {
+  initialData?: Contact | null;
   companyId: number;
-  onSubmit: (data: PersonFormData) => Promise<void>;
+  onSubmit: (data: ContactFormData) => Promise<void>;
   isLoading?: boolean;
 }
 
-export function PersonForm({
+export function ContactForm({
   initialData,
   companyId,
   onSubmit,
   isLoading = false,
-}: PersonFormProps) {
+}: ContactFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<PersonFormData>({
-    resolver: zodResolver(personSchema),
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -61,12 +61,13 @@ export function PersonForm({
     }
   }, [initialData, companyId, form]);
 
-  const handleSubmit = async (data: PersonFormData) => {
+  const handleSubmit = async (data: ContactFormData) => {
     try {
       setSubmitting(true);
       await onSubmit(data);
       form.reset();
     } catch (error) {
+      console.error("Form submission error:", error);
       // Error handling is done in the parent component
     } finally {
       setSubmitting(false);
@@ -87,7 +88,7 @@ export function PersonForm({
             <FormItem>
               <FormLabel>Name *</FormLabel>
               <FormControl>
-                <Input placeholder="Enter person's name" {...field} />
+                <Input placeholder="Enter contact's name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

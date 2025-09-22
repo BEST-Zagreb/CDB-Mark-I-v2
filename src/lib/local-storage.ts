@@ -7,7 +7,7 @@ const APP_STORAGE_KEY = "Company_Database_app";
 export type TableType =
   | "projects"
   | "companies"
-  | "people"
+  | "contacts"
   | "collaborations-companies"
   | "collaborations-projects";
 
@@ -15,7 +15,7 @@ export type TableType =
 interface AppTablePreferences {
   projects?: TablePreferences<any>;
   companies?: TablePreferences<any>;
-  people?: TablePreferences<any>;
+  contacts?: TablePreferences<any>;
   "collaborations-companies"?: TablePreferences<any>;
   "collaborations-projects"?: TablePreferences<any>;
 }

@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import path from "path";
-import { Person, PersonDB } from "@/types/person";
+import { Contact, ContactDB } from "@/types/contact";
 
 const dbPath = path.join(process.cwd(), "db", "cdb.sqlite3");
 
-function transformPerson(dbPerson: PersonDB): Person {
+function transformContact(dbContact: ContactDB): Contact {
   return {
-    id: dbPerson.id,
-    name: dbPerson.name,
-    email: dbPerson.email,
-    phone: dbPerson.phone,
-    companyId: dbPerson.company_id,
-    function: dbPerson.function,
-    createdAt: dbPerson.created_at ? new Date(dbPerson.created_at) : null,
+    id: dbContact.id,
+    name: dbContact.name,
+    email: dbContact.email,
+    phone: dbContact.phone,
+    companyId: dbContact.company_id,
+    function: dbContact.function,
+    createdAt: dbContact.created_at ? new Date(dbContact.created_at) : null,
   };
 }
 
@@ -22,10 +22,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const personId = parseInt(params.id);
+    const contactId = parseInt(params.id);
 
-    if (isNaN(personId)) {
-      return NextResponse.json({ error: "Invalid person ID" }, { status: 400 });
+    if (isNaN(contactId)) {
+      return NextResponse.json(
+        { error: "Invalid contact ID" },
+        { status: 400 }
+      );
     }
 
     const db = new Database(dbPath, { readonly: true });
@@ -39,27 +42,27 @@ export async function GET(
       WHERE p.id = ?
     `;
 
-    const row = db.prepare(query).get(personId) as
-      | (PersonDB & {
+    const row = db.prepare(query).get(contactId) as
+      | (ContactDB & {
           companyName?: string;
         })
       | undefined;
     db.close();
 
     if (!row) {
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const person = transformPerson(row);
+    const contact = transformContact(row);
     if (row.companyName) {
-      person.companyName = row.companyName;
+      contact.companyName = row.companyName;
     }
 
-    return NextResponse.json(person);
+    return NextResponse.json(contact);
   } catch (error) {
-    console.error("Error fetching person:", error);
+    console.error("Error fetching contact:", error);
     return NextResponse.json(
-      { error: "Failed to fetch person" },
+      { error: "Failed to fetch contact" },
       { status: 500 }
     );
   }
@@ -70,10 +73,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const personId = parseInt(params.id);
+    const contactId = parseInt(params.id);
 
-    if (isNaN(personId)) {
-      return NextResponse.json({ error: "Invalid person ID" }, { status: 400 });
+    if (isNaN(contactId)) {
+      return NextResponse.json(
+        { error: "Invalid contact ID" },
+        { status: 400 }
+      );
     }
 
     const data = await request.json();
@@ -91,25 +97,25 @@ export async function PUT(
       data.phone || null,
       data.companyId,
       data.function || null,
-      personId
+      contactId
     );
 
     if (result.changes === 0) {
       db.close();
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const updatedPerson = db
+    const updatedContact = db
       .prepare("SELECT * FROM people WHERE id = ?")
-      .get(personId) as PersonDB;
+      .get(contactId) as ContactDB;
 
     db.close();
 
-    return NextResponse.json(transformPerson(updatedPerson));
+    return NextResponse.json(transformContact(updatedContact));
   } catch (error) {
-    console.error("Error updating person:", error);
+    console.error("Error updating contact:", error);
     return NextResponse.json(
-      { error: "Failed to update person" },
+      { error: "Failed to update contact" },
       { status: 500 }
     );
   }
@@ -120,28 +126,31 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const personId = parseInt(params.id);
+    const contactId = parseInt(params.id);
 
-    if (isNaN(personId)) {
-      return NextResponse.json({ error: "Invalid person ID" }, { status: 400 });
+    if (isNaN(contactId)) {
+      return NextResponse.json(
+        { error: "Invalid contact ID" },
+        { status: 400 }
+      );
     }
 
     const db = new Database(dbPath);
 
     const stmt = db.prepare("DELETE FROM people WHERE id = ?");
-    const result = stmt.run(personId);
+    const result = stmt.run(contactId);
 
     db.close();
 
     if (result.changes === 0) {
-      return NextResponse.json({ error: "Person not found" }, { status: 404 });
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting person:", error);
+    console.error("Error deleting contact:", error);
     return NextResponse.json(
-      { error: "Failed to delete person" },
+      { error: "Failed to delete contact" },
       { status: 500 }
     );
   }

@@ -64,14 +64,14 @@ export default function ProjectDetailPage() {
     Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     }
   > = {
     visibleColumns: [
       "companyName",
       "responsible",
       "priority",
-      "personName",
+      "contactName",
       "comment",
     ],
     sortField: "priority",
@@ -108,15 +108,10 @@ export default function ProjectDetailPage() {
 
     // Sum up amounts from successful collaborations only
     const totalRaised = collaborations
-      .filter(
-        (collaboration) => collaboration.successful && collaboration.amount
-      )
+      .filter((collaboration) => collaboration.amount)
       .reduce((sum, collaboration) => sum + (collaboration.amount || 0), 0);
 
-    const progressPercentage = Math.min(
-      (totalRaised / project.frGoal) * 100,
-      100
-    );
+    const progressPercentage = (totalRaised / project.frGoal) * 100;
 
     return { totalRaised, progressPercentage };
   };
@@ -160,7 +155,7 @@ export default function ProjectDetailPage() {
     field: keyof (Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     })
   ) => {
     const newPreferences = handleSort(tablePreferences, field);
@@ -366,8 +361,7 @@ export default function ProjectDetailPage() {
             <CardHeader>
               <CardTitle>Fundraising Progress</CardTitle>
               <CardDescription>
-                Progress towards the fundraising goal based on successful
-                collaborations
+                Progress towards the fundraising goal based on collaborations
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

@@ -16,7 +16,7 @@ function transformCollaboration(
     id: dbCollaboration.id,
     companyId: dbCollaboration.company_id,
     projectId: dbCollaboration.project_id,
-    personId: dbCollaboration.person_id,
+    contactId: dbCollaboration.person_id,
     responsible: dbCollaboration.responsible,
     comment: dbCollaboration.comment,
     contacted: Boolean(dbCollaboration.contacted),
@@ -61,7 +61,7 @@ export async function GET(
 
     const db = new Database(dbPath, { readonly: true });
     const query = `
-      SELECT c.*, companies.name as companyName, people.name as personName
+      SELECT c.*, companies.name as companyName, people.name as contactName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
@@ -69,7 +69,7 @@ export async function GET(
     `;
 
     const row = db.prepare(query).get(id) as
-      | (CollaborationDB & { companyName?: string; personName?: string })
+      | (CollaborationDB & { companyName?: string; contactName?: string })
       | undefined;
     db.close();
 
@@ -82,7 +82,7 @@ export async function GET(
 
     const collaboration = transformCollaboration(row);
     collaboration.companyName = row.companyName || undefined;
-    collaboration.personName = row.personName || undefined;
+    collaboration.contactName = row.contactName || undefined;
 
     return NextResponse.json(collaboration);
   } catch (error) {
@@ -126,7 +126,7 @@ export async function PUT(
       .run(
         data.companyId,
         data.projectId,
-        data.personId || null,
+        data.contactId || null,
         data.responsible || null,
         data.comment || null,
         data.contacted ? 1 : 0,
@@ -155,7 +155,7 @@ export async function PUT(
 
     // Get the updated collaboration with related data
     const getQuery = `
-      SELECT c.*, companies.name as companyName, people.name as personName
+      SELECT c.*, companies.name as companyName, people.name as contactName
       FROM collaborations c
       LEFT JOIN companies ON c.company_id = companies.id
       LEFT JOIN people ON c.person_id = people.id
@@ -164,13 +164,13 @@ export async function PUT(
 
     const updatedRow = db.prepare(getQuery).get(id) as CollaborationDB & {
       companyName?: string;
-      personName?: string;
+      contactName?: string;
     };
     db.close();
 
     const collaboration = transformCollaboration(updatedRow);
     collaboration.companyName = updatedRow.companyName || undefined;
-    collaboration.personName = updatedRow.personName || undefined;
+    collaboration.contactName = updatedRow.contactName || undefined;
 
     return NextResponse.json(collaboration);
   } catch (error) {

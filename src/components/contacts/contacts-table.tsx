@@ -9,34 +9,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Person } from "@/types/person";
+import { Contact } from "@/types/contact";
 import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
-import { PERSON_FIELDS } from "@/config/person-fields";
-import { PeopleTableRow } from "./people-table-row";
+import { CONTACT_FIELDS } from "@/config/contact-fields";
+import { ContactsTableRow } from "./contacts-table-row";
 
-interface PeopleTableProps {
-  people: Person[];
+interface ContactsTableProps {
+  contacts: Contact[];
   searchQuery: string;
-  tablePreferences: TablePreferences<Person>;
-  onEdit?: (person: Person) => void;
-  onDelete?: (personId: number) => Promise<void>;
-  onSortColumn: (field: keyof Person) => void;
+  tablePreferences: TablePreferences<Contact>;
+  onEdit?: (contact: Contact) => void;
+  onDelete?: (contactId: number) => Promise<void>;
+  onSortColumn: (field: keyof Contact) => void;
   hiddenColumns?: string[];
 }
 
-export function PeopleTable({
-  people,
+export function ContactsTable({
+  contacts,
   searchQuery,
   tablePreferences,
   onEdit,
   onDelete,
   onSortColumn,
   hiddenColumns = [],
-}: PeopleTableProps) {
-  // Sort people based on current sort field and direction
-  const sortedPeople = useMemo(() => {
-    return [...people].sort((a, b) => {
+}: ContactsTableProps) {
+  // Sort contacts based on current sort field and direction
+  const sortedContacts = useMemo(() => {
+    return [...contacts].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -63,34 +63,34 @@ export function PeopleTable({
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
-  }, [people, tablePreferences.sortField, tablePreferences.sortDirection]);
+  }, [contacts, tablePreferences.sortField, tablePreferences.sortDirection]);
 
-  // Filter people based on search query
-  const filteredPeople = useMemo(() => {
-    if (!searchQuery.trim()) return sortedPeople;
+  // Filter contacts based on search query
+  const filteredContacts = useMemo(() => {
+    if (!searchQuery.trim()) return sortedContacts;
 
     const query = searchQuery.toLowerCase();
-    return sortedPeople.filter((person) => {
+    return sortedContacts.filter((contact) => {
       return (
-        person.name?.toLowerCase().includes(query) ||
-        person.email?.toLowerCase().includes(query) ||
-        person.phone?.toLowerCase().includes(query) ||
-        person.function?.toLowerCase().includes(query)
+        contact.name?.toLowerCase().includes(query) ||
+        contact.email?.toLowerCase().includes(query) ||
+        contact.phone?.toLowerCase().includes(query) ||
+        contact.function?.toLowerCase().includes(query)
       );
     });
-  }, [sortedPeople, searchQuery]);
+  }, [sortedContacts, searchQuery]);
 
   // Filter out hidden columns
-  const visibleColumnsFields = PERSON_FIELDS.filter(
+  const visibleColumnsFields = CONTACT_FIELDS.filter(
     (field) => !hiddenColumns.includes(field.id)
   );
 
-  if (filteredPeople.length === 0) {
+  if (filteredContacts.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
-          ? `No people found matching "${searchQuery}"`
-          : "No people found. Add a person to get started."}
+          ? `No contacts found matching "${searchQuery}"`
+          : "No contacts found. Add a contact to get started."}
       </div>
     );
   }
@@ -141,10 +141,10 @@ export function PeopleTable({
         </TableHeader>
 
         <TableBody>
-          {filteredPeople.map((person) => (
-            <PeopleTableRow
-              key={person.id}
-              person={person}
+          {filteredContacts.map((contact) => (
+            <ContactsTableRow
+              key={contact.id}
+              contact={contact}
               tablePreferences={tablePreferences}
               onEdit={onEdit}
               onDelete={onDelete}

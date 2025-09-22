@@ -26,9 +26,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
-import { PeopleTable } from "@/components/people/people-table";
+import { ContactsTable } from "@/components/contacts/contacts-table";
 import { formatUrl } from "@/lib/format-utils";
-import { PersonForm } from "@/components/people/person-form";
+import { ContactForm } from "@/components/contacts/contacts-form";
 import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
@@ -39,11 +39,11 @@ import {
   useUpdateCompany,
 } from "@/hooks/use-companies";
 import {
-  usePeopleByCompany,
-  useCreatePerson,
-  useUpdatePerson,
-  useDeletePerson,
-} from "@/hooks/use-people";
+  useContactsByCompany,
+  useCreateContact,
+  useUpdateContact,
+  useDeleteContact,
+} from "@/hooks/use-contacts";
 import {
   useCollaborationsByCompany,
   useCreateCollaboration,
@@ -51,12 +51,12 @@ import {
   useDeleteCollaboration,
 } from "@/hooks/use-collaborations";
 import { Company, CompanyFormData } from "@/types/company";
-import { Person, PersonFormData } from "@/types/person";
+import { Contact, ContactFormData, contactSchema } from "@/types/contact";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { type TablePreferences } from "@/types/table";
 import { useDebounce } from "@/hooks/use-debounce";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
-import { PERSON_FIELDS } from "@/config/person-fields";
+import { CONTACT_FIELDS } from "@/config/contact-fields";
 import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
 import {
   updateVisibleColumns,
@@ -69,33 +69,34 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function CompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const companyId = parseInt(params.id as string);
+  const rawId = params.id as string;
+  const companyId = rawId ? parseInt(rawId) : 0;
   const { showDeleteAlert } = useDeleteAlert();
   const isMobile = useIsMobile();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [personDialogOpen, setPersonDialogOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | undefined>();
+  const [selectedContact, setSelectedContact] = useState<Contact | undefined>();
   const [selectedCollaboration, setSelectedCollaboration] = useState<
     Collaboration | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
-  const [peopleSearchQuery, setPeopleSearchQuery] = useState("");
+  const [contactsSearchQuery, setContactsSearchQuery] = useState("");
 
   // Table preferences state for collaborations
   const defaultPreferences: TablePreferences<
     Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     }
   > = {
     visibleColumns: [
       "projectName",
       "responsible",
       "priority",
-      "personName",
+      "contactName",
       "comment",
     ],
     sortField: "priority",
@@ -106,19 +107,20 @@ export default function CompanyDetailPage() {
     return getTablePreferences("collaborations-companies", defaultPreferences);
   });
 
-  // Table preferences state for people
-  const peopleDefaultPreferences: TablePreferences<Person> = {
-    visibleColumns: ["name", "email", "phone", "function", "createdAt"],
+  // Table preferences state for contacts
+  const contactsDefaultPreferences: TablePreferences<Contact> = {
     sortField: "name",
     sortDirection: "asc",
+    visibleColumns: ["name", "email", "phone", "function"],
   };
 
-  const [peopleTablePreferences, setPeopleTablePreferences] = useState(() => {
-    return getTablePreferences("people", peopleDefaultPreferences);
-  });
-
+  const [contactsTablePreferences, setContactsTablePreferences] = useState(
+    () => {
+      return getTablePreferences("contacts", contactsDefaultPreferences);
+    }
+  );
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const debouncedPeopleSearchQuery = useDebounce(peopleSearchQuery, 300);
+  const debouncedContactsSearchQuery = useDebounce(contactsSearchQuery, 300);
 
   // React Query hooks
   const {
@@ -126,17 +128,17 @@ export default function CompanyDetailPage() {
     isLoading: loading,
     error: companyError,
   } = useCompany(companyId);
-  const { data: people = [], isLoading: peopleLoading } =
-    usePeopleByCompany(companyId);
+  const { data: contacts = [], isLoading: contactsLoading } =
+    useContactsByCompany(companyId);
   const { data: collaborations = [], isLoading: collaborationsLoading } =
     useCollaborationsByCompany(companyId);
 
   // Mutation hooks
   const updateCompanyMutation = useUpdateCompany();
   const deleteCompanyMutation = useDeleteCompany();
-  const createPersonMutation = useCreatePerson();
-  const updatePersonMutation = useUpdatePerson();
-  const deletePersonMutation = useDeletePerson();
+  const createContactMutation = useCreateContact();
+  const updateContactMutation = useUpdateContact();
+  const deleteContactMutation = useDeleteContact();
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
@@ -147,12 +149,12 @@ export default function CompanyDetailPage() {
   );
 
   useEffect(() => {
-    if (isNaN(companyId)) {
+    if (!rawId || isNaN(companyId) || companyId <= 0) {
       toast.error("Invalid company ID");
       router.push("/companies");
       return;
     }
-  }, [companyId, router]);
+  }, [rawId, companyId, router]);
 
   // Redirect if company not found
   useEffect(() => {
@@ -168,8 +170,8 @@ export default function CompanyDetailPage() {
   }, [tablePreferences]);
 
   useEffect(() => {
-    saveTablePreferences("people", peopleTablePreferences);
-  }, [peopleTablePreferences]);
+    saveTablePreferences("contacts", contactsTablePreferences);
+  }, [contactsTablePreferences]);
 
   // Table handler functions
   const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
@@ -187,7 +189,7 @@ export default function CompanyDetailPage() {
     field: keyof (Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     })
   ) => {
     const newPreferences = handleSort(tablePreferences, field);
@@ -198,22 +200,22 @@ export default function CompanyDetailPage() {
     setSearchQuery(query);
   };
 
-  // People table handler functions
-  const handlePeopleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
+  // Contacts table handler functions
+  const handleContactsUpdateVisibleColumns = (newVisibleColumns: string[]) => {
     const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
-    setPeopleTablePreferences((prev) => ({
+    setContactsTablePreferences((prev) => ({
       ...prev,
       visibleColumns: visibleColumns,
     }));
   };
 
-  const handlePeopleSortColumn = (field: keyof Person) => {
-    const newPreferences = handleSort(peopleTablePreferences, field);
-    setPeopleTablePreferences(newPreferences);
+  const handleContactsSortColumn = (field: keyof Contact) => {
+    const newPreferences = handleSort(contactsTablePreferences, field);
+    setContactsTablePreferences(newPreferences);
   };
 
-  const handlePeopleSearchChange = (query: string) => {
-    setPeopleSearchQuery(query);
+  const handleContactsSearchChange = (query: string) => {
+    setContactsSearchQuery(query);
   };
 
   const handleEditCompany = () => {
@@ -234,32 +236,42 @@ export default function CompanyDetailPage() {
     setEditDialogOpen(false);
   };
 
-  const handleAddPerson = () => {
-    setSelectedPerson(undefined);
-    setPersonDialogOpen(true);
+  const handleAddContact = () => {
+    setSelectedContact(undefined);
+    setContactDialogOpen(true);
   };
 
-  const handleEditPerson = (person: Person) => {
-    setSelectedPerson(person);
-    setPersonDialogOpen(true);
+  const handleEditContact = (contact: Contact) => {
+    setSelectedContact(contact);
+    setContactDialogOpen(true);
   };
 
-  const handleDeletePerson = async (personId: number) => {
-    await deletePersonMutation.mutateAsync(personId);
+  const handleDeleteContact = async (contactId: number) => {
+    await deleteContactMutation.mutateAsync(contactId);
   };
 
-  const handleSubmitPerson = async (data: PersonFormData) => {
-    const personData = { ...data, companyId };
+  const handleSubmitContact = async (data: ContactFormData) => {
+    try {
+      if (!companyId || isNaN(companyId) || companyId <= 0) {
+        toast.error("Invalid company ID");
+        return;
+      }
 
-    if (selectedPerson) {
-      await updatePersonMutation.mutateAsync({
-        id: selectedPerson.id,
-        data: personData,
-      });
-    } else {
-      await createPersonMutation.mutateAsync(personData);
+      const contactData = { ...data, companyId };
+
+      if (selectedContact) {
+        await updateContactMutation.mutateAsync({
+          id: selectedContact.id,
+          data: contactData,
+        });
+      } else {
+        await createContactMutation.mutateAsync(contactData);
+      }
+      setContactDialogOpen(false);
+    } catch (error) {
+      console.error("Error in handleSubmitContact:", error);
+      // Don't close dialog on error
     }
-    setPersonDialogOpen(false);
   };
 
   const handleAddCollaboration = () => {
@@ -295,9 +307,9 @@ export default function CompanyDetailPage() {
 
   const isSubmitting =
     updateCompanyMutation.isPending ||
-    createPersonMutation.isPending ||
-    updatePersonMutation.isPending ||
-    deletePersonMutation.isPending ||
+    createContactMutation.isPending ||
+    updateContactMutation.isPending ||
+    deleteContactMutation.isPending ||
     createCollaborationMutation.isPending ||
     updateCollaborationMutation.isPending ||
     deleteCollaborationMutation.isPending;
@@ -485,23 +497,23 @@ export default function CompanyDetailPage() {
           )}
         </div>
 
-        {/* People Section */}
+        {/* Contacts Section */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  People
-                  <Badge variant="secondary">{people.length}</Badge>
+                  Contacts
+                  <Badge variant="secondary">{contacts.length}</Badge>
                 </CardTitle>
                 <CardDescription>
-                  People associated with this company
+                  Contacts associated with this company
                 </CardDescription>
               </div>
-              <Button onClick={handleAddPerson}>
+              <Button onClick={handleAddContact}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Person
+                Add Contact
               </Button>
             </div>
           </CardHeader>
@@ -509,32 +521,32 @@ export default function CompanyDetailPage() {
             {/* Search Bar and Column Selector */}
             <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
               <SearchBar
-                placeholder="Search people..."
-                onSearchChange={handlePeopleSearchChange}
-                searchParam="people_search"
+                placeholder="Search contacts..."
+                onSearchChange={handleContactsSearchChange}
+                searchParam="contacts_search"
               />
 
               <ColumnSelector
-                fields={PERSON_FIELDS.map((field) => ({
+                fields={CONTACT_FIELDS.map((field) => ({
                   id: field.id as string,
                   label: field.label,
                   required: field.required,
                 }))}
                 visibleColumns={visibleColumnsToStrings(
-                  peopleTablePreferences.visibleColumns
+                  contactsTablePreferences.visibleColumns
                 )}
-                onColumnsChange={handlePeopleUpdateVisibleColumns}
+                onColumnsChange={handleContactsUpdateVisibleColumns}
                 placeholder="Select columns"
               />
             </div>
 
-            <PeopleTable
-              people={people}
-              searchQuery={debouncedPeopleSearchQuery}
-              tablePreferences={peopleTablePreferences}
-              onEdit={handleEditPerson}
-              onDelete={handleDeletePerson}
-              onSortColumn={handlePeopleSortColumn}
+            <ContactsTable
+              contacts={contacts}
+              searchQuery={debouncedContactsSearchQuery}
+              tablePreferences={contactsTablePreferences}
+              onEdit={handleEditContact}
+              onDelete={handleDeleteContact}
+              onSortColumn={handleContactsSortColumn}
             />
           </CardContent>
         </Card>
@@ -616,16 +628,16 @@ export default function CompanyDetailPage() {
         )}
       </FormDialog>
 
-      <FormDialog<Person>
-        open={personDialogOpen}
-        onOpenChange={setPersonDialogOpen}
-        entity="Person"
-        initialData={selectedPerson}
-        onSubmit={handleSubmitPerson}
+      <FormDialog<Contact>
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        entity="Contact"
+        initialData={selectedContact}
+        onSubmit={handleSubmitContact}
         isLoading={isSubmitting}
       >
         {(formProps) => (
-          <PersonForm
+          <ContactForm
             initialData={formProps.initialData}
             companyId={companyId}
             onSubmit={formProps.onSubmit}

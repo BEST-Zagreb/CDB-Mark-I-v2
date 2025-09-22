@@ -25,7 +25,7 @@ export interface Collaboration {
   id: number;
   companyId: number;
   projectId: number;
-  personId: number | null;
+  contactId: number | null;
   responsible: string | null;
   comment: string | null;
   contacted: boolean;
@@ -40,7 +40,7 @@ export interface Collaboration {
   type: string;
   // Related data that might be joined
   companyName?: string;
-  personName?: string;
+  contactName?: string;
   projectName?: string;
 }
 
@@ -48,8 +48,8 @@ export interface Collaboration {
 export const collaborationSchema = z.object({
   companyId: z.number().positive("Company is required"),
   projectId: z.number().positive("Project is required"),
-  personId: z.number().positive().optional(),
-  responsible: z.string().min(1, "Responsible person is required"),
+  contactId: z.number().positive().optional(),
+  responsible: z.string().min(1, "Responsible contact is required"),
   comment: z.string().optional(),
   contacted: z.boolean(),
   successful: z.boolean().optional(),

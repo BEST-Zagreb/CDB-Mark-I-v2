@@ -19,7 +19,7 @@ import { Collaboration } from "@/types/collaboration";
 
 // Define available columns for the collaboration table
 export const COLLABORATION_FIELDS: Array<{
-  id: keyof Collaboration | "companyName" | "projectName" | "personName";
+  id: keyof Collaboration | "companyName" | "projectName" | "contactName";
   label: string;
   required: boolean;
   sortable: boolean;
@@ -78,7 +78,7 @@ export const COLLABORATION_FIELDS: Array<{
   },
 
   {
-    id: "personName",
+    id: "contactName",
     label: "Contact",
     required: false,
     sortable: true,

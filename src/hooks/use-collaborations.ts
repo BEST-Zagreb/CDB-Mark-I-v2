@@ -58,7 +58,9 @@ export function useCreateCollaboration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: collaborationService.create,
+    mutationFn: (data: CollaborationFormData) => {
+      return collaborationService.create(data);
+    },
     onSuccess: (newCollaboration) => {
       queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
       // Invalidate project and company specific queries
@@ -121,7 +123,9 @@ export function useDeleteCollaboration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: collaborationService.delete,
+    mutationFn: (id: number) => {
+      return collaborationService.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
       toast.success("Collaboration deleted successfully");

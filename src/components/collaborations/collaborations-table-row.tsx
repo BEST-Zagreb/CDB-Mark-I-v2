@@ -27,13 +27,13 @@ interface CollaborationsTableRowProps {
   collaboration: Collaboration & {
     companyName?: string;
     projectName?: string;
-    personName?: string;
+    contactName?: string;
   };
   tablePreferences: TablePreferences<
     Collaboration & {
       companyName?: string;
       projectName?: string;
-      personName?: string;
+      contactName?: string;
     }
   >;
   onEdit: (collaboration: Collaboration) => void;
