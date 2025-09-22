@@ -87,7 +87,7 @@ export function CompanySelect({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-0" align="start">
+      <PopoverContent className="w-[70dvw] sm:max-w-56 p-0">
         <Command>
           <CommandInput
             placeholder="Search companies..."

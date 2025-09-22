@@ -26,7 +26,11 @@ export function useCountries() {
 
       return countryOptions;
     },
-    staleTime: 1000 * 60 * 60 * 24 * 7, // 7 days
-    gcTime: 1000 * 60 * 60 * 24 * 30, // 30 days
+    // Keep countries fresh for a long time — they rarely change
+    staleTime: 1000 * 60 * 60 * 24 * 30, // 30 days
+    // Don't refetch on window focus/mount/reconnect — explicit refetch isn't needed
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
