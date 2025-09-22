@@ -48,4 +48,10 @@ export const collaborationService = {
     const response = await axios.get(API_BASE, { params });
     return response.data;
   },
+
+  // Get all unique responsible persons
+  async getResponsiblePersons(): Promise<string[]> {
+    const response = await axios.get(`${API_BASE}/responsible`);
+    return response.data;
+  },
 };

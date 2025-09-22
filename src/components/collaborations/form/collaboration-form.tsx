@@ -24,7 +24,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
+import { ResponsiblePersonSelect } from "@/components/collaborations/form/responsible-person-select";
 import { useContactsByCompany } from "@/hooks/use-contacts";
+import { useResponsiblePersons } from "@/hooks/use-collaborations";
 import {
   Collaboration,
   CollaborationFormData,
@@ -77,6 +79,9 @@ export function CollaborationForm({
   // Watch the selected company ID to fetch contacts
   const selectedCompanyId = form.watch("companyId");
   const { data: contacts = [] } = useContactsByCompany(selectedCompanyId);
+
+  // Fetch all existing responsible persons for autocomplete
+  const { data: responsiblePersons = [] } = useResponsiblePersons();
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -269,7 +274,13 @@ export function CollaborationForm({
               <FormLabel>Responsible Person *</FormLabel>
 
               <FormControl>
-                <Input placeholder="Enter responsible person name" {...field} />
+                <ResponsiblePersonSelect
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  options={responsiblePersons}
+                  placeholder="Search or enter responsible person name"
+                  disabled={isLoading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -135,3 +135,11 @@ export function useDeleteCollaboration() {
     },
   });
 }
+
+export function useResponsiblePersons() {
+  return useQuery({
+    queryKey: ["collaborations", "responsible"],
+    queryFn: collaborationService.getResponsiblePersons,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
