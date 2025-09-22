@@ -21,12 +21,12 @@ export const TableActions = memo(function TableActions<T>({
       <div className="flex justify-center items-center gap-2">
         {onView && (
           <Button variant="outline" size="icon" onClick={() => onView(item)}>
-            <Eye className="h-4 w-4" />
+            <Eye className="h-4 w-4 text-primary" />
           </Button>
         )}
         {onEdit && (
           <Button variant="outline" size="icon" onClick={() => onEdit(item)}>
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4 text-primary" />
           </Button>
         )}
         {onDelete && (
