@@ -27,7 +27,7 @@ Deployed and available on: _[coming soon](#)_
 
   <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details"/>
 
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details 2"/>
+  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details 2 (collaborations)"/>
 </p>
 
 ## Attribution
