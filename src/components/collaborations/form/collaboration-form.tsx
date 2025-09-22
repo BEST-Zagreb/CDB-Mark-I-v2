@@ -177,10 +177,17 @@ export function CollaborationForm({
                   field.onChange(value === "none" ? undefined : parseInt(value))
                 }
                 value={field.value?.toString() || "none"}
+                disabled={!selectedCompanyId || selectedCompanyId === 0}
               >
                 <FormControl className="w-full">
                   <SelectTrigger>
-                    <SelectValue placeholder="Select contact person" />
+                    <SelectValue
+                      placeholder={
+                        !selectedCompanyId || selectedCompanyId === 0
+                          ? "Select a company first"
+                          : "Select contact person"
+                      }
+                    />
                   </SelectTrigger>
                 </FormControl>
 
