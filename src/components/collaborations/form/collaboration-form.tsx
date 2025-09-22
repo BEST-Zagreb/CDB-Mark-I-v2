@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -82,10 +82,24 @@ export function CollaborationForm({
     useContactsByCompany(selectedCompanyId);
 
   // Fetch all existing responsible persons for autocomplete
-  const { data: responsiblePersons = [] } = useResponsiblePersons();
+  const {
+    data: responsiblePersons = [],
+    isLoading: responsiblePersonsLoading,
+  } = useResponsiblePersons();
+
+  // Track if form has been properly initialized with data
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
+
+  // Determine if we should show loading state
+  const isFormLoading =
+    isLoading ||
+    responsiblePersonsLoading ||
+    (initialData && !isFormInitialized);
 
   // Reset form when collaboration changes
   useEffect(() => {
+    setIsFormInitialized(false);
+
     if (initialData) {
       form.reset({
         companyId: initialData.companyId,
@@ -114,8 +128,16 @@ export function CollaborationForm({
         type: "financijska",
         contactInFuture: true,
       });
+      setIsFormInitialized(true);
     }
   }, [initialData, form, projectId, companyId]);
+
+  // Mark form as initialized when contacts are loaded (for edit mode)
+  useEffect(() => {
+    if (initialData && selectedCompanyId && !contactsLoading) {
+      setIsFormInitialized(true);
+    }
+  }, [initialData, selectedCompanyId, contactsLoading]);
 
   const handleSubmit = async (data: CollaborationFormData) => {
     try {
@@ -124,6 +146,18 @@ export function CollaborationForm({
       // Error handling is done in the parent component
     }
   };
+
+  // Show loading state while data is being fetched
+  if (isFormLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2 text-sm text-muted-foreground">
+          Loading form data...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
@@ -191,8 +225,6 @@ export function CollaborationForm({
                       placeholder={
                         !selectedCompanyId || selectedCompanyId === 0
                           ? "Select a company first"
-                          : contactsLoading
-                          ? "Loading contacts..."
                           : "Select contact person"
                       }
                     />

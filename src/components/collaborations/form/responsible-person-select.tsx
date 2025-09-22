@@ -81,9 +81,9 @@ export function ResponsiblePersonSelect({
           />
           <CommandList>
             {filteredOptions.length === 0 && inputValue ? (
-              <CommandEmpty>
-                <div className="py-2">
-                  <p className="text-sm text-muted-foreground mb-2">
+              <CommandEmpty className="p-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">
                     No existing matches found.
                   </p>
                   <Button
@@ -92,7 +92,6 @@ export function ResponsiblePersonSelect({
                     className="w-full justify-start"
                     onClick={() => handleSelect(inputValue)}
                   >
-                    <Check className="mr-2 h-4 w-4" />
                     Use "{inputValue}"
                   </Button>
                 </div>
@@ -109,12 +108,6 @@ export function ResponsiblePersonSelect({
                       value={option}
                       onSelect={() => handleSelect(option)}
                     >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === option ? "opacity-100" : "opacity-0"
-                        )}
-                      />
                       {option}
                     </CommandItem>
                   ))}
