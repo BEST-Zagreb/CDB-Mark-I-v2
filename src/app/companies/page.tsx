@@ -25,6 +25,7 @@ import {
   visibleColumnsToStrings,
   handleSort,
 } from "@/lib/table-utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Default preferences (outside component to prevent recreation)
 const defaultPreferences: TablePreferences<Company> = {
@@ -34,6 +35,7 @@ const defaultPreferences: TablePreferences<Company> = {
 };
 
 export default function CompaniesPage() {
+  const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
@@ -132,15 +134,20 @@ export default function CompaniesPage() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="mx-auto p-4">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+            <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
+              Companies
+            </h1>
             <Badge variant="secondary">{companies.length}</Badge>
           </div>
-          <Button onClick={handleCreateCompany}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button
+            onClick={handleCreateCompany}
+            size={isMobile ? "sm" : "default"}
+          >
+            <Plus className="size-4" />
             New Company
           </Button>
         </div>

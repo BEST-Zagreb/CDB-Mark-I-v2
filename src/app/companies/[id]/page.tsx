@@ -316,7 +316,7 @@ export default function CompanyDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="mx-auto p-4">
         <div className="text-center py-8 text-muted-foreground">
           Loading company...
         </div>
@@ -326,7 +326,7 @@ export default function CompanyDetailPage() {
 
   if (!company) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="mx-auto p-4">
         <div className="text-center py-8 text-muted-foreground">
           Company not found
         </div>
@@ -335,7 +335,7 @@ export default function CompanyDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="mx-auto p-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-2">
@@ -344,7 +344,7 @@ export default function CompanyDetailPage() {
               size="icon"
               onClick={() => router.push("/companies")}
             >
-              <ArrowLeft className="size-6" />
+              <ArrowLeft className="size-5" />
             </Button>
             <h1 className="text-3xl font-bold tracking-tight">
               {company.name}
@@ -352,12 +352,18 @@ export default function CompanyDetailPage() {
           </div>
 
           <div className="space-x-2 sm:space-x-4">
-            <Button onClick={handleEditCompany}>
+            <Button
+              onClick={handleEditCompany}
+              size={isMobile ? "icon" : "default"}
+            >
               <Pencil className="size-4" />
               {!isMobile && "Edit Company"}
             </Button>
 
-            <Button onClick={() => handleDeleteCompany(company)}>
+            <Button
+              onClick={() => handleDeleteCompany(company)}
+              size={isMobile ? "icon" : "default"}
+            >
               <Trash2 className="size-4" />
               {!isMobile && " Delete Company"}
             </Button>
@@ -511,8 +517,12 @@ export default function CompanyDetailPage() {
                   Contacts associated with this company
                 </CardDescription>
               </div>
-              <Button onClick={handleAddContact}>
-                <Plus className="mr-2 h-4 w-4" />
+
+              <Button
+                onClick={handleAddContact}
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="size-4" />
                 Add Contact
               </Button>
             </div>
@@ -565,9 +575,13 @@ export default function CompanyDetailPage() {
                   Collaboration history with this company
                 </CardDescription>
               </div>
-              <Button onClick={handleAddCollaboration}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Collaboration
+
+              <Button
+                onClick={handleAddCollaboration}
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="size-4" />
+                New Collaboration
               </Button>
             </div>
           </CardHeader>

@@ -8,6 +8,7 @@ import QueryProvider from "@/providers/query-provider";
 import ReactScanProvider from "@/providers/react-scan-provider";
 import { DeleteAlertProvider } from "@/contexts/delete-alert-context";
 import "./globals.css";
+import Footer from "@/components/custom/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,11 +40,14 @@ export default function RootLayout({
         <QueryProvider>
           <DeleteAlertProvider>
             <SidebarProvider>
-              <AppSidebar />
-              <main className="w-full">
-                <Header />
-                <div className="pt-24 max-w-7xl mx-auto">{children}</div>
-              </main>
+              <div className="min-h-screen flex flex-col w-full">
+                <AppSidebar />
+                <main className="w-full">
+                  <Header />
+                  <div className="pt-24 max-w-7xl mx-auto">{children}</div>
+                </main>
+                <Footer />
+              </div>
             </SidebarProvider>
           </DeleteAlertProvider>
           <Toaster />

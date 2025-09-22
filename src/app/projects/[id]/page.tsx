@@ -242,7 +242,7 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="mx-auto p-4">
         <div className="text-center py-8 text-muted-foreground">
           Loading project...
         </div>
@@ -252,7 +252,7 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="mx-auto p-4">
         <div className="text-center py-8 text-muted-foreground">
           Project not found
         </div>
@@ -261,7 +261,7 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="mx-auto p-4">
       <div className="space-y-6">
         <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-2">
@@ -270,22 +270,29 @@ export default function ProjectDetailPage() {
               size="icon"
               onClick={() => router.push("/companies")}
             >
-              <ArrowLeft className="size-6" />
+              <ArrowLeft className="size-5" />
             </Button>
+
             <h1 className="text-3xl font-bold tracking-tight">
               {project.name}
             </h1>
           </div>
 
           <div className="space-x-2 sm:space-x-4">
-            <Button onClick={handleEditProject}>
+            <Button
+              onClick={handleEditProject}
+              size={isMobile ? "icon" : "default"}
+            >
               <Pencil className="size-4" />
-              {!isMobile && "Edit project"}
+              {!isMobile && "Edit Project"}
             </Button>
 
-            <Button onClick={() => handleDeleteProject(project)}>
+            <Button
+              onClick={() => handleDeleteProject(project)}
+              size={isMobile ? "icon" : "default"}
+            >
               <Trash2 className="size-4" />
-              {!isMobile && " Delete project"}
+              {!isMobile && " Delete Project"}
             </Button>
           </div>
         </div>
@@ -435,12 +442,17 @@ export default function ProjectDetailPage() {
                   Companies and organizations involved in this project
                 </CardDescription>
               </div>
-              <Button onClick={handleAddCollaboration}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Collaboration
+
+              <Button
+                onClick={handleAddCollaboration}
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="size-4" />
+                New Collaboration
               </Button>
             </div>
           </CardHeader>
+
           <CardContent className="space-y-4">
             {/* Search Bar and Column Selector */}
             <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
