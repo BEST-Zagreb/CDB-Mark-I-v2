@@ -8,7 +8,7 @@ import QueryProvider from "@/providers/query-provider";
 import ReactScanProvider from "@/providers/react-scan-provider";
 import { DeleteAlertProvider } from "@/contexts/delete-alert-context";
 import "./globals.css";
-import Footer from "@/components/custom/footer";
+import Footer from "@/components/layout/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
