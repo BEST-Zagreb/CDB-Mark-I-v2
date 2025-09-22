@@ -18,11 +18,11 @@ export default function Footer() {
           >
             <Link href="/" className="flex items-center space-x-2">
               <Image
-                src="/file.svg"
+                src="/cdb-logo-transparent.png"
                 alt="App logo"
-                width={40}
-                height={40}
-                className="size-6"
+                width={96}
+                height={96}
+                className="shrink-0 w-10"
               />
 
               <span className="font-bold text-primary">Company Database</span>

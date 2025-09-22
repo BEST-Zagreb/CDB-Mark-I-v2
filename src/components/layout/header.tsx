@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Database, FolderOpen, Users, Building, Home } from "lucide-react";
+import { FolderOpen, Users, Building, Home } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,12 +43,14 @@ export default function Header(): JSX.Element {
                   <SidebarTrigger />
 
                   <Link href="/" className="flex items-center space-x-2">
-                    <Database
-                      className={cn(
-                        "size-6 sm:size-8 transition-colors",
-                        pathname === "/" ? "text-primary" : "text-primary"
-                      )}
+                    <Image
+                      src="/cdb-logo-transparent.png"
+                      alt="Company DB logo"
+                      width={96}
+                      height={96}
+                      className="shrink-0 w-10 sm:w-12"
                     />
+
                     <span
                       className={cn(
                         "font-bold text-lg sm:text-xl transition-colors",
