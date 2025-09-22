@@ -84,8 +84,26 @@ function CommandInput({
 
 function CommandList({
   className,
+  onWheel,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
+  // Ensure mouse wheel scrolls the command list even when some wrappers
+  // or parent elements intercept pointer events. We merge any passed
+  // onWheel to preserve existing behaviour.
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    try {
+      onWheel?.(e as any);
+    } catch (err) {
+      // ignore
+    }
+
+    const target = e.currentTarget as HTMLElement;
+    // Programmatically scroll the element by the wheel delta
+    target.scrollTop += e.deltaY;
+    // Prevent page from also scrolling
+    e.preventDefault();
+  };
+
   return (
     <CommandPrimitive.List
       data-slot="command-list"
@@ -93,6 +111,7 @@ function CommandList({
         "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
         className
       )}
+      onWheel={handleWheel}
       {...props}
     />
   );
