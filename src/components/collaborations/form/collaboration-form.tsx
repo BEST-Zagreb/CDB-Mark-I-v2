@@ -78,7 +78,8 @@ export function CollaborationForm({
 
   // Watch the selected company ID to fetch contacts
   const selectedCompanyId = form.watch("companyId");
-  const { data: contacts = [] } = useContactsByCompany(selectedCompanyId);
+  const { data: contacts = [], isLoading: contactsLoading } =
+    useContactsByCompany(selectedCompanyId);
 
   // Fetch all existing responsible persons for autocomplete
   const { data: responsiblePersons = [] } = useResponsiblePersons();
@@ -142,7 +143,7 @@ export function CollaborationForm({
                   <CompanySelect
                     value={field.value || undefined}
                     onValueChange={(value) => field.onChange(value || 0)}
-                    disabled={!!companyId} // Disable if companyId is provided (on company page)
+                    disabled={!!companyId || !!initialData} // Disable if companyId is provided (on company page) or in edit mode
                     className="w-full"
                   />
                 </FormControl>
@@ -161,7 +162,7 @@ export function CollaborationForm({
                   <ProjectSelect
                     value={field.value || undefined}
                     onValueChange={(value) => field.onChange(value || 0)}
-                    disabled={!!projectId} // Disable if projectId is provided (on project page)
+                    disabled={!!projectId || !!initialData} // Disable if projectId is provided (on project page) or in edit mode
                     className="w-full"
                   />
                 </FormControl>
@@ -190,6 +191,8 @@ export function CollaborationForm({
                       placeholder={
                         !selectedCompanyId || selectedCompanyId === 0
                           ? "Select a company first"
+                          : contactsLoading
+                          ? "Loading contacts..."
                           : "Select contact person"
                       }
                     />
@@ -202,7 +205,7 @@ export function CollaborationForm({
                     <SelectItem key={contact.id} value={contact.id.toString()}>
                       {contact.name}
                       <span className="text-muted-foreground">
-                        {contact.function && `(${contact.function})`}
+                        {contact.function && ` (${contact.function})`}
                       </span>
                     </SelectItem>
                   ))}
