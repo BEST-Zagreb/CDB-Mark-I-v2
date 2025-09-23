@@ -583,14 +583,6 @@ export default function CompanyDetailPage() {
                   onClick={handleAddCollaboration}
                   size={isMobile ? "icon" : "default"}
                 >
-                  <ClipboardPaste className="size-5" />
-                  {!isMobile && "Copy Collaborations"}
-                </Button>
-
-                <Button
-                  onClick={handleAddCollaboration}
-                  size={isMobile ? "icon" : "default"}
-                >
                   <Plus className="size-5" />
                   {!isMobile && "New Collaboration"}
                 </Button>
