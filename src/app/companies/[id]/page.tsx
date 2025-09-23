@@ -12,6 +12,8 @@ import {
   AlertTriangle,
   Delete,
   Trash2,
+  Copy,
+  ClipboardPaste,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -576,13 +578,23 @@ export default function CompanyDetailPage() {
                 </CardDescription>
               </div>
 
-              <Button
-                onClick={handleAddCollaboration}
-                size={isMobile ? "sm" : "default"}
-              >
-                <Plus className="size-4" />
-                New Collaboration
-              </Button>
+              <div className="space-x-2 sm:space-x-4">
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <ClipboardPaste className="size-5" />
+                  {!isMobile && "Copy Collaborations"}
+                </Button>
+
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <Plus className="size-5" />
+                  {!isMobile && "New Collaboration"}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

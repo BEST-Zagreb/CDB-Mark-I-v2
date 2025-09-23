@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardPaste,
+  Copy,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -443,13 +450,23 @@ export default function ProjectDetailPage() {
                 </CardDescription>
               </div>
 
-              <Button
-                onClick={handleAddCollaboration}
-                size={isMobile ? "sm" : "default"}
-              >
-                <Plus className="size-4" />
-                New Collaboration
-              </Button>
+              <div className="space-x-2 sm:space-x-4">
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <ClipboardPaste className="size-5" />
+                  {!isMobile && "Copy Collaborations"}
+                </Button>
+
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <Plus className="size-5" />
+                  {!isMobile && "New Collaboration"}
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
