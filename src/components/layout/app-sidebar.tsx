@@ -204,73 +204,8 @@ export const AppSidebar = memo(function AppSidebar() {
                         <span>Companies</span>
                       </Link>
                     </SidebarMenuButton>
-
-                    {/* Separate chevron trigger for collapsible */}
-                    <CollapsibleTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                        <span className="sr-only">Toggle Companies</span>
-                      </button>
-                    </CollapsibleTrigger>
                   </div>
-
-                  <CollapsibleContent>
-                    <SidebarMenuSub className="max-h-128 overflow-y-auto">
-                      {loadingCompanies ? (
-                        <SidebarMenuSubItem>
-                          <div className="text-sm text-muted-foreground px-2">
-                            Loading companies...
-                          </div>
-                        </SidebarMenuSubItem>
-                      ) : (
-                        companies.map((company) => (
-                          <SidebarMenuSubItem key={company.id}>
-                            <Link
-                              href={`/companies/${company.id}`}
-                              className={`flex items-center space-x-2 w-full rounded-md px-2 py-1 ${
-                                pathname === `/companies/${company.id}`
-                                  ? "bg-accent text-accent-foreground font-medium"
-                                  : "hover:bg-accent hover:text-accent-foreground"
-                              }`}
-                            >
-                              <div className="flex flex-col min-w-0">
-                                <span className="truncate text-sm">
-                                  {company.name}
-                                </span>
-                                <span className="truncate text-xs text-muted-foreground">
-                                  {company.city && company.country
-                                    ? `${company.city}, ${company.country}`
-                                    : company.city || company.country || ""}
-                                </span>
-                              </div>
-                            </Link>
-                          </SidebarMenuSubItem>
-                        ))
-                      )}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
                 </Collapsible>
-              </SidebarMenuItem>
-
-              {/* Collaborations */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href="/collaborations"
-                    className={`flex items-center gap-2 ${
-                      isActivePath("/collaborations")
-                        ? "text-primary bg-accent font-bold"
-                        : ""
-                    }`}
-                  >
-                    <Handshake className="size-5" />
-                    <span>Collaborations</span>
-                  </Link>
-                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

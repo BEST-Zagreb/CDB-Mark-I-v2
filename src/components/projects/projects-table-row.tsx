@@ -11,6 +11,7 @@ import { formatDate, formatAmount } from "@/lib/format-utils";
 import { PROJECT_FIELDS } from "@/config/project-fields";
 import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectsTableRowProps {
   project: Project;
@@ -25,6 +26,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
   onEdit,
   onDeleteConfirm,
 }: ProjectsTableRowProps) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
@@ -111,7 +113,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
       {/* Actions - Always visible */}
       <TableActions
         item={project}
-        onView={handleView}
+        onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
         onDelete={handleDelete}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
@@ -18,6 +18,7 @@ import { COMPANY_FIELDS } from "@/config/company-fields";
 import { ExternalLink } from "lucide-react";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CompaniesTableRowProps {
   company: Company;
@@ -32,6 +33,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
   onEdit,
   onDeleteConfirm,
 }: CompaniesTableRowProps) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
@@ -135,7 +137,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
       {/* Actions - Always visible */}
       <TableActions
         item={company}
-        onView={handleView}
+        onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
         onDelete={handleDelete}
       />
