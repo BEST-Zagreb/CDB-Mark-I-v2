@@ -143,3 +143,59 @@ export function useResponsiblePersons() {
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
+
+export function useCopyCollaborations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      sourceProjectId,
+      targetProjectId,
+      attributesToCopy,
+    }: {
+      sourceProjectId: number;
+      targetProjectId: number;
+      attributesToCopy: string[];
+    }) =>
+      collaborationService.copyCollaborations(
+        sourceProjectId,
+        targetProjectId,
+        attributesToCopy
+      ),
+    onSuccess: (result, { targetProjectId }) => {
+      // Invalidate queries for the target project
+      queryClient.invalidateQueries({
+        queryKey: collaborationKeys.byProject(targetProjectId),
+      });
+      queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
+
+      // Show success message for copied collaborations
+      if (result.copiedCollaborations.length > 0) {
+        toast.success(
+          `Successfully copied ${
+            result.copiedCollaborations.length
+          } collaboration${result.copiedCollaborations.length !== 1 ? "s" : ""}`
+        );
+      }
+
+      // Show warning for skipped companies
+      if (result.skippedCompanies.length > 0) {
+        const companyList = result.skippedCompanies.join(`", "`);
+        toast.error(
+          `Collaborations with companies "${companyList}" could not be copied as they already exist in target project.`
+        );
+      }
+
+      // Show info if nothing was copied
+      if (
+        result.copiedCollaborations.length === 0 &&
+        result.skippedCompanies.length === 0
+      ) {
+        toast.info("No collaborations were copied.");
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to copy collaborations");
+    },
+  });
+}

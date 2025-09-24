@@ -54,4 +54,24 @@ export const collaborationService = {
     const response = await axios.get(`${API_BASE}/responsible`);
     return response.data;
   },
+
+  // Copy collaborations from one project to another
+  async copyCollaborations(
+    sourceProjectId: number,
+    targetProjectId: number,
+    attributesToCopy: string[]
+  ): Promise<{
+    copiedCollaborations: Collaboration[];
+    skippedCompanies: string[];
+    totalAttempted: number;
+    totalCopied: number;
+    totalSkipped: number;
+  }> {
+    const response = await axios.post(`${API_BASE}/copy`, {
+      sourceProjectId,
+      targetProjectId,
+      attributesToCopy,
+    });
+    return response.data;
+  },
 };

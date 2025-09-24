@@ -25,6 +25,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
 import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
+import { CopyCollaborationsForm } from "@/components/collaborations/copy-collaborations-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import {
@@ -37,6 +38,7 @@ import {
   useCreateCollaboration,
   useUpdateCollaboration,
   useDeleteCollaboration,
+  useCopyCollaborations,
 } from "@/hooks/use-collaborations";
 import { Project, ProjectFormData } from "@/types/project";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
@@ -61,6 +63,8 @@ export default function ProjectDetailPage() {
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
+  const [copyCollaborationsDialogOpen, setCopyCollaborationsDialogOpen] =
+    useState(false);
   const [editingCollaboration, setEditingCollaboration] = useState<
     Collaboration | undefined
   >();
@@ -106,6 +110,7 @@ export default function ProjectDetailPage() {
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
+  const copyCollaborationsMutation = useCopyCollaborations();
 
   // Calculate fundraising progress
   const calculateFundraisingProgress = () => {
@@ -191,13 +196,12 @@ export default function ProjectDetailPage() {
     setEditDialogOpen(false);
   };
 
-  const handleAddCollaboration = () => {
-    setEditingCollaboration(undefined);
-    setCollaborationDialogOpen(true);
+  const openCopyCollaborationForm = () => {
+    setCopyCollaborationsDialogOpen(true);
   };
 
-  const handleEditCollaboration = (collaboration: Collaboration) => {
-    setEditingCollaboration(collaboration);
+  const openCollaborationForm = (collaboration?: Collaboration) => {
+    setEditingCollaboration(collaboration || undefined);
     setCollaborationDialogOpen(true);
   };
 
@@ -219,11 +223,24 @@ export default function ProjectDetailPage() {
     await deleteCollaborationMutation.mutateAsync(collaborationId);
   };
 
+  async function handleCopyCollaborations(data: {
+    targetProjectId: number;
+    copyAttributes: string[];
+  }) {
+    await copyCollaborationsMutation.mutateAsync({
+      sourceProjectId: projectId,
+      targetProjectId: data.targetProjectId,
+      attributesToCopy: data.copyAttributes,
+    });
+    setCopyCollaborationsDialogOpen(false);
+  }
+
   const isSubmitting =
     updateProjectMutation.isPending ||
     createCollaborationMutation.isPending ||
     updateCollaborationMutation.isPending ||
-    deleteCollaborationMutation.isPending;
+    deleteCollaborationMutation.isPending ||
+    copyCollaborationsMutation.isPending;
 
   const formatDate = (date: Date | string | null) => {
     if (!date) return "—";
@@ -275,7 +292,7 @@ export default function ProjectDetailPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => router.push("/companies")}
+              onClick={() => router.push("/projects")}
             >
               <ArrowLeft className="size-5" />
             </Button>
@@ -450,9 +467,9 @@ export default function ProjectDetailPage() {
                 </CardDescription>
               </div>
 
-              <div className="space-x-2 sm:space-x-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <Button
-                  onClick={handleAddCollaboration}
+                  onClick={openCopyCollaborationForm}
                   size={isMobile ? "icon" : "default"}
                 >
                   <ClipboardPaste className="size-5" />
@@ -460,7 +477,7 @@ export default function ProjectDetailPage() {
                 </Button>
 
                 <Button
-                  onClick={handleAddCollaboration}
+                  onClick={() => openCollaborationForm()}
                   size={isMobile ? "icon" : "default"}
                 >
                   <Plus className="size-5" />
@@ -501,7 +518,7 @@ export default function ProjectDetailPage() {
               collaborations={collaborations}
               searchQuery={debouncedSearchQuery}
               tablePreferences={tablePreferences}
-              onEdit={handleEditCollaboration}
+              onEdit={openCollaborationForm}
               onDelete={handleDeleteCollaboration}
               onSortColumn={handleSortColumn}
               hiddenColumns={["projectName"]}
@@ -541,6 +558,23 @@ export default function ProjectDetailPage() {
             projectId={projectId}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
+
+      <FormDialog
+        open={copyCollaborationsDialogOpen}
+        onOpenChange={setCopyCollaborationsDialogOpen}
+        entity="Copy Collaborations"
+        onSubmit={handleCopyCollaborations}
+        isLoading={copyCollaborationsMutation.isPending}
+      >
+        {(formProps) => (
+          <CopyCollaborationsForm
+            currentProjectId={projectId}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+            open={copyCollaborationsDialogOpen}
           />
         )}
       </FormDialog>
