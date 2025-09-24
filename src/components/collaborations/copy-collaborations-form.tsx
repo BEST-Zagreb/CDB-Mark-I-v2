@@ -46,14 +46,14 @@ const COPY_ATTRIBUTES = [
   { id: "type", label: "Type", required: false, defaultChecked: true },
   { id: "priority", label: "Priority", required: false, defaultChecked: true },
   {
-    id: "responsible",
-    label: "Responsible",
-    required: false,
-    defaultChecked: false,
-  },
-  {
     id: "contactId",
     label: "Contact Person",
+    required: false,
+    defaultChecked: true,
+  },
+  {
+    id: "responsible",
+    label: "Responsible",
     required: false,
     defaultChecked: false,
   },
