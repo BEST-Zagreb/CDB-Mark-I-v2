@@ -275,7 +275,7 @@ export default function ProjectDetailPage() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => router.push("/companies")}
+              onClick={() => router.push("/projects")}
             >
               <ArrowLeft className="size-5" />
             </Button>
