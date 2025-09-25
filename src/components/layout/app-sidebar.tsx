@@ -38,6 +38,7 @@ import { projectService } from "@/services/project.service";
 import { companyService } from "@/services/company.service";
 import { Project } from "@/types/project";
 import { Company } from "@/types/company";
+import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
 type OpenSection = "projects" | "companies" | null;
 
@@ -151,9 +152,7 @@ export const AppSidebar = memo(function AppSidebar() {
                     <SidebarMenuSub className="max-h-128 overflow-y-auto">
                       {loadingProjects ? (
                         <SidebarMenuSubItem>
-                          <div className="text-sm text-muted-foreground px-2">
-                            Loading projects...
-                          </div>
+                          <BlocksWaveLoader size={32} />
                         </SidebarMenuSubItem>
                       ) : (
                         projects.map((project) => (

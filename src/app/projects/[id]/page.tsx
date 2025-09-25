@@ -250,13 +250,7 @@ export default function ProjectDetailPage() {
   };
 
   if (isLoadingProject) {
-    return (
-      <div className="mx-auto p-4">
-        <div className="flex justify-center py-8">
-          <BlocksWaveLoader size={96} className="my-16" />
-        </div>
-      </div>
-    );
+    return <BlocksWaveLoader size={96} className="my-16" />;
   }
 
   if (!project) {
@@ -439,87 +433,70 @@ export default function ProjectDetailPage() {
         )}
 
         {/* Collaborations Section */}
-        {isLoadingCollaborations ? (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CardTitle>Collaborations</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Companies and organizations involved in this project
-                  </CardDescription>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Collaborations</CardTitle>
+                  <Badge variant="secondary">{collaborations.length}</Badge>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center py-8">
-                <BlocksWaveLoader size={48} />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <CardTitle>Collaborations</CardTitle>
-                    <Badge variant="secondary">{collaborations.length}</Badge>
-                  </div>
-                  <CardDescription>
-                    Companies and organizations involved in this project
-                  </CardDescription>
-                </div>
-
-                <div className="space-x-2 sm:space-x-4">
-                  <Button
-                    onClick={handleAddCollaboration}
-                    size={isMobile ? "icon" : "default"}
-                  >
-                    <ClipboardPaste className="size-5" />
-                    {!isMobile && "Copy Collaborations"}
-                  </Button>
-
-                  <Button
-                    onClick={handleAddCollaboration}
-                    size={isMobile ? "icon" : "default"}
-                  >
-                    <Plus className="size-5" />
-                    {!isMobile && "New Collaboration"}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              {/* Search Bar and Column Selector */}
-              <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-                <SearchBar
-                  placeholder="Search collaborations..."
-                  onSearchChange={handleSearchChange}
-                  searchParam="collaborations_search"
-                />
-
-                <ColumnSelector
-                  fields={COLLABORATION_FIELDS.filter((field) => {
-                    // Filter out project name column since we're on a project page
-                    if (field.id === "projectName") return false;
-                    return true;
-                  }).map((field) => ({
-                    id: field.id as string,
-                    label: field.label,
-                    required: field.required,
-                  }))}
-                  visibleColumns={visibleColumnsToStrings(
-                    tablePreferences.visibleColumns
-                  )}
-                  onColumnsChange={handleUpdateVisibleColumns}
-                  placeholder="Select columns"
-                />
+                <CardDescription>
+                  Companies and organizations involved in this project
+                </CardDescription>
               </div>
 
+              <div className="space-x-2 sm:space-x-4">
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <ClipboardPaste className="size-5" />
+                  {!isMobile && "Copy Collaborations"}
+                </Button>
+
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <Plus className="size-5" />
+                  {!isMobile && "New Collaboration"}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search collaborations..."
+                onSearchChange={handleSearchChange}
+                searchParam="collaborations_search"
+              />
+
+              <ColumnSelector
+                fields={COLLABORATION_FIELDS.filter((field) => {
+                  // Filter out project name column since we're on a project page
+                  if (field.id === "projectName") return false;
+                  return true;
+                }).map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  tablePreferences.visibleColumns
+                )}
+                onColumnsChange={handleUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            {isLoadingCollaborations ? (
+              <BlocksWaveLoader size={48} />
+            ) : (
               <CollaborationsTable
                 collaborations={collaborations}
                 searchQuery={debouncedSearchQuery}
@@ -529,9 +506,9 @@ export default function ProjectDetailPage() {
                 onSortColumn={handleSortColumn}
                 hiddenColumns={["projectName"]}
               />
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <FormDialog<Project>

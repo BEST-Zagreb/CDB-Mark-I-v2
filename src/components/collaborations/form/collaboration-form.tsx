@@ -33,6 +33,7 @@ import {
   collaborationSchema,
 } from "@/types/collaboration";
 import { Separator } from "@/components/ui/separator";
+import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
 // Helper function to ensure priority is a valid string value
 function normalizePriority(
@@ -145,14 +146,7 @@ export function CollaborationForm({
 
   // Show loading state while data is being fetched
   if (isFormLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-2 text-sm text-muted-foreground">
-          Loading form data...
-        </span>
-      </div>
-    );
+    return <BlocksWaveLoader size={48} className="my-16" />;
   }
 
   return (

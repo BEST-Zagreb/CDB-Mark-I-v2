@@ -320,13 +320,7 @@ export default function CompanyDetailPage() {
     deleteCollaborationMutation.isPending;
 
   if (isLoadingCompany) {
-    return (
-      <div className="mx-auto p-4">
-        <div className="flex justify-center py-8">
-          <BlocksWaveLoader size={64} />
-        </div>
-      </div>
-    );
+    return <BlocksWaveLoader size={64} className="my-16" />;
   }
 
   if (!company) {
@@ -509,74 +503,55 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Contacts Section */}
-        {isLoadingContacts ? (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Contacts
-                  </CardTitle>
-                  <CardDescription>
-                    Contacts associated with this company
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center py-8">
-                <BlocksWaveLoader size={48} />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Contacts
-                    <Badge variant="secondary">{contacts.length}</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Contacts associated with this company
-                  </CardDescription>
-                </div>
-
-                <Button
-                  onClick={handleAddContact}
-                  size={isMobile ? "sm" : "default"}
-                >
-                  <Plus className="size-4" />
-                  Add Contact
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search Bar and Column Selector */}
-              <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-                <SearchBar
-                  placeholder="Search contacts..."
-                  onSearchChange={handleContactsSearchChange}
-                  searchParam="contacts_search"
-                />
-
-                <ColumnSelector
-                  fields={CONTACT_FIELDS.map((field) => ({
-                    id: field.id as string,
-                    label: field.label,
-                    required: field.required,
-                  }))}
-                  visibleColumns={visibleColumnsToStrings(
-                    contactsTablePreferences.visibleColumns
-                  )}
-                  onColumnsChange={handleContactsUpdateVisibleColumns}
-                  placeholder="Select columns"
-                />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Contacts
+                  <Badge variant="secondary">{contacts.length}</Badge>
+                </CardTitle>
+                <CardDescription>
+                  Contacts associated with this company
+                </CardDescription>
               </div>
 
+              <Button
+                onClick={handleAddContact}
+                size={isMobile ? "sm" : "default"}
+              >
+                <Plus className="size-4" />
+                Add Contact
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search contacts..."
+                onSearchChange={handleContactsSearchChange}
+                searchParam="contacts_search"
+              />
+
+              <ColumnSelector
+                fields={CONTACT_FIELDS.map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  contactsTablePreferences.visibleColumns
+                )}
+                onColumnsChange={handleContactsUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            {isLoadingContacts ? (
+              <BlocksWaveLoader size={48} />
+            ) : (
               <ContactsTable
                 contacts={contacts}
                 searchQuery={debouncedContactsSearchQuery}
@@ -585,85 +560,66 @@ export default function CompanyDetailPage() {
                 onDelete={handleDeleteContact}
                 onSortColumn={handleContactsSortColumn}
               />
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
 
         {/* Collaborations Section */}
-        {isLoadingCollaborations ? (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Handshake className="h-5 w-5" />
-                    Collaborations
-                  </CardTitle>
-                  <CardDescription>
-                    Collaboration history with this company
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-center py-8">
-                <BlocksWaveLoader size={48} />
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Handshake className="h-5 w-5" />
-                    Collaborations
-                    <Badge variant="secondary">{collaborations.length}</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Collaboration history with this company
-                  </CardDescription>
-                </div>
-
-                <div className="space-x-2 sm:space-x-4">
-                  <Button
-                    onClick={handleAddCollaboration}
-                    size={isMobile ? "icon" : "default"}
-                  >
-                    <Plus className="size-5" />
-                    {!isMobile && "New Collaboration"}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search Bar and Column Selector */}
-              <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-                <SearchBar
-                  placeholder="Search collaborations..."
-                  onSearchChange={handleSearchChange}
-                  searchParam="collaborations_search"
-                />
-
-                <ColumnSelector
-                  fields={COLLABORATION_FIELDS.filter((field) => {
-                    // Filter out company name column since we're on a company page
-                    if (field.id === "companyName") return false;
-                    return true;
-                  }).map((field) => ({
-                    id: field.id as string,
-                    label: field.label,
-                    required: field.required,
-                  }))}
-                  visibleColumns={visibleColumnsToStrings(
-                    tablePreferences.visibleColumns
-                  )}
-                  onColumnsChange={handleUpdateVisibleColumns}
-                  placeholder="Select columns"
-                />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Handshake className="h-5 w-5" />
+                  Collaborations
+                  <Badge variant="secondary">{collaborations.length}</Badge>
+                </CardTitle>
+                <CardDescription>
+                  Collaboration history with this company
+                </CardDescription>
               </div>
 
+              <div className="space-x-2 sm:space-x-4">
+                <Button
+                  onClick={handleAddCollaboration}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <Plus className="size-5" />
+                  {!isMobile && "New Collaboration"}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Search Bar and Column Selector */}
+            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+              <SearchBar
+                placeholder="Search collaborations..."
+                onSearchChange={handleSearchChange}
+                searchParam="collaborations_search"
+              />
+
+              <ColumnSelector
+                fields={COLLABORATION_FIELDS.filter((field) => {
+                  // Filter out company name column since we're on a company page
+                  if (field.id === "companyName") return false;
+                  return true;
+                }).map((field) => ({
+                  id: field.id as string,
+                  label: field.label,
+                  required: field.required,
+                }))}
+                visibleColumns={visibleColumnsToStrings(
+                  tablePreferences.visibleColumns
+                )}
+                onColumnsChange={handleUpdateVisibleColumns}
+                placeholder="Select columns"
+              />
+            </div>
+
+            {isLoadingCollaborations ? (
+              <BlocksWaveLoader size={48} />
+            ) : (
               <CollaborationsTable
                 collaborations={collaborations}
                 searchQuery={debouncedSearchQuery}
@@ -673,9 +629,9 @@ export default function CompanyDetailPage() {
                 onSortColumn={handleSortColumn}
                 hiddenColumns={["companyName"]}
               />
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <FormDialog<Company>
