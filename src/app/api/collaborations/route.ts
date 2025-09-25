@@ -7,7 +7,7 @@ import {
   CollaborationFormData,
 } from "@/types/collaboration";
 
-const dbPath = path.join(process.cwd(), "db", "cdb.sqlite3");
+const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformCollaboration(
   dbCollaboration: CollaborationDB

@@ -6,7 +6,7 @@ let db: Database.Database | null = null;
 
 export function getDatabase() {
   if (!db) {
-    const dbPath = path.join(process.cwd(), "db", "cdb.sqlite3");
+    const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
     db = new Database(dbPath);
 
     // Enable foreign keys

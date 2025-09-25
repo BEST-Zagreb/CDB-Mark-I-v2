@@ -3,7 +3,7 @@ import Database from "better-sqlite3";
 import path from "path";
 import { Contact, ContactDB } from "@/types/contact";
 
-const dbPath = path.join(process.cwd(), "db", "cdb.sqlite3");
+const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformContact(dbContact: ContactDB): Contact {
   return {

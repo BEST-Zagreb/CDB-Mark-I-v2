@@ -59,9 +59,7 @@ This work is licensed under a
 
 ## Database
 
-This project uses a local SQLite database. For local development, create a folder named `db` at the repository root and add a SQLite database file named `cdb.sqlite3`.
-
-Add `db/cdb.sqlite3` to your `.gitignore` to avoid accidentally committing the database file:
+This project uses a local SQLite database. For local development, create a folder named `db` at the repository root and add a SQLite database file named `db.sqlite3`.
 
 ## How to contribute
 
