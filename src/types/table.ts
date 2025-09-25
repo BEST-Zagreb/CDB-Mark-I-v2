@@ -2,7 +2,7 @@
 export type SortDirection = "asc" | "desc";
 
 export interface TablePreferences<T = any> {
-  visibleColumns: (keyof T)[];
+  visibleColumns: string[];
   sortField: keyof T;
   sortDirection: SortDirection;
 }

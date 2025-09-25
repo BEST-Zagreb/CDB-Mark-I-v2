@@ -14,12 +14,18 @@ import {
   Users,
   CalendarDays,
   ClockIcon,
+  Pickaxe,
 } from "lucide-react";
 import { Collaboration } from "@/types/collaboration";
 
 // Define available columns for the collaboration table
 export const COLLABORATION_FIELDS: Array<{
-  id: keyof Collaboration | "companyName" | "projectName" | "contactName";
+  id:
+    | keyof Collaboration
+    | "companyName"
+    | "projectName"
+    | "contactName"
+    | "status";
   label: string;
   required: boolean;
   sortable: boolean;
@@ -87,45 +93,21 @@ export const COLLABORATION_FIELDS: Array<{
   },
 
   {
+    id: "status",
+    label: "Status",
+    required: false,
+    sortable: false, // Status column won't be sortable since it combines multiple fields
+    center: true,
+    icon: Pickaxe,
+  },
+
+  {
     id: "comment",
     label: "Comment",
     required: false,
     sortable: true,
     center: false,
     icon: MessageCircle,
-  },
-
-  {
-    id: "contacted",
-    label: "Contacted",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Phone,
-  },
-  {
-    id: "letter",
-    label: "Letter",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Mail,
-  },
-  {
-    id: "meeting",
-    label: "Meeting",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Users,
-  },
-  {
-    id: "successful",
-    label: "Successful",
-    required: false,
-    sortable: true,
-    center: true,
-    icon: Trophy,
   },
 
   {

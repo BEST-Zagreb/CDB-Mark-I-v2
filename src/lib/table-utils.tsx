@@ -5,7 +5,7 @@ import type { TablePreferences, SortDirection } from "@/types/table";
 
 // Helper function to check if a column is visible
 export function isColumnVisible<T>(
-  columnId: keyof T,
+  columnId: string,
   tablePreferences: TablePreferences<T>
 ): boolean {
   return tablePreferences.visibleColumns.includes(columnId);
@@ -14,19 +14,19 @@ export function isColumnVisible<T>(
 // Simple function that returns filtered visible columns
 export function updateVisibleColumns<T>(
   newVisibleColumns: string[],
-  requiredColumn?: keyof T
-): (keyof T)[] {
+  requiredColumn?: string
+): string[] {
   // Ensure required column is always included if specified
-  const columnsWithRequired = [requiredColumn as string, ...newVisibleColumns];
+  const columnsWithRequired = requiredColumn
+    ? [requiredColumn, ...newVisibleColumns]
+    : newVisibleColumns;
 
-  return columnsWithRequired as (keyof T)[];
+  return columnsWithRequired;
 }
 
-// Helper to convert keyof T[] to string[] for MultiSelect component
-export function visibleColumnsToStrings<T>(
-  visibleColumns: (keyof T)[]
-): string[] {
-  return visibleColumns.map((col) => col as string);
+// Helper to convert string[] to string[] for MultiSelect component (no-op now)
+export function visibleColumnsToStrings(visibleColumns: string[]): string[] {
+  return visibleColumns;
 }
 
 // Simple function that returns updated table preferences for sorting

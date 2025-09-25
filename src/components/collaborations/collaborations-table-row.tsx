@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -14,13 +13,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isColumnVisible } from "@/lib/table-utils";
-import { formatDate, formatAmount } from "@/lib/format-utils";
+import { Phone, Mail, Briefcase, BadgeEuro, ClockAlert } from "lucide-react";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
 import {
   Collaboration,
   getCollaborationTypeDisplay,
   getPriorityDisplay,
 } from "@/types/collaboration";
+import { formatAmount, formatDate } from "@/lib/format-utils";
 import { type TablePreferences } from "@/types/table";
 
 interface CollaborationsTableRowProps {
@@ -48,7 +48,6 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
   onDeleteConfirm,
   hiddenColumns = [],
 }: CollaborationsTableRowProps) {
-  const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
   // Memoize the delete handler to prevent recreation
@@ -145,76 +144,6 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               </Badge>
             </TableCell>
           );
-        } else if (column.id === "successful") {
-          return (
-            <TableCell
-              key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
-            >
-              <Badge
-                variant={
-                  collaboration.successful === null
-                    ? "secondary"
-                    : collaboration.successful
-                    ? "default"
-                    : "destructive"
-                }
-              >
-                {collaboration.successful === null
-                  ? "Unknown"
-                  : collaboration.successful
-                  ? "Yes"
-                  : "No"}
-              </Badge>
-            </TableCell>
-          );
-        } else if (column.id === "letter") {
-          return (
-            <TableCell
-              key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
-            >
-              <Badge variant={collaboration.letter ? "default" : "secondary"}>
-                {collaboration.letter ? "Yes" : "No"}
-              </Badge>
-            </TableCell>
-          );
-        } else if (column.id === "meeting") {
-          return (
-            <TableCell
-              key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
-            >
-              <Badge
-                variant={
-                  collaboration.meeting === null
-                    ? "secondary"
-                    : collaboration.meeting
-                    ? "default"
-                    : "destructive"
-                }
-              >
-                {collaboration.meeting === null
-                  ? "Unknown"
-                  : collaboration.meeting
-                  ? "Yes"
-                  : "No"}
-              </Badge>
-            </TableCell>
-          );
-        } else if (column.id === "contacted") {
-          return (
-            <TableCell
-              key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
-            >
-              <Badge
-                variant={collaboration.contacted ? "default" : "secondary"}
-              >
-                {collaboration.contacted ? "Yes" : "No"}
-              </Badge>
-            </TableCell>
-          );
         } else if (column.id === "contactInFuture") {
           return (
             <TableCell
@@ -236,6 +165,79 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   ? "Yes"
                   : "No"}
               </Badge>
+            </TableCell>
+          );
+        } else if (column.id === "status") {
+          return (
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+            >
+              <div className="flex items-center justify-center gap-1">
+                {collaboration.contacted && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Phone className="size-4 text-green-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Contacted</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {collaboration.letter && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Mail className="size-4 text-blue-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Letter sent</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {collaboration.meeting && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Briefcase className="size-4 text-primary" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Meeting held</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {collaboration.successful && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <BadgeEuro className="size-4 text-yellow-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Successful</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {!collaboration.contacted &&
+                  !collaboration.letter &&
+                  !collaboration.meeting &&
+                  !collaboration.successful && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <ClockAlert className="size-4 text-red-600" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Not contacted yet</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+              </div>
             </TableCell>
           );
         } else if (column.id === "comment") {
@@ -301,7 +303,11 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
             }`}
           >
             <div className="text-pretty">
-              {(collaboration as any)[column.id] || "—"}
+              {String(
+                (collaboration as unknown as Record<string, unknown>)[
+                  column.id
+                ] || "—"
+              )}
             </div>
           </TableCell>
         );
