@@ -93,7 +93,7 @@ export function ProjectSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("justify-between", className)}
+          className={cn("justify-between w-full truncate", className)}
           disabled={disabled || isLoading}
         >
           {isLoading ? (
@@ -118,7 +118,9 @@ export function ProjectSelect({
             onValueChange={setSearchValue}
           />
           <CommandList>
-            <CommandEmpty>No project found.</CommandEmpty>
+            <CommandEmpty>
+              No project with name "{searchValue}" found
+            </CommandEmpty>
             <CommandGroup>
               {filteredProjects?.map((project) => (
                 <CommandItem
@@ -136,8 +138,8 @@ export function ProjectSelect({
                     setSearchValue("");
                   }}
                 >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{project.name}</span>
+                  <div className="flex flex-col w-full">
+                    <span className="font-medium truncate">{project.name}</span>
                   </div>
                 </CommandItem>
               )) || []}

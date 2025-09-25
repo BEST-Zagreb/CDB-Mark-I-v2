@@ -57,7 +57,7 @@ export function CountrySelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "justify-between",
+            "justify-between w-full truncate",
             !value && "text-muted-foreground",
             className
           )}

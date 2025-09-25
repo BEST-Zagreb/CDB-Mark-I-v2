@@ -65,7 +65,7 @@ export function ResponsiblePersonSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn("justify-between w-full truncate", className)}
           disabled={disabled}
         >
           {inputValue || placeholder}

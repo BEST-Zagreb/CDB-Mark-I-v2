@@ -74,7 +74,7 @@ export function CompanySelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("justify-between", className)}
+          className={cn("justify-between w-full truncate", className)}
           disabled={disabled || isLoadingCompanies}
         >
           {isLoadingCompanies ? (
@@ -117,8 +117,8 @@ export function CompanySelect({
                     setSearchValue("");
                   }}
                 >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{company.name}</span>
+                  <div className="flex flex-col w-full">
+                    <span className="font-medium truncate">{company.name}</span>
                     {(company.city || company.country) && (
                       <span className="text-xs text-muted-foreground">
                         {[company.city, company.country]
