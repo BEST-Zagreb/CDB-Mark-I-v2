@@ -6,30 +6,23 @@ import {
   ArrowLeft,
   Pencil,
   Trash2,
-  AlertTriangle,
-  ExternalLink,
-  Users,
-  Plus,
-  Handshake,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/app/companies/components/form/company-form";
 import { CompanyDetailsSection } from "@/app/companies/[id]/components/sections/company-details-section";
 import { ContactsSection } from "@/app/companies/[id]/components/sections/contacts-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
+import { DoNotContactWarning } from "@/app/companies/[id]/components/do-not-contact-warning";
 import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCompanyDetailOperations } from "@/app/companies/[id]/hooks/use-company-detail-operations";
-import { useContactsOperations } from "@/app/companies/[id]/hooks/use-contacts-operations";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company } from "@/types/company";
-import { Contact } from "@/types/contact";
 import { Collaboration } from "@/types/collaboration";
 
 export default function CompanyDetailPage() {
@@ -41,7 +34,6 @@ export default function CompanyDetailPage() {
 
   // Custom hooks for operations
   const companyOps = useCompanyDetailOperations(companyId);
-  const contactsOps = useContactsOperations(companyId);
   const collaborationsOps = useCollaborationsOperations("company", companyId);
 
   const {
@@ -54,18 +46,6 @@ export default function CompanyDetailPage() {
     handleDeleteCompany,
     handleSubmitCompany,
   } = companyOps;
-
-  const {
-    contacts,
-    isLoadingContacts,
-    contactDialogOpen,
-    setContactDialogOpen,
-    selectedContact,
-    handleAddContact,
-    handleEditContact,
-    handleDeleteContact,
-    handleSubmitContact,
-  } = contactsOps;
 
   const {
     collaborations,
@@ -102,7 +82,6 @@ export default function CompanyDetailPage() {
 
   const isSubmitting =
     companyOps.isSubmitting ||
-    contactsOps.isSubmitting ||
     collaborationsOps.isSubmitting;
 
   if (isLoadingCompany) {
@@ -156,31 +135,13 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Do Not Contact Warning */}
-        {hasDoNotContactFlag && (
-          <Alert className="border-orange-200 bg-orange-50 text-orange-900 flex items-center gap-4">
-            <AlertTriangle className="size-7 shrink-0" />
-
-            <div>
-              <AlertTitle>Do Not Contact Warning</AlertTitle>
-              <AlertDescription>
-                This company has been marked as "do not contact in future" in
-                one or more collaborations. Please review collaboration history
-                before initiating new contact.
-              </AlertDescription>
-            </div>
-          </Alert>
-        )}
+        {hasDoNotContactFlag && <DoNotContactWarning />}
 
         <CompanyDetailsSection company={company} />
 
         {/* Contacts Section */}
         <ContactsSection
-          contacts={contacts}
-          isLoadingContacts={isLoadingContacts}
-          isMobile={isMobile}
-          onAddContact={handleAddContact}
-          onEditContact={handleEditContact}
-          onDeleteContact={handleDeleteContact}
+          companyId={companyId}
         />
 
         {/* Collaborations Section */}
@@ -206,24 +167,6 @@ export default function CompanyDetailPage() {
         {(formProps) => (
           <CompanyForm
             initialData={formProps.initialData}
-            onSubmit={formProps.onSubmit}
-            isLoading={formProps.isLoading}
-          />
-        )}
-      </FormDialog>
-
-      <FormDialog<Contact>
-        open={contactDialogOpen}
-        onOpenChange={setContactDialogOpen}
-        entity="Contact"
-        initialData={selectedContact}
-        onSubmit={handleSubmitContact}
-        isLoading={isSubmitting}
-      >
-        {(formProps) => (
-          <ContactForm
-            initialData={formProps.initialData}
-            companyId={companyId}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
           />

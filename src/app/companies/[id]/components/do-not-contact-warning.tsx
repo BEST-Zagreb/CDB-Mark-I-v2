@@ -3,13 +3,7 @@
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface DoNotContactWarningProps {
-  show: boolean;
-}
-
-export function DoNotContactWarning({ show }: DoNotContactWarningProps) {
-  if (!show) return null;
-
+export function DoNotContactWarning() {
   return (
     <Alert className="border-orange-200 bg-orange-50 text-orange-900 flex items-center gap-4">
       <AlertTriangle className="size-7 shrink-0" />
