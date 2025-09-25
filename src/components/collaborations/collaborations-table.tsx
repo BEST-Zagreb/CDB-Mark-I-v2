@@ -32,13 +32,7 @@ interface VirtualizedCollaborationListProps {
   >;
   onEdit: (collaboration: Collaboration) => void;
   onDelete: (collaborationId: number) => Promise<void>;
-  onSortColumn: (
-    field: keyof (Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    })
-  ) => void;
+  onSortColumn: (field: string) => void;
   hiddenColumns?: string[];
 }
 
@@ -56,8 +50,8 @@ export function CollaborationsTable({
   // Sort collaborations based on current sort field and direction
   const sortedCollaborations = useMemo(() => {
     return [...collaborations].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: unknown;
+      let bValue: unknown;
 
       const { sortField, sortDirection } = tablePreferences;
 
@@ -69,32 +63,42 @@ export function CollaborationsTable({
           bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
           break;
         case "amount":
-        case "contactId":
-          aValue = (a as any)[sortField];
-          bValue = (b as any)[sortField];
+          aValue = a.amount;
+          bValue = b.amount;
           break;
-        case "successful":
-        case "contacted":
-        case "letter":
-        case "meeting":
+        case "contactId":
+          aValue = a.contactId;
+          bValue = b.contactId;
+          break;
         case "contactInFuture":
           // Handle boolean fields - null values come last
-          aValue = (a as any)[sortField];
-          bValue = (b as any)[sortField];
+          aValue = a.contactInFuture;
+          bValue = b.contactInFuture;
           break;
         case "updatedAt":
+          aValue = a.updatedAt ? new Date(a.updatedAt).getTime() : null;
+          bValue = b.updatedAt ? new Date(b.updatedAt).getTime() : null;
+          break;
         case "createdAt":
-          aValue = (a as any)[sortField]
-            ? new Date((a as any)[sortField]).getTime()
-            : null;
-          bValue = (b as any)[sortField]
-            ? new Date((b as any)[sortField]).getTime()
-            : null;
+          aValue = a.createdAt ? new Date(a.createdAt).getTime() : null;
+          bValue = b.createdAt ? new Date(b.createdAt).getTime() : null;
+          break;
+        case "companyName":
+          aValue = a.companyName;
+          bValue = b.companyName;
+          break;
+        case "projectName":
+          aValue = a.projectName;
+          bValue = b.projectName;
+          break;
+        case "contactName":
+          aValue = a.contactName;
+          bValue = b.contactName;
           break;
         default:
-          // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = (a as any)[sortField];
-          bValue = (b as any)[sortField];
+          // For other string fields, convert to lowercase for case-insensitive sorting
+          aValue = (a as unknown as Record<string, unknown>)[sortField];
+          bValue = (b as unknown as Record<string, unknown>)[sortField];
           break;
       }
 
@@ -110,11 +114,32 @@ export function CollaborationsTable({
 
       // For string comparison, convert to lowercase
       if (typeof aValue === "string" && typeof bValue === "string") {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+        const aStr = aValue.toLowerCase();
+        const bStr = bValue.toLowerCase();
+        if (aStr < bStr) return sortDirection === "asc" ? -1 : 1;
+        if (aStr > bStr) return sortDirection === "asc" ? 1 : -1;
+        return 0;
       }
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+
+      // For number comparison
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+        return 0;
+      }
+
+      // For boolean comparison (treat true > false)
+      if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        if (aValue === bValue) return 0;
+        return aValue && !bValue
+          ? sortDirection === "asc"
+            ? 1
+            : -1
+          : sortDirection === "asc"
+          ? -1
+          : 1;
+      }
+
       return 0;
     });
   }, [

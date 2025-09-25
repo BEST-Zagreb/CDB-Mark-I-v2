@@ -32,7 +32,7 @@ export function visibleColumnsToStrings(visibleColumns: string[]): string[] {
 // Simple function that returns updated table preferences for sorting
 export function handleSort<T>(
   currentPreferences: TablePreferences<T>,
-  field: keyof T
+  field: string
 ): TablePreferences<T> {
   if (currentPreferences.sortField === field) {
     // Toggle direction if same field
@@ -53,7 +53,7 @@ export function handleSort<T>(
 
 // Get sort icon JSX element
 export function getSortIcon<T>(
-  field: keyof T,
+  field: string,
   tablePreferences: TablePreferences<T>
 ): ReactElement {
   if (tablePreferences.sortField !== field) {

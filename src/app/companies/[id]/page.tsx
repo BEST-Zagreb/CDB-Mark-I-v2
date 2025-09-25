@@ -190,13 +190,7 @@ export default function CompanyDetailPage() {
     }));
   };
 
-  const handleSortColumn = (
-    field: keyof (Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    })
-  ) => {
+  const handleSortColumn = (field: string) => {
     const newPreferences = handleSort(tablePreferences, field);
     setTablePreferences(newPreferences);
   };
@@ -214,7 +208,7 @@ export default function CompanyDetailPage() {
     }));
   };
 
-  const handleContactsSortColumn = (field: keyof Contact) => {
+  const handleContactsSortColumn = (field: string) => {
     const newPreferences = handleSort(contactsTablePreferences, field);
     setContactsTablePreferences(newPreferences);
   };

@@ -21,7 +21,7 @@ interface ContactsTableProps {
   tablePreferences: TablePreferences<Contact>;
   onEdit?: (contact: Contact) => void;
   onDelete?: (contactId: number) => Promise<void>;
-  onSortColumn: (field: keyof Contact) => void;
+  onSortColumn: (field: string) => void;
   hiddenColumns?: string[];
 }
 
@@ -54,8 +54,8 @@ export function ContactsTable({
           break;
         default:
           // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = a[sortField];
-          bValue = b[sortField];
+          aValue = (a as unknown as Record<string, unknown>)[sortField];
+          bValue = (b as unknown as Record<string, unknown>)[sortField];
           break;
       }
 

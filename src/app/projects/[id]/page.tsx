@@ -160,13 +160,7 @@ export default function ProjectDetailPage() {
     }));
   };
 
-  const handleSortColumn = (
-    field: keyof (Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    })
-  ) => {
+  const handleSortColumn = (field: string) => {
     const newPreferences = handleSort(tablePreferences, field);
     setTablePreferences(newPreferences);
   };
