@@ -30,7 +30,7 @@ export function formatDate(date: Date | string | null): string {
 /**
  * Format currency amount based on project creation/update date
  * Projects created/updated before 2023-01-01 are displayed in HRK, otherwise in EUR
- * Rounds to whole numbers with no decimals
+ * Rounds to whole numbers with no decimals and adds comma separators for thousands
  * Returns empty string for null/undefined/empty values, "—" for 0
  */
 export function formatCurrency(
@@ -43,16 +43,17 @@ export function formatCurrency(
   }
 
   const roundedAmount = Math.round(amount);
+  const formattedAmount = roundedAmount.toLocaleString("en-US");
   const dateToCheck = projectDate || new Date();
   const isOldProject = new Date(dateToCheck) < new Date("2023-01-01");
 
   if (isOldProject) {
     // HRK with symbol after number
-    return `${roundedAmount} kn`;
+    return `${formattedAmount} kn`;
   }
 
   // EUR with symbol after number (custom formatting)
-  return `${roundedAmount} €`;
+  return `${formattedAmount} €`;
 }
 
 /**
