@@ -197,7 +197,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                         <Mail className="size-4 text-blue-600" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Letter sent</p>
+                        <p>Letter</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -209,7 +209,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                         <Briefcase className="size-4 text-primary" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Meeting held</p>
+                        <p>Meeting</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
