@@ -83,13 +83,13 @@ export function ProjectDetailsSection({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Amount Raised</span>
-                <span className="font-medium">
+                <span className="font-medium text-right">
                   {formatCurrency(totalRaised, project.updated_at)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Goal</span>
-                <span className="font-medium">
+                <span className="font-medium text-right">
                   {formatCurrency(project.frGoal, project.updated_at)}
                 </span>
               </div>
@@ -98,7 +98,7 @@ export function ProjectDetailsSection({
                 <span className="text-muted-foreground">
                   {progressPercentage.toFixed(1)}% Complete
                 </span>
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground text-right">
                   {formatCurrency(
                     Math.max(0, project.frGoal - totalRaised),
                     project.updated_at
