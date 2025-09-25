@@ -21,9 +21,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Company Database",
+  metadataBase: new URL("https://cdb.best.hr"),
+  title: {
+    default: "Company Database",
+    template: "CDB - %s",
+  },
   description:
-    "CRUD application for managing projects, companies, and collaborations",
+    "Web and mobile (PWA) application for managing contacts for fundraising per project.",
+  creator: "Jakov Jakovac",
+  keywords: [
+    "Company Database",
+    "CDB",
+    "Contacts",
+    "CRM",
+    "Fundraising",
+    "Networking",
+    "Project Management",
+    "Collaboration",
+    "Business Development",
+    "Client Management",
+    "Customer Relationships",
+    "Open Source",
+    "Productivity",
+    "Organization",
+    "Entrepreneurship",
+  ],
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
