@@ -47,9 +47,9 @@ export function ContactsSection({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex flex-wrap items-center gap-2">
               <Users className="h-5 w-5" />
               Contacts
               <Badge variant="secondary">{contacts.length}</Badge>
@@ -59,9 +59,9 @@ export function ContactsSection({
             </CardDescription>
           </div>
 
-          <Button onClick={onAddContact} size={isMobile ? "sm" : "default"}>
+          <Button onClick={onAddContact} size={isMobile ? "icon" : "default"}>
             <Plus className="size-4" />
-            Add Contact
+            {!isMobile && "Add Contact"}
           </Button>
         </div>
       </CardHeader>

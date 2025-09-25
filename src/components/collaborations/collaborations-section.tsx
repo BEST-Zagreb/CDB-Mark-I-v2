@@ -51,27 +51,25 @@ export function CollaborationsSection({
     visibleColumnsString,
   } = useCollaborationsTable(storageKey, [hiddenColumn]);
 
-  const title = type === "company" ? "Collaborations" : "Collaborations";
-  const description =
-    type === "company"
-      ? "Collaboration history with this company"
-      : "Companies and organizations involved in this project";
-  const icon = type === "company" ? Handshake : null;
-
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              {icon && <Handshake className="h-5 w-5" />}
-              {title}
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2">
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              <Handshake className="h-5 w-5" />
+              Collaborations
               <Badge variant="secondary">{collaborations.length}</Badge>
             </CardTitle>
-            <CardDescription>{description}</CardDescription>
+
+            <CardDescription>
+              {type === "company"
+                ? "Collaboration history with this company"
+                : "Companies to contact regarding this project"}
+            </CardDescription>
           </div>
 
-          <div className="space-x-2 sm:space-x-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
             {type === "project" && (
               <Button
                 onClick={onAddCollaboration}

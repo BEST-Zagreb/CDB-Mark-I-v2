@@ -100,7 +100,7 @@ export default function ProjectDetailPage() {
             </h1>
           </div>
 
-          <div className="space-x-2 sm:space-x-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
             <Button
               onClick={handleEditProject}
               size={isMobile ? "icon" : "default"}
