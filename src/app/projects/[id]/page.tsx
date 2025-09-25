@@ -9,13 +9,13 @@ import { ProjectForm } from "@/components/projects/project-form";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useProjectDetailOperations } from "@/hooks/projects/use-project-detail-operations";
-import { useCollaborationsOperations } from "@/hooks/projects/use-collaborations-operations";
+import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 import { Collaboration } from "@/types/collaboration";
 import { ProjectDetailsSection } from "@/components/projects/sections/project-details-section";
 import { ProjectFundraisingSection } from "@/components/projects/sections/fundraising-section";
-import { ProjectCollaborationsSection } from "@/components/projects/sections/collaborations-section";
+import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -26,7 +26,7 @@ export default function ProjectDetailPage() {
 
   // Custom hooks for operations
   const projectOps = useProjectDetailOperations(projectId);
-  const collaborationsOps = useCollaborationsOperations(projectId);
+  const collaborationsOps = useCollaborationsOperations("project", projectId);
 
   const {
     project,
@@ -127,7 +127,8 @@ export default function ProjectDetailPage() {
           collaborations={collaborations}
         />
 
-        <ProjectCollaborationsSection
+        <CollaborationsSection
+          type="project"
           collaborations={collaborations}
           isLoadingCollaborations={isLoadingCollaborations}
           isMobile={isMobile}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Handshake, Plus } from "lucide-react";
+import { Handshake, Plus, ClipboardPaste } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,6 +18,7 @@ import { useCollaborationsTable } from "@/hooks/collaborations/use-collaboration
 import { Collaboration } from "@/types/collaboration";
 
 interface CollaborationsSectionProps {
+  type: "company" | "project";
   collaborations: Collaboration[];
   isLoadingCollaborations: boolean;
   isMobile: boolean;
@@ -27,6 +28,7 @@ interface CollaborationsSectionProps {
 }
 
 export function CollaborationsSection({
+  type,
   collaborations,
   isLoadingCollaborations,
   isMobile,
@@ -34,6 +36,11 @@ export function CollaborationsSection({
   onEditCollaboration,
   onDeleteCollaboration,
 }: CollaborationsSectionProps) {
+  const storageKey = `collaborations-${
+    type === "company" ? "companies" : "projects"
+  }` as "collaborations-companies" | "collaborations-projects";
+  const hiddenColumn = type === "company" ? "companyName" : "projectName";
+
   const {
     tablePreferences,
     searchQuery,
@@ -42,7 +49,14 @@ export function CollaborationsSection({
     handleSearchChange,
     collaborationFields,
     visibleColumnsString,
-  } = useCollaborationsTable("collaborations-companies", ["companyName"]);
+  } = useCollaborationsTable(storageKey, [hiddenColumn]);
+
+  const title = type === "company" ? "Collaborations" : "Collaborations";
+  const description =
+    type === "company"
+      ? "Collaboration history with this company"
+      : "Companies and organizations involved in this project";
+  const icon = type === "company" ? Handshake : null;
 
   return (
     <Card>
@@ -50,16 +64,24 @@ export function CollaborationsSection({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Handshake className="h-5 w-5" />
-              Collaborations
+              {icon && <Handshake className="h-5 w-5" />}
+              {title}
               <Badge variant="secondary">{collaborations.length}</Badge>
             </CardTitle>
-            <CardDescription>
-              Collaboration history with this company
-            </CardDescription>
+            <CardDescription>{description}</CardDescription>
           </div>
 
           <div className="space-x-2 sm:space-x-4">
+            {type === "project" && (
+              <Button
+                onClick={onAddCollaboration}
+                size={isMobile ? "icon" : "default"}
+              >
+                <ClipboardPaste className="size-5" />
+                {!isMobile && "Copy Collaborations"}
+              </Button>
+            )}
+
             <Button
               onClick={onAddCollaboration}
               size={isMobile ? "icon" : "default"}
@@ -70,6 +92,7 @@ export function CollaborationsSection({
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="space-y-4">
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
@@ -97,7 +120,7 @@ export function CollaborationsSection({
             onEdit={onEditCollaboration}
             onDelete={onDeleteCollaboration}
             onSortColumn={handleSortColumn}
-            hiddenColumns={["companyName"]}
+            hiddenColumns={[hiddenColumn]}
           />
         )}
       </CardContent>

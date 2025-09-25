@@ -20,7 +20,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
 import { CompanyDetailsSection } from "@/components/companies/sections/company-details-section";
 import { ContactsSection } from "@/components/companies/sections/contacts-section";
-import { CollaborationsSection } from "@/components/companies/sections/collaborations-section";
+import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 import { ContactForm } from "@/components/contacts/contacts-form";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
@@ -42,7 +42,7 @@ export default function CompanyDetailPage() {
   // Custom hooks for operations
   const companyOps = useCompanyDetailOperations(companyId);
   const contactsOps = useContactsOperations(companyId);
-  const collaborationsOps = useCollaborationsOperations(companyId);
+  const collaborationsOps = useCollaborationsOperations("company", companyId);
 
   const {
     company,
@@ -72,7 +72,7 @@ export default function CompanyDetailPage() {
     isLoadingCollaborations,
     collaborationDialogOpen,
     setCollaborationDialogOpen,
-    selectedCollaboration,
+    editingCollaboration,
     handleAddCollaboration,
     handleEditCollaboration,
     handleDeleteCollaboration,
@@ -185,6 +185,7 @@ export default function CompanyDetailPage() {
 
         {/* Collaborations Section */}
         <CollaborationsSection
+          type="company"
           collaborations={collaborations}
           isLoadingCollaborations={isLoadingCollaborations}
           isMobile={isMobile}
@@ -233,7 +234,7 @@ export default function CompanyDetailPage() {
         open={collaborationDialogOpen}
         onOpenChange={setCollaborationDialogOpen}
         entity="Collaboration"
-        initialData={selectedCollaboration}
+        initialData={editingCollaboration}
         onSubmit={handleSubmitCollaboration}
         isLoading={isSubmitting}
       >
