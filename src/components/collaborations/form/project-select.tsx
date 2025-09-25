@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useProjects } from "@/hooks/projects/use-projects";
+import { useEffect } from "react";
 
 interface ProjectSelectProps {
   value?: number;
@@ -38,6 +39,31 @@ export function ProjectSelect({
   const [searchValue, setSearchValue] = React.useState("");
 
   const { data: allProjects, isLoading, error } = useProjects();
+
+  // Find the project with the most recent updated_at date
+  const mostRecentProject = React.useMemo(() => {
+    if (!allProjects || allProjects.length === 0) return null;
+
+    return allProjects.reduce((mostRecent, current) => {
+      if (!current.updated_at) return mostRecent;
+      if (!mostRecent.updated_at) return current;
+
+      return current.updated_at > mostRecent.updated_at ? current : mostRecent;
+    });
+  }, [allProjects]);
+
+  // Auto-select the most recent project when no value is provided and projects are loaded
+  useEffect(() => {
+    if (
+      !value &&
+      mostRecentProject &&
+      !isLoading &&
+      allProjects &&
+      allProjects.length > 0
+    ) {
+      onValueChange(mostRecentProject.id);
+    }
+  }, [value, mostRecentProject, isLoading, allProjects, onValueChange]);
 
   // Filter projects based on search
   const filteredProjects = React.useMemo(() => {
