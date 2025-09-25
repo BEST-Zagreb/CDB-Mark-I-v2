@@ -40,7 +40,7 @@ export default function Header(): JSX.Element {
             <div className="flex items-center justify-between gap-4 flex-wrap py-2 sm:py-4">
               <div className="flex items-center justify-between sm:w-auto">
                 <div className="flex items-center space-x-2">
-                  <SidebarTrigger />
+                  {isMobile && <SidebarTrigger />}
 
                   <Link href="/" className="flex items-center space-x-2">
                     <Image
@@ -63,7 +63,7 @@ export default function Header(): JSX.Element {
                 </div>
               </div>
 
-              <ul className="hidden sm:flex gap-8 text-sm ">
+              <ul className="hidden sm:flex gap-8 text-sm">
                 <li>
                   <Link
                     href="/"
