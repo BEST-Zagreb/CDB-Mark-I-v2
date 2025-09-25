@@ -58,7 +58,7 @@ export function CollaborationsTable({
       // Handle different field types
       switch (sortField) {
         case "priority":
-          const priorityOrder = { high: 3, medium: 2, low: 1 };
+          const priorityOrder = { High: 3, Medium: 2, Low: 1 };
           aValue = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
           bValue = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
           break;

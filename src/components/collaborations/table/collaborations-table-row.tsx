@@ -24,11 +24,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
-import {
-  Collaboration,
-  getCollaborationTypeDisplay,
-  getPriorityDisplay,
-} from "@/types/collaboration";
+import { Collaboration } from "@/types/collaboration";
 import { formatDate, formatCurrency } from "@/lib/format-utils";
 import { type TablePreferences } from "@/types/table";
 
@@ -142,7 +138,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               className={`max-w-50 ${column.center ? "text-center" : ""}`}
             >
               <Badge variant="outline">
-                {getCollaborationTypeDisplay(collaboration.type)}
+                {collaboration.type || "Unknown/Not specified"}
               </Badge>
             </TableCell>
           );
@@ -154,14 +150,14 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
             >
               <Badge
                 variant={
-                  collaboration.priority === "high"
+                  collaboration.priority === "High"
                     ? "destructive"
-                    : collaboration.priority === "medium"
+                    : collaboration.priority === "Medium"
                     ? "default"
                     : "secondary"
                 }
               >
-                {getPriorityDisplay(collaboration.priority)}
+                {collaboration.priority}
               </Badge>
             </TableCell>
           );

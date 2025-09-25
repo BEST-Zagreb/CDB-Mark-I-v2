@@ -17,7 +17,7 @@ export interface CollaborationDB {
   updated_at: string | null;
   amount: number | null;
   contact_in_future: boolean | null;
-  type: string;
+  type: string | null;
 }
 
 // UI collaboration interface (transformed from DB)
@@ -32,12 +32,12 @@ export interface Collaboration {
   successful: boolean | null;
   letter: boolean;
   meeting: boolean | null;
-  priority: string; // Changed from number to string
+  priority: "Low" | "Medium" | "High";
   createdAt: Date | string | null; // Can be string due to JSON serialization
   updatedAt: Date | string | null; // Can be string due to JSON serialization
   amount: number | null;
   contactInFuture: boolean | null;
-  type: string;
+  type: string | null;
   // Related data that might be joined
   companyName?: string;
   contactName?: string;
@@ -55,10 +55,10 @@ export const collaborationSchema = z.object({
   successful: z.boolean().optional(),
   letter: z.boolean(),
   meeting: z.boolean().optional(),
-  priority: z.enum(["low", "medium", "high"]),
+  priority: z.enum(["Low", "Medium", "High"]),
   amount: z.number().positive().optional(),
   contactInFuture: z.boolean().optional(),
-  type: z.enum(["financijska", "materijalna", "edukacija"]),
+  type: z.enum(["Financial", "Material", "Educational"]).nullable(),
 });
 
 // Form data for creating/updating collaborations
@@ -85,40 +85,14 @@ export function getCollaborationStatusColor(
   return "text-gray-600";
 }
 
-export function getCollaborationTypeDisplay(type: string): string {
-  switch (type) {
-    case "financijska":
-      return "Financial";
-    case "materijalna":
-      return "Material";
-    case "edukacija":
-      return "Educational";
-    default:
-      return type;
-  }
-}
-
-export function getPriorityDisplay(priority: string): string {
-  switch (priority) {
-    case "low":
-      return "Low";
-    case "medium":
-      return "Medium";
-    case "high":
-      return "High";
-    default:
-      return "Unknown";
-  }
-}
-
 // Helper function to get priority order value for sorting
 export function getPriorityOrder(priority: string): number {
   switch (priority) {
-    case "high":
+    case "High":
       return 3;
-    case "medium":
+    case "Medium":
       return 2;
-    case "low":
+    case "Low":
       return 1;
     default:
       return 0;

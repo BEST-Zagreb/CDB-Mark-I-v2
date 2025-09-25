@@ -16,7 +16,7 @@ function transformCollaboration(
     contactId: dbCollaboration.person_id,
     responsible: dbCollaboration.responsible,
     comment: dbCollaboration.comment,
-    contacted: Boolean(dbCollaboration.contacted),
+    contacted: dbCollaboration.contacted,
     successful:
       dbCollaboration.successful === null
         ? null
@@ -26,7 +26,7 @@ function transformCollaboration(
       dbCollaboration.meeting === null
         ? null
         : Boolean(dbCollaboration.meeting),
-    priority: dbCollaboration.priority,
+    priority: dbCollaboration.priority as "Low" | "Medium" | "High",
     createdAt: dbCollaboration.created_at
       ? new Date(dbCollaboration.created_at)
       : null,

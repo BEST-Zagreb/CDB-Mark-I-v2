@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CROATIAN_MONTHS } from "@/app/companies/constants/months";
+import { MONTH_NAMES } from "@/app/companies/constants/months";
 
 interface MonthSelectProps {
   value?: string;
@@ -52,7 +52,7 @@ export function MonthSelect({
         <SelectGroup>
           <SelectLabel>Months</SelectLabel>
           <SelectItem value="unknown">Unknown</SelectItem>
-          {CROATIAN_MONTHS.map((month) => (
+          {MONTH_NAMES.map((month) => (
             <SelectItem key={month} value={month}>
               {month}
             </SelectItem>

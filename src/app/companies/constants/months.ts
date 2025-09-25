@@ -1,15 +1,15 @@
-// Croatian months for budgeting month selection
-export const CROATIAN_MONTHS = [
-  "01 - Siječanj",
-  "02 - Veljača",
-  "03 - Ožujak",
-  "04 - Travanj",
-  "05 - Svibanj",
-  "06 - Lipanj",
-  "07 - Srpanj",
-  "08 - Kolovoz",
-  "09 - Rujan",
-  "10 - Listopad",
-  "11 - Studeni",
-  "12 - Prosinac",
+// Months for budgeting month selection
+export const MONTH_NAMES = [
+  "01 - January",
+  "02 - February",
+  "03 - March",
+  "04 - April",
+  "05 - May",
+  "06 - June",
+  "07 - July",
+  "08 - August",
+  "09 - September",
+  "10 - October",
+  "11 - November",
+  "12 - December",
 ] as const;

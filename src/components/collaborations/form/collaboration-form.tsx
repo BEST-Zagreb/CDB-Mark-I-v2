@@ -35,18 +35,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
-// Helper function to ensure priority is a valid string value
-function normalizePriority(
-  priority: string | number | null | undefined
-): "low" | "medium" | "high" {
-  if (typeof priority === "string") {
-    if (["low", "medium", "high"].includes(priority)) {
-      return priority as "low" | "medium" | "high";
-    }
-  }
-  return "low"; // Default fallback
-}
-
 interface CollaborationFormProps {
   initialData?: Collaboration | null;
   projectId?: number;
@@ -71,8 +59,8 @@ export function CollaborationForm({
       comment: "",
       contacted: false,
       letter: false,
-      priority: "low",
-      type: "financijska",
+      priority: "Low",
+      type: null,
       contactInFuture: true,
     },
   });
@@ -108,10 +96,14 @@ export function CollaborationForm({
         successful: initialData.successful || undefined,
         letter: initialData.letter,
         meeting: initialData.meeting || undefined,
-        priority: normalizePriority(initialData.priority),
+        priority: initialData.priority,
         amount: initialData.amount || undefined,
         contactInFuture: initialData.contactInFuture || undefined,
-        type: initialData.type as "financijska" | "materijalna" | "edukacija",
+        type: initialData.type as
+          | "Financial"
+          | "Material"
+          | "Educational"
+          | null,
       });
     } else {
       form.reset({
@@ -121,8 +113,8 @@ export function CollaborationForm({
         comment: "",
         contacted: false,
         letter: false,
-        priority: "low",
-        type: "financijska",
+        priority: "Low",
+        type: null,
         contactInFuture: true,
       });
       setIsFormInitialized(true);
@@ -248,7 +240,12 @@ export function CollaborationForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Collaboration type *</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select
+                  onValueChange={(value) =>
+                    field.onChange(value === "unknown" ? null : value)
+                  }
+                  value={field.value === null ? "unknown" : field.value}
+                >
                   <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -256,9 +253,12 @@ export function CollaborationForm({
                   </FormControl>
 
                   <SelectContent>
-                    <SelectItem value="financijska">Financial</SelectItem>
-                    <SelectItem value="materijalna">Material</SelectItem>
-                    <SelectItem value="edukacija">Educational</SelectItem>
+                    <SelectItem value="unknown">
+                      Unknown/Not specified
+                    </SelectItem>
+                    <SelectItem value="Financial">Financial</SelectItem>
+                    <SelectItem value="Material">Material</SelectItem>
+                    <SelectItem value="Educational">Educational</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -280,9 +280,9 @@ export function CollaborationForm({
                   </FormControl>
 
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -344,7 +344,7 @@ export function CollaborationForm({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Letter Sent</FormLabel>
+                  <FormLabel>Letter</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -362,7 +362,7 @@ export function CollaborationForm({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Meeting Held</FormLabel>
+                  <FormLabel>Meeting</FormLabel>
                 </div>
               </FormItem>
             )}

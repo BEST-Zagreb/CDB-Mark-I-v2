@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { CROATIAN_MONTHS } from "@/app/companies/constants/months";
+import { MONTH_NAMES } from "@/app/companies/constants/months";
 
 // Valid Croatian month values
-const VALID_MONTHS = CROATIAN_MONTHS;
+const VALID_MONTHS = MONTH_NAMES;
 
 // Database company type (what we get from the database)
 export interface CompanyDB {
