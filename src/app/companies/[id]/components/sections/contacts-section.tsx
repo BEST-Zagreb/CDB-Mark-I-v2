@@ -58,7 +58,7 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="flex flex-wrap items-center gap-2">
-                <Users className="h-5 w-5" />
+                {!isMobile && <Users className="h-5 w-5" />}
                 Contacts
                 <Badge variant="secondary">{contacts.length}</Badge>
               </CardTitle>
@@ -67,7 +67,10 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
               </CardDescription>
             </div>
 
-            <Button onClick={handleAddContact} size={isMobile ? "icon" : "default"}>
+            <Button
+              onClick={handleAddContact}
+              size={isMobile ? "icon" : "default"}
+            >
               <Plus className="size-4" />
               {!isMobile && "Add Contact"}
             </Button>

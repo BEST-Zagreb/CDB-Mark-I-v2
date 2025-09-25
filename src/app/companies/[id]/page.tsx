@@ -2,11 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -17,10 +13,9 @@ import { ContactsSection } from "@/app/companies/[id]/components/sections/contac
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 import { DoNotContactWarning } from "@/app/companies/[id]/components/do-not-contact-warning";
 import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
-import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCompanyDetailOperations } from "@/app/companies/[id]/hooks/use-company-detail-operations";
-import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
+import { useCollaborationsByCompany } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company } from "@/types/company";
 import { Collaboration } from "@/types/collaboration";
@@ -34,7 +29,7 @@ export default function CompanyDetailPage() {
 
   // Custom hooks for operations
   const companyOps = useCompanyDetailOperations(companyId);
-  const collaborationsOps = useCollaborationsOperations("company", companyId);
+  const { data: collaborations = [] } = useCollaborationsByCompany(companyId);
 
   const {
     company,
@@ -46,18 +41,6 @@ export default function CompanyDetailPage() {
     handleDeleteCompany,
     handleSubmitCompany,
   } = companyOps;
-
-  const {
-    collaborations,
-    isLoadingCollaborations,
-    collaborationDialogOpen,
-    setCollaborationDialogOpen,
-    editingCollaboration,
-    handleAddCollaboration,
-    handleEditCollaboration,
-    handleDeleteCollaboration,
-    handleSubmitCollaboration,
-  } = collaborationsOps;
 
   // Check if company should not be contacted in future
   const hasDoNotContactFlag = collaborations.some(
@@ -80,9 +63,7 @@ export default function CompanyDetailPage() {
     }
   }, [companyError, router]);
 
-  const isSubmitting =
-    companyOps.isSubmitting ||
-    collaborationsOps.isSubmitting;
+  const isSubmitting = companyOps.isSubmitting;
 
   if (isLoadingCompany) {
     return <BlocksWaveLoader size={64} className="my-16" />;
@@ -140,20 +121,10 @@ export default function CompanyDetailPage() {
         <CompanyDetailsSection company={company} />
 
         {/* Contacts Section */}
-        <ContactsSection
-          companyId={companyId}
-        />
+        <ContactsSection companyId={companyId} />
 
         {/* Collaborations Section */}
-        <CollaborationsSection
-          type="company"
-          collaborations={collaborations}
-          isLoadingCollaborations={isLoadingCollaborations}
-          isMobile={isMobile}
-          onAddCollaboration={handleAddCollaboration}
-          onEditCollaboration={handleEditCollaboration}
-          onDeleteCollaboration={handleDeleteCollaboration}
-        />
+        <CollaborationsSection type="company" id={companyId} />
       </div>
 
       <FormDialog<Company>
@@ -167,24 +138,6 @@ export default function CompanyDetailPage() {
         {(formProps) => (
           <CompanyForm
             initialData={formProps.initialData}
-            onSubmit={formProps.onSubmit}
-            isLoading={formProps.isLoading}
-          />
-        )}
-      </FormDialog>
-
-      <FormDialog<Collaboration>
-        open={collaborationDialogOpen}
-        onOpenChange={setCollaborationDialogOpen}
-        entity="Collaboration"
-        initialData={editingCollaboration}
-        onSubmit={handleSubmitCollaboration}
-        isLoading={isSubmitting}
-      >
-        {(formProps) => (
-          <CollaborationForm
-            initialData={formProps.initialData}
-            companyId={companyId}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
           />

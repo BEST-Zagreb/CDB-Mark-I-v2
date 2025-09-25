@@ -6,10 +6,9 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/app/projects/components/project-form";
-import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-project-detail-operations";
-import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
+import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 import { Collaboration } from "@/types/collaboration";
@@ -25,7 +24,7 @@ export default function ProjectDetailPage() {
 
   // Custom hooks for operations
   const projectOps = useProjectDetailOperations(projectId);
-  const collaborationsOps = useCollaborationsOperations("project", projectId);
+  const { data: collaborations = [] } = useCollaborationsByProject(projectId);
 
   const {
     project,
@@ -38,19 +37,6 @@ export default function ProjectDetailPage() {
     handleSubmitProject,
     isSubmitting: isSubmittingProject,
   } = projectOps;
-
-  const {
-    collaborations,
-    isLoadingCollaborations,
-    collaborationDialogOpen,
-    setCollaborationDialogOpen,
-    editingCollaboration,
-    handleAddCollaboration,
-    handleEditCollaboration,
-    handleDeleteCollaboration,
-    handleSubmitCollaboration,
-    isSubmitting: isSubmittingCollaboration,
-  } = collaborationsOps;
 
   useEffect(() => {
     if (isNaN(projectId)) {
@@ -66,7 +52,7 @@ export default function ProjectDetailPage() {
     }
   }, [projectError, router]);
 
-  const isSubmitting = isSubmittingProject || isSubmittingCollaboration;
+  const isSubmitting = isSubmittingProject;
 
   if (isLoadingProject) {
     return <BlocksWaveLoader size={96} className="my-16" />;
@@ -124,15 +110,7 @@ export default function ProjectDetailPage() {
           collaborations={collaborations}
         />
 
-        <CollaborationsSection
-          type="project"
-          collaborations={collaborations}
-          isLoadingCollaborations={isLoadingCollaborations}
-          isMobile={isMobile}
-          onAddCollaboration={handleAddCollaboration}
-          onEditCollaboration={handleEditCollaboration}
-          onDeleteCollaboration={handleDeleteCollaboration}
-        />
+        <CollaborationsSection type="project" id={projectId} />
       </div>
 
       <FormDialog<Project>
@@ -146,24 +124,6 @@ export default function ProjectDetailPage() {
         {(formProps) => (
           <ProjectForm
             initialData={formProps.initialData}
-            onSubmit={formProps.onSubmit}
-            isLoading={formProps.isLoading}
-          />
-        )}
-      </FormDialog>
-
-      <FormDialog<Collaboration>
-        open={collaborationDialogOpen}
-        onOpenChange={setCollaborationDialogOpen}
-        entity="Collaboration"
-        initialData={editingCollaboration}
-        onSubmit={handleSubmitCollaboration}
-        isLoading={isSubmitting}
-      >
-        {(formProps) => (
-          <CollaborationForm
-            initialData={formProps.initialData}
-            projectId={projectId}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
           />
