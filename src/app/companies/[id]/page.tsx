@@ -15,10 +15,8 @@ import { DoNotContactWarning } from "@/app/companies/[id]/components/do-not-cont
 import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCompanyDetailOperations } from "@/app/companies/[id]/hooks/use-company-detail-operations";
-import { useCollaborationsByCompany } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company } from "@/types/company";
-import { Collaboration } from "@/types/collaboration";
 
 export default function CompanyDetailPage() {
   const params = useParams();
@@ -29,7 +27,6 @@ export default function CompanyDetailPage() {
 
   // Custom hooks for operations
   const companyOps = useCompanyDetailOperations(companyId);
-  const { data: collaborations = [] } = useCollaborationsByCompany(companyId);
 
   const {
     company,
@@ -41,11 +38,6 @@ export default function CompanyDetailPage() {
     handleDeleteCompany,
     handleSubmitCompany,
   } = companyOps;
-
-  // Check if company should not be contacted in future
-  const hasDoNotContactFlag = collaborations.some(
-    (collaboration) => collaboration.contactInFuture === false
-  );
 
   useEffect(() => {
     if (!rawId || isNaN(companyId) || companyId <= 0) {
@@ -116,7 +108,7 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Do Not Contact Warning */}
-        {hasDoNotContactFlag && <DoNotContactWarning />}
+        {company?.hasDoNotContact && <DoNotContactWarning />}
 
         <CompanyDetailsSection company={company} />
 

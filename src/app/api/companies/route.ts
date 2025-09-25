@@ -17,12 +17,18 @@ export async function GET(request: NextRequest) {
     let stmt;
     let companies: CompanyDB[];
 
-    // Get all companies
+    // Get all companies with do not contact status
     stmt = db.prepare(`
-        SELECT * FROM companies 
+        SELECT 
+          c.*,
+          CASE WHEN EXISTS(
+            SELECT 1 FROM collaborations 
+            WHERE company_id = c.id AND contact_in_future = 0
+          ) THEN 1 ELSE 0 END as hasDoNotContact
+        FROM companies c
         ORDER BY name ASC
       `);
-    companies = stmt.all() as CompanyDB[];
+    companies = stmt.all() as (CompanyDB & { hasDoNotContact: number })[];
 
     const formattedCompanies: Company[] = companies.map(dbCompanyToCompany);
 
@@ -64,8 +70,16 @@ export async function POST(request: NextRequest) {
     );
 
     if (result.lastInsertRowid) {
-      // Fetch the created company
-      const getStmt = db.prepare("SELECT * FROM companies WHERE id = ?");
+      // Fetch the created company with do not contact status
+      const getStmt = db.prepare(`
+        SELECT 
+          c.*,
+          CASE WHEN EXISTS(
+            SELECT 1 FROM collaborations 
+            WHERE company_id = c.id AND contact_in_future = 0
+          ) THEN 1 ELSE 0 END as hasDoNotContact
+        FROM companies c WHERE c.id = ?
+      `);
       const newCompany: CompanyDB = getStmt.get(
         result.lastInsertRowid
       ) as CompanyDB;

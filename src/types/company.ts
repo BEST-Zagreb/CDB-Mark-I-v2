@@ -16,6 +16,7 @@ export interface CompanyDB {
   phone: string | null;
   budgeting_month: string | null;
   comment: string | null;
+  hasDoNotContact?: number;
 }
 
 // Company type for our application
@@ -30,6 +31,7 @@ export interface Company {
   phone: string;
   budgeting_month: string;
   comment: string;
+  hasDoNotContact: boolean;
 }
 
 // Zod schema for company validation
@@ -83,5 +85,6 @@ export function dbCompanyToCompany(dbCompany: CompanyDB): Company {
     phone: dbCompany.phone || "",
     budgeting_month: dbCompany.budgeting_month || "",
     comment: dbCompany.comment || "",
+    hasDoNotContact: Boolean(dbCompany.hasDoNotContact),
   };
 }

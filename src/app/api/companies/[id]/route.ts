@@ -24,7 +24,15 @@ export async function GET(
     }
 
     const db = getDatabase();
-    const stmt = db.prepare("SELECT * FROM companies WHERE id = ?");
+    const stmt = db.prepare(`
+      SELECT 
+        c.*,
+        CASE WHEN EXISTS(
+          SELECT 1 FROM collaborations 
+          WHERE company_id = c.id AND contact_in_future = 0
+        ) THEN 1 ELSE 0 END as hasDoNotContact
+      FROM companies c WHERE c.id = ?
+    `);
     const company: CompanyDB | undefined = stmt.get(companyId) as
       | CompanyDB
       | undefined;
@@ -141,7 +149,15 @@ export async function PUT(
     updateStmt.run(...updateValues);
 
     // Fetch and return the updated company
-    const getStmt = db.prepare("SELECT * FROM companies WHERE id = ?");
+    const getStmt = db.prepare(`
+      SELECT 
+        c.*,
+        CASE WHEN EXISTS(
+          SELECT 1 FROM collaborations 
+          WHERE company_id = c.id AND contact_in_future = 0
+        ) THEN 1 ELSE 0 END as hasDoNotContact
+      FROM companies c WHERE c.id = ?
+    `);
     const updatedCompany: CompanyDB = getStmt.get(companyId) as CompanyDB;
 
     return NextResponse.json(dbCompanyToCompany(updatedCompany));

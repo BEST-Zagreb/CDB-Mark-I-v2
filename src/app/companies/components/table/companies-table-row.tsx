@@ -15,7 +15,7 @@ import {
 import { isColumnVisible } from "@/lib/table-utils";
 import { formatUrl } from "@/lib/format-utils";
 import { COMPANY_FIELDS } from "@/config/company-fields";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ShieldAlert } from "lucide-react";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -56,7 +56,12 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
   );
 
   return (
-    <TableRow key={company.id}>
+    <TableRow
+      key={company.id}
+      className={
+        company.hasDoNotContact ? "bg-orange-50 text-muted-foreground" : ""
+      }
+    >
       {COMPANY_FIELDS.map((column) => {
         if (!isColumnVisible(column.id, tablePreferences) && !column.required)
           return null;
@@ -69,12 +74,17 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
                 column.center ? "text-center" : "font-medium"
               }`}
             >
-              <Link
-                href={`/companies/${company.id}`}
-                className="text-primary hover:underline text-pretty"
-              >
-                {company.name || "—"}
-              </Link>
+              <div className="flex items-center gap-2">
+                {company.hasDoNotContact && (
+                  <ShieldAlert className="size-5 text-orange-900 flex-shrink-0" />
+                )}
+                <Link
+                  href={`/companies/${company.id}`}
+                  className="text-primary hover:underline text-pretty"
+                >
+                  {company.name || "—"}
+                </Link>
+              </div>
             </TableCell>
           );
         } else if (column.id === "url") {
