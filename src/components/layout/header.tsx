@@ -32,7 +32,7 @@ export default function Header(): JSX.Element {
         <nav className="fixed z-20 inset-x-4 my-4">
           <div
             className={cn(
-              "mx-auto max-w-6xl transition-all duration-300 px-2",
+              "mx-auto max-w-7xl transition-all duration-300 px-4",
               isScrolled &&
                 "bg-background/50 max-w-5xl rounded-2xl border backdrop-blur-sm px-4"
             )}

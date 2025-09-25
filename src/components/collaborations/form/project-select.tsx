@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useProjects } from "@/hooks/use-projects";
+import { useProjects } from "@/hooks/projects/use-projects";
 
 interface ProjectSelectProps {
   value?: number;

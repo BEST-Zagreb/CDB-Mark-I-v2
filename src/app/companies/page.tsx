@@ -1,14 +1,16 @@
 "use client";
 
-import { CompaniesTable } from "@/components/companies/companies-table";
+import { Plus } from "lucide-react";
+import { CompaniesTable } from "@/components/companies/table/companies-table";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
-import { CompaniesPageHeader } from "@/components/companies/companies-page-header";
-import { useCompaniesTable } from "@/hooks/use-companies-table";
-import { useCompanyOperations } from "@/hooks/use-company-operations";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useCompaniesTable } from "@/hooks/companies/use-companies-table";
+import { useCompanyOperations } from "@/hooks/companies/use-company-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company } from "@/types/company";
 
@@ -42,11 +44,21 @@ export default function CompaniesPage() {
   return (
     <div className="mx-auto p-4">
       <div className="space-y-6">
-        <CompaniesPageHeader
-          companiesCount={companies.length}
-          isMobile={isMobile}
-          onCreateCompany={handleCreateCompany}
-        />
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
+              Companies
+            </h1>
+            <Badge variant="secondary">{companies.length}</Badge>
+          </div>
+          <Button
+            onClick={handleCreateCompany}
+            size={isMobile ? "sm" : "default"}
+          >
+            <Plus className="size-4" />
+            New Company
+          </Button>
+        </div>
 
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">

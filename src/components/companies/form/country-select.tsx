@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useCountries } from "@/hooks/use-countries";
+import { useCountries } from "@/hooks/companies/use-countries";
 
 interface CountrySelectProps {
   value?: string;

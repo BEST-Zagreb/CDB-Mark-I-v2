@@ -6,7 +6,7 @@ import {
   useCreateProject,
   useUpdateProject,
   useDeleteProject,
-} from "@/hooks/use-projects";
+} from "@/hooks/projects/use-projects";
 import { Project, ProjectFormData } from "@/types/project";
 
 export function useProjectOperations() {

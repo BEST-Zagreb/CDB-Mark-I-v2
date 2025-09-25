@@ -1,14 +1,16 @@
 "use client";
 
-import { ProjectsTable } from "@/components/projects/projects-table";
+import { Plus } from "lucide-react";
+import { ProjectsTable } from "@/components/projects/table/projects-table";
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
-import { ProjectsPageHeader } from "@/components/projects/projects-page-header";
-import { useProjectsTable } from "@/hooks/use-projects-table";
-import { useProjectOperations } from "@/hooks/use-project-operations";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useProjectsTable } from "@/hooks/projects/use-projects-table";
+import { useProjectOperations } from "@/hooks/projects/use-project-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 
@@ -42,11 +44,21 @@ export default function ProjectsPage() {
   return (
     <div className="mx-auto p-4">
       <div className="space-y-6">
-        <ProjectsPageHeader
-          projectsCount={projects.length}
-          isMobile={isMobile}
-          onCreateProject={handleCreateProject}
-        />
+        <div className="flex justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-3xl font-bold tracking-tight">
+              Projects
+            </h1>
+            <Badge variant="secondary">{projects.length}</Badge>
+          </div>
+          <Button
+            onClick={handleCreateProject}
+            size={isMobile ? "sm" : "default"}
+          >
+            <Plus className="size-4" />
+            New Project
+          </Button>
+        </div>
 
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">

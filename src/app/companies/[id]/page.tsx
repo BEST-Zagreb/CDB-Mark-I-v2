@@ -1,152 +1,83 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Pencil,
+  Trash2,
+  AlertTriangle,
   ExternalLink,
   Users,
-  Handshake,
   Plus,
-  AlertTriangle,
-  Delete,
-  Trash2,
-  Copy,
-  ClipboardPaste,
+  Handshake,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
-import { ContactsTable } from "@/components/contacts/contacts-table";
-import { formatUrl } from "@/lib/format-utils";
+import { CompanyDetailsSection } from "@/components/companies/sections/company-details-section";
+import { ContactsSection } from "@/components/companies/sections/contacts-section";
+import { CollaborationsSection } from "@/components/companies/sections/collaborations-section";
 import { ContactForm } from "@/components/contacts/contacts-form";
-import { CollaborationsTable } from "@/components/collaborations/collaborations-table";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
-import { ColumnSelector } from "@/components/common/table/column-selector";
-import { SearchBar } from "@/components/common/table/search-bar";
-import {
-  useCompany,
-  useDeleteCompany,
-  useUpdateCompany,
-} from "@/hooks/use-companies";
-import {
-  useContactsByCompany,
-  useCreateContact,
-  useUpdateContact,
-  useDeleteContact,
-} from "@/hooks/use-contacts";
-import {
-  useCollaborationsByCompany,
-  useCreateCollaboration,
-  useUpdateCollaboration,
-  useDeleteCollaboration,
-} from "@/hooks/use-collaborations";
-import { Company, CompanyFormData } from "@/types/company";
-import { Contact, ContactFormData, contactSchema } from "@/types/contact";
-import { Collaboration, CollaborationFormData } from "@/types/collaboration";
-import { type TablePreferences } from "@/types/table";
-import { useDebounce } from "@/hooks/use-debounce";
-import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
-import { CONTACT_FIELDS } from "@/config/contact-fields";
-import { getTablePreferences, saveTablePreferences } from "@/lib/local-storage";
-import {
-  updateVisibleColumns,
-  visibleColumnsToStrings,
-  handleSort,
-} from "@/lib/table-utils";
-import { useDeleteAlert } from "@/contexts/delete-alert-context";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
+import { useCompanyDetailOperations } from "@/hooks/companies/use-company-detail-operations";
+import { useContactsOperations } from "@/hooks/contacts/use-contacts-operations";
+import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Company } from "@/types/company";
+import { Contact } from "@/types/contact";
+import { Collaboration } from "@/types/collaboration";
 
 export default function CompanyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const rawId = params.id as string;
   const companyId = rawId ? parseInt(rawId) : 0;
-  const { showDeleteAlert } = useDeleteAlert();
   const isMobile = useIsMobile();
 
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<Contact | undefined>();
-  const [selectedCollaboration, setSelectedCollaboration] = useState<
-    Collaboration | undefined
-  >();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [contactsSearchQuery, setContactsSearchQuery] = useState("");
+  // Custom hooks for operations
+  const companyOps = useCompanyDetailOperations(companyId);
+  const contactsOps = useContactsOperations(companyId);
+  const collaborationsOps = useCollaborationsOperations(companyId);
 
-  // Table preferences state for collaborations
-  const defaultPreferences: TablePreferences<
-    Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    }
-  > = {
-    visibleColumns: [
-      "projectName",
-      "responsible",
-      "priority",
-      "contactName",
-      "comment",
-    ],
-    sortField: "priority",
-    sortDirection: "desc",
-  };
-
-  const [tablePreferences, setTablePreferences] = useState(() => {
-    return getTablePreferences("collaborations-companies", defaultPreferences);
-  });
-
-  // Table preferences state for contacts
-  const contactsDefaultPreferences: TablePreferences<Contact> = {
-    sortField: "name",
-    sortDirection: "asc",
-    visibleColumns: ["name", "email", "phone", "function"],
-  };
-
-  const [contactsTablePreferences, setContactsTablePreferences] = useState(
-    () => {
-      return getTablePreferences("contacts", contactsDefaultPreferences);
-    }
-  );
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const debouncedContactsSearchQuery = useDebounce(contactsSearchQuery, 300);
-
-  // React Query hooks
   const {
-    data: company,
-    isLoading: isLoadingCompany,
-    error: companyError,
-  } = useCompany(companyId);
+    company,
+    isLoadingCompany,
+    companyError,
+    editDialogOpen,
+    setEditDialogOpen,
+    handleEditCompany,
+    handleDeleteCompany,
+    handleSubmitCompany,
+  } = companyOps;
 
-  const { data: contacts = [], isLoading: isLoadingContacts } =
-    useContactsByCompany(companyId);
+  const {
+    contacts,
+    isLoadingContacts,
+    contactDialogOpen,
+    setContactDialogOpen,
+    selectedContact,
+    handleAddContact,
+    handleEditContact,
+    handleDeleteContact,
+    handleSubmitContact,
+  } = contactsOps;
 
-  const { data: collaborations = [], isLoading: isLoadingCollaborations } =
-    useCollaborationsByCompany(companyId);
-
-  // Mutation hooks
-  const updateCompanyMutation = useUpdateCompany();
-  const deleteCompanyMutation = useDeleteCompany();
-  const createContactMutation = useCreateContact();
-  const updateContactMutation = useUpdateContact();
-  const deleteContactMutation = useDeleteContact();
-  const createCollaborationMutation = useCreateCollaboration();
-  const updateCollaborationMutation = useUpdateCollaboration();
-  const deleteCollaborationMutation = useDeleteCollaboration();
+  const {
+    collaborations,
+    isLoadingCollaborations,
+    collaborationDialogOpen,
+    setCollaborationDialogOpen,
+    selectedCollaboration,
+    handleAddCollaboration,
+    handleEditCollaboration,
+    handleDeleteCollaboration,
+    handleSubmitCollaboration,
+  } = collaborationsOps;
 
   // Check if company should not be contacted in future
   const hasDoNotContactFlag = collaborations.some(
@@ -169,149 +100,10 @@ export default function CompanyDetailPage() {
     }
   }, [companyError, router]);
 
-  // Save table preferences to localStorage
-  useEffect(() => {
-    saveTablePreferences("collaborations-companies", tablePreferences);
-  }, [tablePreferences]);
-
-  useEffect(() => {
-    saveTablePreferences("contacts", contactsTablePreferences);
-  }, [contactsTablePreferences]);
-
-  // Table handler functions
-  const handleUpdateVisibleColumns = (newVisibleColumns: string[]) => {
-    const visibleColumns = updateVisibleColumns(
-      newVisibleColumns,
-      "projectName"
-    );
-    setTablePreferences((prev) => ({
-      ...prev,
-      visibleColumns: visibleColumns,
-    }));
-  };
-
-  const handleSortColumn = (field: string) => {
-    const newPreferences = handleSort(tablePreferences, field);
-    setTablePreferences(newPreferences);
-  };
-
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  // Contacts table handler functions
-  const handleContactsUpdateVisibleColumns = (newVisibleColumns: string[]) => {
-    const visibleColumns = updateVisibleColumns(newVisibleColumns, "name");
-    setContactsTablePreferences((prev) => ({
-      ...prev,
-      visibleColumns: visibleColumns,
-    }));
-  };
-
-  const handleContactsSortColumn = (field: string) => {
-    const newPreferences = handleSort(contactsTablePreferences, field);
-    setContactsTablePreferences(newPreferences);
-  };
-
-  const handleContactsSearchChange = (query: string) => {
-    setContactsSearchQuery(query);
-  };
-
-  const handleEditCompany = () => {
-    setEditDialogOpen(true);
-  };
-
-  function handleDeleteCompany(company: Company) {
-    showDeleteAlert({
-      entity: "company",
-      entityName: company.name,
-      onConfirm: () => deleteCompanyMutation.mutate(company.id),
-    });
-  }
-
-  const handleSubmitCompany = async (data: CompanyFormData) => {
-    if (!company) return;
-    await updateCompanyMutation.mutateAsync({ id: company.id, data });
-    setEditDialogOpen(false);
-  };
-
-  const handleAddContact = () => {
-    setSelectedContact(undefined);
-    setContactDialogOpen(true);
-  };
-
-  const handleEditContact = (contact: Contact) => {
-    setSelectedContact(contact);
-    setContactDialogOpen(true);
-  };
-
-  const handleDeleteContact = async (contactId: number) => {
-    await deleteContactMutation.mutateAsync(contactId);
-  };
-
-  const handleSubmitContact = async (data: ContactFormData) => {
-    try {
-      if (!companyId || isNaN(companyId) || companyId <= 0) {
-        toast.error("Invalid company ID");
-        return;
-      }
-
-      const contactData = { ...data, companyId };
-
-      if (selectedContact) {
-        await updateContactMutation.mutateAsync({
-          id: selectedContact.id,
-          data: contactData,
-        });
-      } else {
-        await createContactMutation.mutateAsync(contactData);
-      }
-      setContactDialogOpen(false);
-    } catch (error) {
-      console.error("Error in handleSubmitContact:", error);
-      // Don't close dialog on error
-    }
-  };
-
-  const handleAddCollaboration = () => {
-    setSelectedCollaboration(undefined);
-    setCollaborationDialogOpen(true);
-  };
-
-  const handleEditCollaboration = (collaboration: Collaboration) => {
-    setSelectedCollaboration(collaboration);
-    setCollaborationDialogOpen(true);
-  };
-
-  const handleDeleteCollaboration = async (collaborationId: number) => {
-    await deleteCollaborationMutation.mutateAsync(collaborationId);
-  };
-
-  const handleSubmitCollaboration = async (data: CollaborationFormData) => {
-    const collaborationData = {
-      ...data,
-      companyId: data.companyId || companyId,
-    };
-
-    if (selectedCollaboration) {
-      await updateCollaborationMutation.mutateAsync({
-        id: selectedCollaboration.id,
-        data: collaborationData,
-      });
-    } else {
-      await createCollaborationMutation.mutateAsync(collaborationData);
-    }
-    setCollaborationDialogOpen(false);
-  };
-
   const isSubmitting =
-    updateCompanyMutation.isPending ||
-    createContactMutation.isPending ||
-    updateContactMutation.isPending ||
-    deleteContactMutation.isPending ||
-    createCollaborationMutation.isPending ||
-    updateCollaborationMutation.isPending ||
-    deleteCollaborationMutation.isPending;
+    companyOps.isSubmitting ||
+    contactsOps.isSubmitting ||
+    collaborationsOps.isSubmitting;
 
   if (isLoadingCompany) {
     return <BlocksWaveLoader size={64} className="my-16" />;
@@ -379,253 +171,27 @@ export default function CompanyDetailPage() {
           </Alert>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Company Name
-                </label>
-                <p className="mt-1 font-medium">{company.name}</p>
-              </div>
-
-              {company.url && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Website
-                  </label>
-                  <div className="mt-1">
-                    {formatUrl(company.url) ? (
-                      <a
-                        href={formatUrl(company.url)?.link!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                      >
-                        {formatUrl(company.url)?.label}
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    ) : (
-                      <p>{company.url}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {company.phone && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Phone
-                  </label>
-                  <p className="mt-1">{company.phone}</p>
-                </div>
-              )}
-
-              {company.budgeting_month && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Budgeting Month
-                  </label>
-                  <p className="mt-1">
-                    <Badge variant="outline">
-                      {company.budgeting_month || "Unknown"}
-                    </Badge>
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Address Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {company.address && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Address
-                  </label>
-                  <p className="mt-1">{company.address}</p>
-                </div>
-              )}
-
-              {company.city && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    City
-                  </label>
-                  <p className="mt-1">{company.city}</p>
-                </div>
-              )}
-
-              {company.zip && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    ZIP Code
-                  </label>
-                  <p className="mt-1">{company.zip}</p>
-                </div>
-              )}
-
-              {company.country && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Country
-                  </label>
-                  <p className="mt-1">
-                    <Badge variant="secondary">{company.country}</Badge>
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {company.comment && (
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Comments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{company.comment}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <CompanyDetailsSection company={company} />
 
         {/* Contacts Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Contacts
-                  <Badge variant="secondary">{contacts.length}</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Contacts associated with this company
-                </CardDescription>
-              </div>
-
-              <Button
-                onClick={handleAddContact}
-                size={isMobile ? "sm" : "default"}
-              >
-                <Plus className="size-4" />
-                Add Contact
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Bar and Column Selector */}
-            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-              <SearchBar
-                placeholder="Search contacts..."
-                onSearchChange={handleContactsSearchChange}
-                searchParam="contacts_search"
-              />
-
-              <ColumnSelector
-                fields={CONTACT_FIELDS.map((field) => ({
-                  id: field.id as string,
-                  label: field.label,
-                  required: field.required,
-                }))}
-                visibleColumns={visibleColumnsToStrings(
-                  contactsTablePreferences.visibleColumns
-                )}
-                onColumnsChange={handleContactsUpdateVisibleColumns}
-                placeholder="Select columns"
-              />
-            </div>
-
-            {isLoadingContacts ? (
-              <BlocksWaveLoader size={48} />
-            ) : (
-              <ContactsTable
-                contacts={contacts}
-                searchQuery={debouncedContactsSearchQuery}
-                tablePreferences={contactsTablePreferences}
-                onEdit={handleEditContact}
-                onDelete={handleDeleteContact}
-                onSortColumn={handleContactsSortColumn}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <ContactsSection
+          contacts={contacts}
+          isLoadingContacts={isLoadingContacts}
+          isMobile={isMobile}
+          onAddContact={handleAddContact}
+          onEditContact={handleEditContact}
+          onDeleteContact={handleDeleteContact}
+        />
 
         {/* Collaborations Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Handshake className="h-5 w-5" />
-                  Collaborations
-                  <Badge variant="secondary">{collaborations.length}</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Collaboration history with this company
-                </CardDescription>
-              </div>
-
-              <div className="space-x-2 sm:space-x-4">
-                <Button
-                  onClick={handleAddCollaboration}
-                  size={isMobile ? "icon" : "default"}
-                >
-                  <Plus className="size-5" />
-                  {!isMobile && "New Collaboration"}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Bar and Column Selector */}
-            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-              <SearchBar
-                placeholder="Search collaborations..."
-                onSearchChange={handleSearchChange}
-                searchParam="collaborations_search"
-              />
-
-              <ColumnSelector
-                fields={COLLABORATION_FIELDS.filter((field) => {
-                  // Filter out company name column since we're on a company page
-                  if (field.id === "companyName") return false;
-                  return true;
-                }).map((field) => ({
-                  id: field.id as string,
-                  label: field.label,
-                  required: field.required,
-                }))}
-                visibleColumns={visibleColumnsToStrings(
-                  tablePreferences.visibleColumns
-                )}
-                onColumnsChange={handleUpdateVisibleColumns}
-                placeholder="Select columns"
-              />
-            </div>
-
-            {isLoadingCollaborations ? (
-              <BlocksWaveLoader size={48} />
-            ) : (
-              <CollaborationsTable
-                collaborations={collaborations}
-                searchQuery={debouncedSearchQuery}
-                tablePreferences={tablePreferences}
-                onEdit={handleEditCollaboration}
-                onDelete={handleDeleteCollaboration}
-                onSortColumn={handleSortColumn}
-                hiddenColumns={["companyName"]}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <CollaborationsSection
+          collaborations={collaborations}
+          isLoadingCollaborations={isLoadingCollaborations}
+          isMobile={isMobile}
+          onAddCollaboration={handleAddCollaboration}
+          onEditCollaboration={handleEditCollaboration}
+          onDeleteCollaboration={handleDeleteCollaboration}
+        />
       </div>
 
       <FormDialog<Company>

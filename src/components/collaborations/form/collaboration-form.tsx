@@ -25,8 +25,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
 import { ResponsiblePersonSelect } from "@/components/collaborations/form/responsible-person-select";
-import { useContactsByCompany } from "@/hooks/use-contacts";
-import { useResponsiblePersons } from "@/hooks/use-collaborations";
+import { useContactsByCompany } from "@/hooks/contacts/use-contacts";
+import { useResponsiblePersons } from "@/hooks/collaborations/use-collaborations";
 import {
   Collaboration,
   CollaborationFormData,
