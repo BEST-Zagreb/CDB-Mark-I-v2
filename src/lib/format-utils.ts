@@ -28,27 +28,31 @@ export function formatDate(date: Date | string | null): string {
 }
 
 /**
- * Format amount based on project creation date
- * Projects created before 2023-01-01 are displayed in HRK, otherwise in EUR
+ * Format currency amount based on project creation/update date
+ * Projects created/updated before 2023-01-01 are displayed in HRK, otherwise in EUR
+ * Rounds to whole numbers with no decimals
+ * Returns empty string for null/undefined/empty values, "—" for 0
  */
-export function formatAmount(
-  amount: number | null,
-  projectCreatedAt: string | Date | number | null
+export function formatCurrency(
+  amount: number,
+  projectDate?: Date | string | null
 ): string {
-  if (!amount) return "—";
-
-  // If project created before 1.1.2023, display in HRK, otherwise display in EUR
-  if (projectCreatedAt && new Date(projectCreatedAt) < new Date("2023-01-01")) {
-    return new Intl.NumberFormat("hr-HR", {
-      style: "currency",
-      currency: "HRK",
-    }).format(amount);
+  // Return empty string for null, undefined, or empty values
+  if (!amount || isNaN(amount) || amount === 0) {
+    return "";
   }
 
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "EUR",
-  }).format(amount);
+  const roundedAmount = Math.round(amount);
+  const dateToCheck = projectDate || new Date();
+  const isOldProject = new Date(dateToCheck) < new Date("2023-01-01");
+
+  if (isOldProject) {
+    // HRK with symbol after number
+    return `${roundedAmount} kn`;
+  }
+
+  // EUR with symbol after number (custom formatting)
+  return `${roundedAmount} €`;
 }
 
 /**
@@ -74,6 +78,9 @@ export function formatUrl(url: string): { label: string; link: string } | null {
 
   // Remove "www." from label for cleaner display
   label = label.replace(/^www\./, "");
+
+  // Remove trailing slashes from label
+  label = label.replace(/\/+$/, "");
 
   return { label, link };
 }

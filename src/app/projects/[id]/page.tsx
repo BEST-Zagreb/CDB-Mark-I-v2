@@ -14,7 +14,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 import { Collaboration } from "@/types/collaboration";
 import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
-import { ProjectFundraisingSection } from "@/app/projects/[id]/components/sections/fundraising-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 
 export default function ProjectDetailPage() {
@@ -120,9 +119,7 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        <ProjectDetailsSection project={project} />
-
-        <ProjectFundraisingSection
+        <ProjectDetailsSection
           project={project}
           collaborations={collaborations}
         />

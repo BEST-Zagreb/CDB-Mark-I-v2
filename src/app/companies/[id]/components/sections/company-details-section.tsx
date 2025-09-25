@@ -12,48 +12,40 @@ interface CompanyDetailsSectionProps {
 
 export function CompanyDetailsSection({ company }: CompanyDetailsSectionProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">
-              Company Name
-            </label>
-            <p className="mt-1 font-medium">{company.name}</p>
-          </div>
-
+    <Card>
+      <CardContent className="space-y-4">
+        {/* Row 1: Website, Phone, Budgeting Month */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {company.url && (
-            <div>
+            <div className="flex-1">
               <label className="text-sm font-medium text-muted-foreground">
                 Website
               </label>
               <div className="mt-1">
                 {formatUrl(company.url) ? (
-                  <a
-                    href={formatUrl(company.url)?.link!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                  >
-                    {formatUrl(company.url)?.label}
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
+                  <div className="truncate">
+                    <a
+                      href={formatUrl(company.url)?.link!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-pretty"
+                    >
+                      {formatUrl(company.url)?.label || "—"}
+                    </a>
+                  </div>
                 ) : (
-                  <p>{company.url}</p>
+                  <div className="truncate">—</div>
                 )}
               </div>
             </div>
           )}
 
           {company.phone && (
-            <div>
+            <div className="flex-1">
               <label className="text-sm font-medium text-muted-foreground">
                 Phone
               </label>
-              <p className="mt-1">{company.phone}</p>
+              <p className="mt-1 text-sm">{company.phone}</p>
             </div>
           )}
 
@@ -62,71 +54,75 @@ export function CompanyDetailsSection({ company }: CompanyDetailsSectionProps) {
               <label className="text-sm font-medium text-muted-foreground">
                 Budgeting Month
               </label>
-              <p className="mt-1">
-                <Badge variant="outline">
+              <div className="mt-1">
+                <Badge variant="outline" className="text-xs">
                   {company.budgeting_month || "Unknown"}
                 </Badge>
-              </p>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Address Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {company.address && (
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Address
-              </label>
-              <p className="mt-1">{company.address}</p>
-            </div>
-          )}
+        {/* Row 2: Address, City, ZIP, Country */}
+        {(company.address ||
+          company.city ||
+          company.zip ||
+          company.country) && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {company.address && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Address
+                </label>
+                <p className="mt-1 text-sm">{company.address}</p>
+              </div>
+            )}
 
-          {company.city && (
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                City
-              </label>
-              <p className="mt-1">{company.city}</p>
-            </div>
-          )}
+            {company.city && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  City
+                </label>
+                <p className="mt-1 text-sm">{company.city}</p>
+              </div>
+            )}
 
-          {company.zip && (
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                ZIP Code
-              </label>
-              <p className="mt-1">{company.zip}</p>
-            </div>
-          )}
+            {company.zip && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  ZIP Code
+                </label>
+                <p className="mt-1 text-sm">{company.zip}</p>
+              </div>
+            )}
 
-          {company.country && (
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Country
-              </label>
-              <p className="mt-1">
-                <Badge variant="secondary">{company.country}</Badge>
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {company.country && (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Country
+                </label>
+                <div className="mt-1">
+                  <Badge variant="secondary" className="text-xs">
+                    {company.country}
+                  </Badge>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-      {company.comment && (
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Comments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{company.comment}</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {/* Row 3: Comment */}
+        {company.comment && (
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">
+              Comment
+            </label>
+            <p className="mt-1 text-sm whitespace-pre-wrap">
+              {company.comment}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -20,7 +20,7 @@ import {
   getCollaborationTypeDisplay,
   getPriorityDisplay,
 } from "@/types/collaboration";
-import { formatAmount, formatDate } from "@/lib/format-utils";
+import { formatDate, formatCurrency } from "@/lib/format-utils";
 import { type TablePreferences } from "@/types/table";
 
 interface CollaborationsTableRowProps {
@@ -271,7 +271,10 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               className={`max-w-50 ${column.center ? "text-center" : ""}`}
             >
               <div className="text-pretty">
-                {formatAmount(collaboration.amount, collaboration.updatedAt)}
+                {formatCurrency(
+                  collaboration.amount || 0,
+                  collaboration.updatedAt
+                )}
               </div>
             </TableCell>
           );

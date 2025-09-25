@@ -7,7 +7,7 @@ import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { TableActions } from "@/components/common/table/table-actions";
 import { isColumnVisible } from "@/lib/table-utils";
-import { formatDate, formatAmount } from "@/lib/format-utils";
+import { formatDate, formatCurrency } from "@/lib/format-utils";
 import { PROJECT_FIELDS } from "@/config/project-fields";
 import { Project } from "@/types/project";
 import { type TablePreferences } from "@/types/table";
@@ -78,8 +78,8 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
               className={`max-w-50 ${column.center ? "text-center" : ""}`}
             >
               <div className="text-pretty">
-                {formatAmount(
-                  project.frGoal,
+                {formatCurrency(
+                  project.frGoal || 0,
                   project.created_at || project.updated_at
                 )}
               </div>

@@ -89,7 +89,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
                     href={formatUrl(company.url)?.link!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline text-pretty"
                   >
                     {formatUrl(company.url)?.label || "—"}
                   </a>
