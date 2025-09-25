@@ -7,7 +7,7 @@ import {
   useCreateContact,
   useUpdateContact,
   useDeleteContact,
-} from "@/hooks/contacts/use-contacts";
+} from "@/app/companies/[id]/hooks/use-contacts";
 import { Contact, ContactFormData } from "@/types/contact";
 
 export function useContactsOperations(companyId: number) {

@@ -10,11 +10,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ContactsTable } from "@/components/contacts/table/contacts-table";
+import { ContactsTable } from "@/app/companies/[id]/components/contacts/table/contacts-table";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
-import { useContactsTable } from "@/hooks/contacts/use-contacts-table";
+import { useContactsTable } from "@/app/companies/[id]/hooks/use-contacts-table";
 import { Contact } from "@/types/contact";
 
 interface ContactsSectionProps {

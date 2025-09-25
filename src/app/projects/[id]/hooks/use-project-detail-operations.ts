@@ -7,7 +7,7 @@ import {
   useProject,
   useDeleteProject,
   useUpdateProject,
-} from "@/hooks/projects/use-projects";
+} from "@/app/projects/hooks/use-projects";
 import { Project, ProjectFormData } from "@/types/project";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 

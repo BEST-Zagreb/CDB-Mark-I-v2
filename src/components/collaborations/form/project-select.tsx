@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useProjects } from "@/hooks/projects/use-projects";
+import { useProjects } from "@/app/projects/hooks/use-projects";
 import { useEffect } from "react";
 
 interface ProjectSelectProps {

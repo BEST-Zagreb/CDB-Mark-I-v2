@@ -13,7 +13,7 @@ import { Contact } from "@/types/contact";
 import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
 import { CONTACT_FIELDS } from "@/config/contact-fields";
-import { ContactsTableRow } from "@/components/contacts/table/contacts-table-row";
+import { ContactsTableRow } from "@/app/companies/[id]/components/contacts/table/contacts-table-row";
 
 interface ContactsTableProps {
   contacts: Contact[];

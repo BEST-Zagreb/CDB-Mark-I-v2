@@ -1,16 +1,16 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { CompaniesTable } from "@/components/companies/table/companies-table";
+import { CompaniesTable } from "@/app/companies/components/table/companies-table";
 import { FormDialog } from "@/components/common/form-dialog";
-import { CompanyForm } from "@/components/companies/form/company-form";
+import { CompanyForm } from "@/app/companies/components/form/company-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCompaniesTable } from "@/hooks/companies/use-companies-table";
-import { useCompanyOperations } from "@/hooks/companies/use-company-operations";
+import { useCompaniesTable } from "@/app/companies/hooks/use-companies-table";
+import { useCompanyOperations } from "@/app/companies/hooks/use-company-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company } from "@/types/company";
 

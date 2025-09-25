@@ -1,16 +1,16 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { ProjectsTable } from "@/components/projects/table/projects-table";
+import { ProjectsTable } from "@/app/projects/components/table/projects-table";
 import { FormDialog } from "@/components/common/form-dialog";
-import { ProjectForm } from "@/components/projects/project-form";
+import { ProjectForm } from "@/app/projects/components/project-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useProjectsTable } from "@/hooks/projects/use-projects-table";
-import { useProjectOperations } from "@/hooks/projects/use-project-operations";
+import { useProjectsTable } from "@/app/projects/hooks/use-projects-table";
+import { useProjectOperations } from "@/app/projects/hooks/use-project-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 

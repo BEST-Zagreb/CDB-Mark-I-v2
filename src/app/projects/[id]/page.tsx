@@ -5,16 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/common/form-dialog";
-import { ProjectForm } from "@/components/projects/project-form";
+import { ProjectForm } from "@/app/projects/components/project-form";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
-import { useProjectDetailOperations } from "@/hooks/projects/use-project-detail-operations";
+import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-project-detail-operations";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
 import { Collaboration } from "@/types/collaboration";
-import { ProjectDetailsSection } from "@/components/projects/sections/project-details-section";
-import { ProjectFundraisingSection } from "@/components/projects/sections/fundraising-section";
+import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
+import { ProjectFundraisingSection } from "@/app/projects/[id]/components/sections/fundraising-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 
 export default function ProjectDetailPage() {

@@ -6,7 +6,7 @@ import {
   useCreateCompany,
   useUpdateCompany,
   useDeleteCompany,
-} from "@/hooks/companies/use-companies";
+} from "@/app/companies/hooks/use-companies";
 import { Company, CompanyFormData } from "@/types/company";
 
 export function useCompanyOperations() {

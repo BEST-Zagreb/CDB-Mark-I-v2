@@ -7,7 +7,7 @@ import {
   useCompany,
   useDeleteCompany,
   useUpdateCompany,
-} from "@/hooks/companies/use-companies";
+} from "@/app/companies/hooks/use-companies";
 import { Company, CompanyFormData } from "@/types/company";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 

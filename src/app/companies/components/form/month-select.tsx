@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CROATIAN_MONTHS } from "@/constants/months";
+import { CROATIAN_MONTHS } from "@/app/companies/constants/months";
 
 interface MonthSelectProps {
   value?: string;

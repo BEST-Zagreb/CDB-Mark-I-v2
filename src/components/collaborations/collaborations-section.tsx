@@ -36,7 +36,9 @@ export function CollaborationsSection({
   onEditCollaboration,
   onDeleteCollaboration,
 }: CollaborationsSectionProps) {
-  const storageKey = `collaborations-${type === "company" ? "companies" : "projects"}` as "collaborations-companies" | "collaborations-projects";
+  const storageKey = `collaborations-${
+    type === "company" ? "companies" : "projects"
+  }` as "collaborations-companies" | "collaborations-projects";
   const hiddenColumn = type === "company" ? "companyName" : "projectName";
 
   const {
