@@ -46,24 +46,41 @@ export function ProjectsTable({
       // Handle different field types
       switch (sortField) {
         case "name":
-          aValue = String(a.name || "").toLowerCase();
-          bValue = String(b.name || "").toLowerCase();
+          aValue = a.name;
+          bValue = b.name;
           break;
         case "frGoal":
-          aValue = a.frGoal || 0;
-          bValue = b.frGoal || 0;
+          aValue = a.frGoal;
+          bValue = b.frGoal;
           break;
         case "created_at":
         case "updated_at":
           // Handle null dates by putting them at the end
-          aValue = a[sortField] ? new Date(a[sortField]!).getTime() : 0;
-          bValue = b[sortField] ? new Date(b[sortField]!).getTime() : 0;
+          aValue = a[sortField] ? new Date(a[sortField]!).getTime() : null;
+          bValue = b[sortField] ? new Date(b[sortField]!).getTime() : null;
           break;
         default:
-          aValue = String(a[sortField as keyof Project] || "").toLowerCase();
-          bValue = String(b[sortField as keyof Project] || "").toLowerCase();
+          aValue = a[sortField as keyof Project];
+          bValue = b[sortField as keyof Project];
       }
 
+      // Handle null/undefined values - they should always sort to the bottom
+      const aIsEmpty =
+        aValue == null || (typeof aValue === "string" && aValue.trim() === "");
+      const bIsEmpty =
+        bValue == null || (typeof bValue === "string" && bValue.trim() === "");
+
+      if (aIsEmpty && bIsEmpty) return 0;
+      if (aIsEmpty) return 1; // a is empty, b is not - a goes to bottom
+      if (bIsEmpty) return -1; // b is empty, a is not - a goes to top
+
+      // For string comparison, convert to lowercase
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      // Both values are valid, compare normally
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;

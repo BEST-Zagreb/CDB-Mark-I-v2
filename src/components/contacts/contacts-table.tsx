@@ -45,20 +45,37 @@ export function ContactsTable({
       // Handle different field types
       switch (sortField) {
         case "id":
-          aValue = a.id || 0;
-          bValue = b.id || 0;
+          aValue = a.id;
+          bValue = b.id;
           break;
         case "createdAt":
-          aValue = new Date(a.createdAt || 0).getTime();
-          bValue = new Date(b.createdAt || 0).getTime();
+          aValue = a.createdAt ? new Date(a.createdAt).getTime() : null;
+          bValue = b.createdAt ? new Date(b.createdAt).getTime() : null;
           break;
         default:
           // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = String(a[sortField] || "").toLowerCase();
-          bValue = String(b[sortField] || "").toLowerCase();
+          aValue = a[sortField];
+          bValue = b[sortField];
           break;
       }
 
+      // Handle null/undefined values - they should always sort to the bottom
+      const aIsEmpty =
+        aValue == null || (typeof aValue === "string" && aValue.trim() === "");
+      const bIsEmpty =
+        bValue == null || (typeof bValue === "string" && bValue.trim() === "");
+
+      if (aIsEmpty && bIsEmpty) return 0;
+      if (aIsEmpty) return 1; // a is empty, b is not - a goes to bottom
+      if (bIsEmpty) return -1; // b is empty, a is not - a goes to top
+
+      // For string comparison, convert to lowercase
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      // Both values are valid, compare normally
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;

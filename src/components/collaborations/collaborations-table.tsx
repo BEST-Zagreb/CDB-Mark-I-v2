@@ -70,8 +70,8 @@ export function CollaborationsTable({
           break;
         case "amount":
         case "contactId":
-          aValue = (a as any)[sortField] || 0;
-          bValue = (b as any)[sortField] || 0;
+          aValue = (a as any)[sortField];
+          bValue = (b as any)[sortField];
           break;
         case "successful":
         case "contacted":
@@ -79,23 +79,40 @@ export function CollaborationsTable({
         case "meeting":
         case "contactInFuture":
           // Handle boolean fields - null values come last
-          const aBool = (a as any)[sortField];
-          const bBool = (b as any)[sortField];
-          aValue = aBool === null ? -1 : aBool ? 1 : 0;
-          bValue = bBool === null ? -1 : bBool ? 1 : 0;
+          aValue = (a as any)[sortField];
+          bValue = (b as any)[sortField];
           break;
         case "updatedAt":
         case "createdAt":
-          aValue = new Date((a as any)[sortField] || 0).getTime();
-          bValue = new Date((b as any)[sortField] || 0).getTime();
+          aValue = (a as any)[sortField]
+            ? new Date((a as any)[sortField]).getTime()
+            : null;
+          bValue = (b as any)[sortField]
+            ? new Date((b as any)[sortField]).getTime()
+            : null;
           break;
         default:
           // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = String((a as any)[sortField] || "").toLowerCase();
-          bValue = String((b as any)[sortField] || "").toLowerCase();
+          aValue = (a as any)[sortField];
+          bValue = (b as any)[sortField];
           break;
       }
 
+      // Handle null/undefined values - they should always sort to the bottom
+      const aIsEmpty =
+        aValue == null || (typeof aValue === "string" && aValue.trim() === "");
+      const bIsEmpty =
+        bValue == null || (typeof bValue === "string" && bValue.trim() === "");
+
+      if (aIsEmpty && bIsEmpty) return 0;
+      if (aIsEmpty) return 1; // a is empty, b is not - a goes to bottom
+      if (bIsEmpty) return -1; // b is empty, a is not - a goes to top
+
+      // For string comparison, convert to lowercase
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;

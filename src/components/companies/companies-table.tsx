@@ -43,10 +43,27 @@ export function CompaniesTable({
 
       const { sortField, sortDirection } = tablePreferences;
 
-      // For all sortable fields, convert to lowercase for case-insensitive sorting
-      aValue = String(a[sortField as keyof Company] || "").toLowerCase();
-      bValue = String(b[sortField as keyof Company] || "").toLowerCase();
+      // Get the raw values (don't convert null to empty string yet)
+      aValue = a[sortField as keyof Company];
+      bValue = b[sortField as keyof Company];
 
+      // Handle null/undefined/empty string values - they should always sort to the bottom
+      const aIsEmpty =
+        aValue == null || (typeof aValue === "string" && aValue.trim() === "");
+      const bIsEmpty =
+        bValue == null || (typeof bValue === "string" && bValue.trim() === "");
+
+      if (aIsEmpty && bIsEmpty) return 0;
+      if (aIsEmpty) return 1; // a is empty, b is not - a goes to bottom
+      if (bIsEmpty) return -1; // b is empty, a is not - a goes to top
+
+      // For string comparison, convert to lowercase
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+
+      // Both values are valid, compare normally
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
       return 0;
