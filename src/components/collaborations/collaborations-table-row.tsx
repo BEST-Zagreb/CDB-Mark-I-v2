@@ -171,9 +171,13 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
           return (
             <TableCell
               key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+              className={`max-w-50 ${column.center && "text-center"}`}
             >
-              <div className="flex items-center justify-center gap-1">
+              <div
+                className={`flex items-center ${
+                  column.center && "justify-center"
+                } gap-1`}
+              >
                 {collaboration.contacted && (
                   <TooltipProvider>
                     <Tooltip>
