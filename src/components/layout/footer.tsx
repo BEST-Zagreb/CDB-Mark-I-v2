@@ -14,7 +14,7 @@ export default function Footer() {
         <div className="text-balance text-center bg-zinc-50 rounded-2xl border backdrop-blur-sm p-6 mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div
             aria-label={`Copyright ${new Date().getFullYear()}`}
-            className="text-muted-foreground text-sm flex flex-col sm:flex-row items-center justify-between gap-4"
+            className="text-muted-foreground text-sm flex flex-col sm:flex-row items-center justify-between gap-2"
           >
             <Link href="/" className="flex items-center space-x-2">
               <Image
@@ -28,7 +28,7 @@ export default function Footer() {
               <span className="font-bold text-primary">Company Database</span>
             </Link>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <Copyright size={16} />
               <span className="whitespace-nowrap">BEST-Zagreb</span>
               <span>{new Date().getFullYear()}</span>

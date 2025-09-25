@@ -9,6 +9,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/components/companies/form/company-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
+import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import {
   useCompanies,
   useCreateCompany,
@@ -169,9 +170,7 @@ export default function CompaniesPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading companies...
-          </div>
+          <BlocksWaveLoader size={96} className="my-16" />
         ) : (
           <CompaniesTable
             companies={companies}

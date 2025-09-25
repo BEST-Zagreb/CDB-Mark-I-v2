@@ -9,6 +9,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/components/projects/project-form";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
+import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import {
   useProjects,
   useCreateProject,
@@ -169,9 +170,7 @@ export default function ProjectsPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Loading projects...
-          </div>
+          <BlocksWaveLoader size={96} className="my-16" />
         ) : (
           <ProjectsTable
             projects={projects}

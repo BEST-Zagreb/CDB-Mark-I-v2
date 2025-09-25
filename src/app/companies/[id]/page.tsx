@@ -67,6 +67,7 @@ import {
 } from "@/lib/table-utils";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
 export default function CompanyDetailPage() {
   const params = useParams();
@@ -319,8 +320,8 @@ export default function CompanyDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto p-4">
-        <div className="text-center py-8 text-muted-foreground">
-          Loading company...
+        <div className="flex justify-center py-8">
+          <BlocksWaveLoader size={64} />
         </div>
       </div>
     );
@@ -506,127 +507,173 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Contacts Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Contacts
-                  <Badge variant="secondary">{contacts.length}</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Contacts associated with this company
-                </CardDescription>
+        {contactsLoading ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Contacts
+                  </CardTitle>
+                  <CardDescription>
+                    Contacts associated with this company
+                  </CardDescription>
+                </div>
               </div>
-
-              <Button
-                onClick={handleAddContact}
-                size={isMobile ? "sm" : "default"}
-              >
-                <Plus className="size-4" />
-                Add Contact
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Bar and Column Selector */}
-            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-              <SearchBar
-                placeholder="Search contacts..."
-                onSearchChange={handleContactsSearchChange}
-                searchParam="contacts_search"
-              />
-
-              <ColumnSelector
-                fields={CONTACT_FIELDS.map((field) => ({
-                  id: field.id as string,
-                  label: field.label,
-                  required: field.required,
-                }))}
-                visibleColumns={visibleColumnsToStrings(
-                  contactsTablePreferences.visibleColumns
-                )}
-                onColumnsChange={handleContactsUpdateVisibleColumns}
-                placeholder="Select columns"
-              />
-            </div>
-
-            <ContactsTable
-              contacts={contacts}
-              searchQuery={debouncedContactsSearchQuery}
-              tablePreferences={contactsTablePreferences}
-              onEdit={handleEditContact}
-              onDelete={handleDeleteContact}
-              onSortColumn={handleContactsSortColumn}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Collaborations Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Handshake className="h-5 w-5" />
-                  Collaborations
-                  <Badge variant="secondary">{collaborations.length}</Badge>
-                </CardTitle>
-                <CardDescription>
-                  Collaboration history with this company
-                </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center py-8">
+                <BlocksWaveLoader size={48} />
               </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Contacts
+                    <Badge variant="secondary">{contacts.length}</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Contacts associated with this company
+                  </CardDescription>
+                </div>
 
-              <div className="space-x-2 sm:space-x-4">
                 <Button
-                  onClick={handleAddCollaboration}
-                  size={isMobile ? "icon" : "default"}
+                  onClick={handleAddContact}
+                  size={isMobile ? "sm" : "default"}
                 >
-                  <Plus className="size-5" />
-                  {!isMobile && "New Collaboration"}
+                  <Plus className="size-4" />
+                  Add Contact
                 </Button>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Search Bar and Column Selector */}
-            <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-              <SearchBar
-                placeholder="Search collaborations..."
-                onSearchChange={handleSearchChange}
-                searchParam="collaborations_search"
-              />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search Bar and Column Selector */}
+              <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+                <SearchBar
+                  placeholder="Search contacts..."
+                  onSearchChange={handleContactsSearchChange}
+                  searchParam="contacts_search"
+                />
 
-              <ColumnSelector
-                fields={COLLABORATION_FIELDS.filter((field) => {
-                  // Filter out company name column since we're on a company page
-                  if (field.id === "companyName") return false;
-                  return true;
-                }).map((field) => ({
-                  id: field.id as string,
-                  label: field.label,
-                  required: field.required,
-                }))}
-                visibleColumns={visibleColumnsToStrings(
-                  tablePreferences.visibleColumns
-                )}
-                onColumnsChange={handleUpdateVisibleColumns}
-                placeholder="Select columns"
-              />
-            </div>
+                <ColumnSelector
+                  fields={CONTACT_FIELDS.map((field) => ({
+                    id: field.id as string,
+                    label: field.label,
+                    required: field.required,
+                  }))}
+                  visibleColumns={visibleColumnsToStrings(
+                    contactsTablePreferences.visibleColumns
+                  )}
+                  onColumnsChange={handleContactsUpdateVisibleColumns}
+                  placeholder="Select columns"
+                />
+              </div>
 
-            <CollaborationsTable
-              collaborations={collaborations}
-              searchQuery={debouncedSearchQuery}
-              tablePreferences={tablePreferences}
-              onEdit={handleEditCollaboration}
-              onDelete={handleDeleteCollaboration}
-              onSortColumn={handleSortColumn}
-              hiddenColumns={["companyName"]}
-            />
-          </CardContent>
-        </Card>
+              <ContactsTable
+                contacts={contacts}
+                searchQuery={debouncedContactsSearchQuery}
+                tablePreferences={contactsTablePreferences}
+                onEdit={handleEditContact}
+                onDelete={handleDeleteContact}
+                onSortColumn={handleContactsSortColumn}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Collaborations Section */}
+        {collaborationsLoading ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Handshake className="h-5 w-5" />
+                    Collaborations
+                  </CardTitle>
+                  <CardDescription>
+                    Collaboration history with this company
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center py-8">
+                <BlocksWaveLoader size={48} />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Handshake className="h-5 w-5" />
+                    Collaborations
+                    <Badge variant="secondary">{collaborations.length}</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Collaboration history with this company
+                  </CardDescription>
+                </div>
+
+                <div className="space-x-2 sm:space-x-4">
+                  <Button
+                    onClick={handleAddCollaboration}
+                    size={isMobile ? "icon" : "default"}
+                  >
+                    <Plus className="size-5" />
+                    {!isMobile && "New Collaboration"}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search Bar and Column Selector */}
+              <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
+                <SearchBar
+                  placeholder="Search collaborations..."
+                  onSearchChange={handleSearchChange}
+                  searchParam="collaborations_search"
+                />
+
+                <ColumnSelector
+                  fields={COLLABORATION_FIELDS.filter((field) => {
+                    // Filter out company name column since we're on a company page
+                    if (field.id === "companyName") return false;
+                    return true;
+                  }).map((field) => ({
+                    id: field.id as string,
+                    label: field.label,
+                    required: field.required,
+                  }))}
+                  visibleColumns={visibleColumnsToStrings(
+                    tablePreferences.visibleColumns
+                  )}
+                  onColumnsChange={handleUpdateVisibleColumns}
+                  placeholder="Select columns"
+                />
+              </div>
+
+              <CollaborationsTable
+                collaborations={collaborations}
+                searchQuery={debouncedSearchQuery}
+                tablePreferences={tablePreferences}
+                onEdit={handleEditCollaboration}
+                onDelete={handleDeleteCollaboration}
+                onSortColumn={handleSortColumn}
+                hiddenColumns={["companyName"]}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <FormDialog<Company>
