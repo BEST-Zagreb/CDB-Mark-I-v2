@@ -37,7 +37,11 @@ export function CompanySelect({
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
-  const { data: allCompanies, isLoading, error } = useCompanies();
+  const {
+    data: allCompanies,
+    isLoading: isLoadingCompanies,
+    error,
+  } = useCompanies();
 
   // Filter companies based on search
   const filteredCompanies = React.useMemo(() => {
@@ -71,9 +75,9 @@ export function CompanySelect({
           role="combobox"
           aria-expanded={open}
           className={cn("justify-between", className)}
-          disabled={disabled || isLoading}
+          disabled={disabled || isLoadingCompanies}
         >
-          {isLoading ? (
+          {isLoadingCompanies ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading companies...

@@ -128,12 +128,14 @@ export default function CompanyDetailPage() {
   // React Query hooks
   const {
     data: company,
-    isLoading: loading,
+    isLoading: isLoadingCompany,
     error: companyError,
   } = useCompany(companyId);
-  const { data: contacts = [], isLoading: contactsLoading } =
+
+  const { data: contacts = [], isLoading: isLoadingContacts } =
     useContactsByCompany(companyId);
-  const { data: collaborations = [], isLoading: collaborationsLoading } =
+
+  const { data: collaborations = [], isLoading: isLoadingCollaborations } =
     useCollaborationsByCompany(companyId);
 
   // Mutation hooks
@@ -317,7 +319,7 @@ export default function CompanyDetailPage() {
     updateCollaborationMutation.isPending ||
     deleteCollaborationMutation.isPending;
 
-  if (loading) {
+  if (isLoadingCompany) {
     return (
       <div className="mx-auto p-4">
         <div className="flex justify-center py-8">
@@ -507,7 +509,7 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Contacts Section */}
-        {contactsLoading ? (
+        {isLoadingContacts ? (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -588,7 +590,7 @@ export default function CompanyDetailPage() {
         )}
 
         {/* Collaborations Section */}
-        {collaborationsLoading ? (
+        {isLoadingCollaborations ? (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">

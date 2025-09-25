@@ -78,23 +78,19 @@ export function CollaborationForm({
 
   // Watch the selected company ID to fetch contacts
   const selectedCompanyId = form.watch("companyId");
-  const { data: contacts = [], isLoading: contactsLoading } =
+  const { data: contacts = [], isLoading: isLoadingContacts } =
     useContactsByCompany(selectedCompanyId);
 
   // Fetch all existing responsible persons for autocomplete
-  const {
-    data: responsiblePersons = [],
-    isLoading: responsiblePersonsLoading,
-  } = useResponsiblePersons();
+  const { data: responsiblePersons = [], isLoading: isLoadingResponsible } =
+    useResponsiblePersons();
 
   // Track if form has been properly initialized with data
   const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   // Determine if we should show loading state
   const isFormLoading =
-    isLoading ||
-    responsiblePersonsLoading ||
-    (initialData && !isFormInitialized);
+    isLoading || isLoadingResponsible || (initialData && !isFormInitialized);
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -134,10 +130,10 @@ export function CollaborationForm({
 
   // Mark form as initialized when contacts are loaded (for edit mode)
   useEffect(() => {
-    if (initialData && selectedCompanyId && !contactsLoading) {
+    if (initialData && selectedCompanyId && !isLoadingContacts) {
       setIsFormInitialized(true);
     }
-  }, [initialData, selectedCompanyId, contactsLoading]);
+  }, [initialData, selectedCompanyId, isLoadingContacts]);
 
   const handleSubmit = async (data: CollaborationFormData) => {
     try {

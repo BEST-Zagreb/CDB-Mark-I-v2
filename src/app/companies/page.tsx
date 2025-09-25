@@ -58,7 +58,11 @@ export default function CompaniesPage() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Fetch ALL companies at once (no server-side search filtering)
-  const { data: companies = [], isLoading: loading, error } = useCompanies(); // No search parameter - fetch all companies
+  const {
+    data: companies = [],
+    isLoading: isLoadingCompanies,
+    error,
+  } = useCompanies(); // No search parameter - fetch all companies
 
   const createMutation = useCreateCompany();
   const updateMutation = useUpdateCompany();
@@ -169,7 +173,7 @@ export default function CompaniesPage() {
           />
         </div>
 
-        {loading ? (
+        {isLoadingCompanies ? (
           <BlocksWaveLoader size={96} className="my-16" />
         ) : (
           <CompaniesTable

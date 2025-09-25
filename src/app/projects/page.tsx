@@ -58,7 +58,11 @@ export default function ProjectsPage() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Fetch ALL projects at once (no server-side search filtering)
-  const { data: projects = [], isLoading: loading, error } = useProjects(); // No search parameter - fetch all projects
+  const {
+    data: projects = [],
+    isLoading: isLoadingProjects,
+    error,
+  } = useProjects(); // No search parameter - fetch all projects
 
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
@@ -169,7 +173,7 @@ export default function ProjectsPage() {
           />
         </div>
 
-        {loading ? (
+        {isLoadingProjects ? (
           <BlocksWaveLoader size={96} className="my-16" />
         ) : (
           <ProjectsTable

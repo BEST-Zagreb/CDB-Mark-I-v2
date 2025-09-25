@@ -95,10 +95,11 @@ export default function ProjectDetailPage() {
   // React Query hooks
   const {
     data: project,
-    isLoading: loading,
+    isLoading: isLoadingProject,
     error: projectError,
   } = useProject(projectId);
-  const { data: collaborations = [], isLoading: loadingCollaborations } =
+
+  const { data: collaborations = [], isLoading: isLoadingCollaborations } =
     useCollaborationsByProject(projectId);
 
   // Mutation hooks
@@ -248,7 +249,7 @@ export default function ProjectDetailPage() {
     }).format(dateObj);
   };
 
-  if (loading) {
+  if (isLoadingProject) {
     return (
       <div className="mx-auto p-4">
         <div className="flex justify-center py-8">
@@ -438,7 +439,7 @@ export default function ProjectDetailPage() {
         )}
 
         {/* Collaborations Section */}
-        {loadingCollaborations ? (
+        {isLoadingCollaborations ? (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
