@@ -13,7 +13,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isColumnVisible } from "@/lib/table-utils";
-import { Phone, Mail, Briefcase, BadgeEuro, ClockAlert } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  Briefcase,
+  BadgeEuro,
+  ClockAlert,
+  AlertTriangle,
+  SearchX,
+  ShieldAlert,
+} from "lucide-react";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
 import {
   Collaboration,
@@ -63,7 +72,14 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
   );
 
   return (
-    <TableRow key={collaboration.id}>
+    <TableRow
+      key={collaboration.id}
+      className={
+        collaboration.contactInFuture === false
+          ? "bg-orange-50 text-muted-foreground"
+          : ""
+      }
+    >
       {COLLABORATION_FIELDS.filter(
         (field) => !hiddenColumns.includes(field.id)
       ).map((column) => {
@@ -78,18 +94,23 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                 column.center ? "text-center" : "font-medium"
               }`}
             >
-              {collaboration.companyName && collaboration.companyId ? (
-                <Link
-                  href={`/companies/${collaboration.companyId}`}
-                  className="text-primary hover:underline text-pretty"
-                >
-                  {collaboration.companyName}
-                </Link>
-              ) : (
-                <div className="text-pretty">
-                  {collaboration.companyName || "—"}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {collaboration.contactInFuture === false && (
+                  <ShieldAlert className="size-5 text-orange-900 flex-shrink-0" />
+                )}
+                {collaboration.companyName && collaboration.companyId ? (
+                  <Link
+                    href={`/companies/${collaboration.companyId}`}
+                    className="text-primary hover:underline text-pretty"
+                  >
+                    {collaboration.companyName}
+                  </Link>
+                ) : (
+                  <div className="text-pretty">
+                    {collaboration.companyName || "—"}
+                  </div>
+                )}
+              </div>
             </TableCell>
           );
         } else if (column.id === "projectName") {
