@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
+import { getDatabase } from "@/lib/db";
 import {
   Collaboration,
   CollaborationDB,
   CollaborationFormData,
 } from "@/types/collaboration";
-
-const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformCollaboration(
   dbCollaboration: CollaborationDB
@@ -52,7 +49,7 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
 
-    const db = new Database(dbPath, { readonly: true });
+    const db = getDatabase();
 
     let query = `
       SELECT c.*, companies.name as companyName, people.name as contactName, projects.name as projectName
@@ -78,7 +75,6 @@ export async function GET(request: NextRequest) {
       contactName?: string;
       projectName?: string;
     })[];
-    db.close();
 
     const collaborations = rows.map((row) => {
       const collaboration = transformCollaboration(row);
@@ -103,7 +99,7 @@ export async function POST(request: NextRequest) {
   try {
     const data: CollaborationFormData = await request.json();
 
-    const db = new Database(dbPath);
+    const db = getDatabase();
     const now = new Date().toISOString();
 
     const insertQuery = `
@@ -155,7 +151,6 @@ export async function POST(request: NextRequest) {
       contactName?: string;
       projectName?: string;
     };
-    db.close();
 
     const collaboration = transformCollaboration(newRow);
     collaboration.companyName = newRow.companyName || undefined;

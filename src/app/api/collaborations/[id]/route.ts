@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
+import { getDatabase } from "@/lib/db";
 import {
   Collaboration,
   CollaborationDB,
   CollaborationFormData,
 } from "@/types/collaboration";
-
-const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformCollaboration(
   dbCollaboration: CollaborationDB
@@ -59,7 +56,7 @@ export async function GET(
       );
     }
 
-    const db = new Database(dbPath, { readonly: true });
+    const db = getDatabase();
     const query = `
       SELECT c.*, companies.name as companyName, people.name as contactName
       FROM collaborations c
@@ -71,7 +68,6 @@ export async function GET(
     const row = db.prepare(query).get(id) as
       | (CollaborationDB & { companyName?: string; contactName?: string })
       | undefined;
-    db.close();
 
     if (!row) {
       return NextResponse.json(
@@ -110,7 +106,7 @@ export async function PUT(
 
     const data: CollaborationFormData = await request.json();
 
-    const db = new Database(dbPath);
+    const db = getDatabase();
     const now = new Date().toISOString();
 
     const updateQuery = `
@@ -166,7 +162,6 @@ export async function PUT(
       companyName?: string;
       contactName?: string;
     };
-    db.close();
 
     const collaboration = transformCollaboration(updatedRow);
     collaboration.companyName = updatedRow.companyName || undefined;
@@ -196,11 +191,10 @@ export async function DELETE(
       );
     }
 
-    const db = new Database(dbPath);
+    const db = getDatabase();
     const result = db
       .prepare("DELETE FROM collaborations WHERE id = ?")
       .run(id);
-    db.close();
 
     if (result.changes === 0) {
       return NextResponse.json(

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
+import { getDatabase } from "@/lib/db";
 import { Contact, ContactDB } from "@/types/contact";
-
-const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformContact(dbContact: ContactDB): Contact {
   return {
@@ -31,7 +28,7 @@ export async function GET(
       );
     }
 
-    const db = new Database(dbPath, { readonly: true });
+    const db = getDatabase();
 
     const query = `
       SELECT 
@@ -47,7 +44,6 @@ export async function GET(
           companyName?: string;
         })
       | undefined;
-    db.close();
 
     if (!row) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
@@ -83,7 +79,7 @@ export async function PUT(
     }
 
     const data = await request.json();
-    const db = new Database(dbPath);
+    const db = getDatabase();
 
     const stmt = db.prepare(`
       UPDATE people 
@@ -109,8 +105,6 @@ export async function PUT(
       .prepare("SELECT * FROM people WHERE id = ?")
       .get(contactId) as ContactDB;
 
-    db.close();
-
     return NextResponse.json(transformContact(updatedContact));
   } catch (error) {
     console.error("Error updating contact:", error);
@@ -135,12 +129,10 @@ export async function DELETE(
       );
     }
 
-    const db = new Database(dbPath);
+    const db = getDatabase();
 
     const stmt = db.prepare("DELETE FROM people WHERE id = ?");
     const result = stmt.run(contactId);
-
-    db.close();
 
     if (result.changes === 0) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });

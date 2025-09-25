@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Database from "better-sqlite3";
-import path from "path";
+import { getDatabase } from "@/lib/db";
 import { Contact, ContactDB } from "@/types/contact";
-
-const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
 function transformContact(dbContact: ContactDB): Contact {
   return {
@@ -19,7 +16,7 @@ function transformContact(dbContact: ContactDB): Contact {
 
 export async function GET(request: NextRequest) {
   try {
-    const db = new Database(dbPath);
+    const db = getDatabase();
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
@@ -42,7 +39,6 @@ export async function GET(request: NextRequest) {
     const rows = db.prepare(query).all(...params) as (ContactDB & {
       companyName?: string;
     })[];
-    db.close();
 
     const contacts = rows.map((row) => {
       const contact = transformContact(row);
@@ -65,7 +61,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const db = new Database(dbPath);
+    const db = getDatabase();
 
     const stmt = db.prepare(`
       INSERT INTO people (name, email, phone, company_id, function, created_at)
@@ -83,8 +79,6 @@ export async function POST(request: NextRequest) {
     const insertedContact = db
       .prepare("SELECT * FROM people WHERE id = ?")
       .get(result.lastInsertRowid) as ContactDB;
-
-    db.close();
 
     return NextResponse.json(transformContact(insertedContact), {
       status: 201,
