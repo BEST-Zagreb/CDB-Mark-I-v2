@@ -1,28 +1,52 @@
-import Database from "better-sqlite3";
-import path from "path";
+import { createClient } from "@libsql/client";
 
-// Database instance
-let db: Database.Database | null = null;
+// Database client instance
+let db: any = null;
 
-export function getDatabase() {
+export async function getDatabase() {
   if (!db) {
-    const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
-    db = new Database(dbPath);
+    const url = process.env.TURSO_DB_URL;
+    const authToken = process.env.TURSO_DB_TOKEN;
 
-    // Enable foreign keys
-    db.pragma("foreign_keys = ON");
+    if (!url || !authToken) {
+      throw new Error(
+        "TURSO_DB_URL and TURSO_DB_TOKEN environment variables are required"
+      );
+    }
+
+    db = createClient({
+      url,
+      authToken,
+    });
+
+    // Enable foreign keys (if supported)
+    try {
+      await db.execute("PRAGMA foreign_keys = ON");
+    } catch (error) {
+      console.warn("Foreign keys pragma not supported:", error);
+    }
   }
   return db;
 }
 
-export function closeDatabase() {
+export async function closeDatabase() {
   if (db) {
-    db.close();
+    await db.close();
     db = null;
   }
 }
 
 // Graceful shutdown
-process.on("SIGINT", closeDatabase);
-process.on("SIGTERM", closeDatabase);
-process.on("exit", closeDatabase);
+process.on("SIGINT", async () => {
+  await closeDatabase();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await closeDatabase();
+  process.exit(0);
+});
+
+process.on("exit", async () => {
+  await closeDatabase();
+});
