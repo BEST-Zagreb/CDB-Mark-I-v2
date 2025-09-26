@@ -2,7 +2,7 @@
 
 /**
  * Migrate data from local SQLite database to Turso database
- * Run: node migrate_to_turso.js
+ * Run: TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/migrate_to_turso.js
  */
 
 const Database = require("better-sqlite3");
