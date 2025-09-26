@@ -56,7 +56,7 @@ export async function GET(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
     const query = `
       SELECT c.*, companies.name as companyName, people.name as contactName
       FROM collaborations c
@@ -65,7 +65,12 @@ export async function GET(
       WHERE c.id = ?
     `;
 
-    const row = db.prepare(query).get(id) as
+    const result = await db.execute({
+      sql: query,
+      args: [id],
+    });
+
+    const row = result.rows[0] as
       | (CollaborationDB & { companyName?: string; contactName?: string })
       | undefined;
 
@@ -106,7 +111,7 @@ export async function PUT(
 
     const data: CollaborationFormData = await request.json();
 
-    const db = getDatabase();
+    const db = await getDatabase();
     const now = new Date().toISOString();
 
     const updateQuery = `
@@ -117,9 +122,9 @@ export async function PUT(
       WHERE id = ?
     `;
 
-    const result = db
-      .prepare(updateQuery)
-      .run(
+    const result = await db.execute({
+      sql: updateQuery,
+      args: [
         data.companyId,
         data.projectId,
         data.contactId || null,
@@ -138,11 +143,11 @@ export async function PUT(
           : null,
         data.type,
         now,
-        id
-      );
+        id,
+      ],
+    });
 
-    if (result.changes === 0) {
-      db.close();
+    if (result.rowsAffected === 0) {
       return NextResponse.json(
         { error: "Collaboration not found" },
         { status: 404 }
@@ -158,7 +163,12 @@ export async function PUT(
       WHERE c.id = ?
     `;
 
-    const updatedRow = db.prepare(getQuery).get(id) as CollaborationDB & {
+    const getResult = await db.execute({
+      sql: getQuery,
+      args: [id],
+    });
+
+    const updatedRow = getResult.rows[0] as CollaborationDB & {
       companyName?: string;
       contactName?: string;
     };
@@ -191,12 +201,13 @@ export async function DELETE(
       );
     }
 
-    const db = getDatabase();
-    const result = db
-      .prepare("DELETE FROM collaborations WHERE id = ?")
-      .run(id);
+    const db = await getDatabase();
+    const result = await db.execute({
+      sql: "DELETE FROM collaborations WHERE id = ?",
+      args: [id],
+    });
 
-    if (result.changes === 0) {
+    if (result.rowsAffected === 0) {
       return NextResponse.json(
         { error: "Collaboration not found" },
         { status: 404 }

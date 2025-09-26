@@ -23,11 +23,13 @@ export async function GET(
       );
     }
 
-    const db = getDatabase();
-    const stmt = db.prepare("SELECT * FROM projects WHERE id = ?");
-    const project: ProjectDB | undefined = stmt.get(projectId) as
-      | ProjectDB
-      | undefined;
+    const db = await getDatabase();
+    const result = await db.execute({
+      sql: "SELECT * FROM projects WHERE id = ?",
+      args: [projectId],
+    });
+
+    const project = result.rows[0] as ProjectDB | undefined;
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -64,13 +66,15 @@ export async function PUT(
     // Validate the request body
     const validatedData = updateProjectSchema.parse(body);
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Check if project exists
-    const checkStmt = db.prepare("SELECT id FROM projects WHERE id = ?");
-    const existingProject = checkStmt.get(projectId);
+    const checkResult = await db.execute({
+      sql: "SELECT id FROM projects WHERE id = ?",
+      args: [projectId],
+    });
 
-    if (!existingProject) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
@@ -100,17 +104,24 @@ export async function PUT(
     updateValues.push(new Date().toISOString());
     updateValues.push(projectId);
 
-    const updateStmt = db.prepare(`
-      UPDATE projects 
-      SET ${updateFields.join(", ")} 
+    const updateSql = `
+      UPDATE projects
+      SET ${updateFields.join(", ")}
       WHERE id = ?
-    `);
+    `;
 
-    updateStmt.run(...updateValues);
+    await db.execute({
+      sql: updateSql,
+      args: updateValues,
+    });
 
     // Fetch and return the updated project
-    const getStmt = db.prepare("SELECT * FROM projects WHERE id = ?");
-    const updatedProject: ProjectDB = getStmt.get(projectId) as ProjectDB;
+    const getResult = await db.execute({
+      sql: "SELECT * FROM projects WHERE id = ?",
+      args: [projectId],
+    });
+
+    const updatedProject = getResult.rows[0] as ProjectDB;
 
     return NextResponse.json(dbProjectToProject(updatedProject));
   } catch (error) {
@@ -146,20 +157,24 @@ export async function DELETE(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Check if project exists before deletion
-    const checkStmt = db.prepare("SELECT id FROM projects WHERE id = ?");
-    const existingProject = checkStmt.get(projectId);
+    const checkResult = await db.execute({
+      sql: "SELECT id FROM projects WHERE id = ?",
+      args: [projectId],
+    });
 
-    if (!existingProject) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const deleteStmt = db.prepare("DELETE FROM projects WHERE id = ?");
-    const result = deleteStmt.run(projectId);
+    const deleteResult = await db.execute({
+      sql: "DELETE FROM projects WHERE id = ?",
+      args: [projectId],
+    });
 
-    if (result.changes === 0) {
+    if (deleteResult.rowsAffected === 0) {
       return NextResponse.json(
         { error: "Failed to delete project" },
         { status: 500 }
@@ -167,7 +182,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Project deleted successfully" },
+      { message: "Project and all associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
