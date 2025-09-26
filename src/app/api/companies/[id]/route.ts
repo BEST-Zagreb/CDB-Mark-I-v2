@@ -228,7 +228,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Company deleted successfully" },
+      { message: "Company and all associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {

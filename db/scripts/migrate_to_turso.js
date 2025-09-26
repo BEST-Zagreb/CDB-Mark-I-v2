@@ -74,7 +74,10 @@ async function migrateTable(localDb, tursoDb, tableName, columns) {
 }
 
 async function createTablesIfNotExist(tursoDb) {
-  console.log("🔨 Creating tables in Turso if they don't exist...");
+  console.log("🔨 Creating tables in Turso with cascading deletes...");
+
+  // Enable foreign keys
+  await tursoDb.execute("PRAGMA foreign_keys = ON");
 
   const createTableStatements = [
     `CREATE TABLE IF NOT EXISTS companies (
@@ -106,7 +109,7 @@ async function createTablesIfNotExist(tursoDb) {
       company_id INTEGER,
       function TEXT,
       created_at TEXT,
-      FOREIGN KEY (company_id) REFERENCES companies(id)
+      FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
     )`,
 
     `CREATE TABLE IF NOT EXISTS collaborations (
@@ -126,9 +129,9 @@ async function createTablesIfNotExist(tursoDb) {
       amount REAL,
       contact_in_future INTEGER,
       type TEXT,
-      FOREIGN KEY (company_id) REFERENCES companies(id),
-      FOREIGN KEY (project_id) REFERENCES projects(id),
-      FOREIGN KEY (person_id) REFERENCES people(id)
+      FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE
     )`,
   ];
 
@@ -136,7 +139,7 @@ async function createTablesIfNotExist(tursoDb) {
     await tursoDb.execute(sql);
   }
 
-  console.log("✅ Tables created or already exist");
+  console.log("✅ Tables created with cascading deletes enabled");
 }
 
 async function main() {

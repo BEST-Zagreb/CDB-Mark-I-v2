@@ -146,20 +146,24 @@ export async function DELETE(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Check if project exists before deletion
-    const checkStmt = db.prepare("SELECT id FROM projects WHERE id = ?");
-    const existingProject = checkStmt.get(projectId);
+    const checkResult = await db.execute({
+      sql: "SELECT id FROM projects WHERE id = ?",
+      args: [projectId],
+    });
 
-    if (!existingProject) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const deleteStmt = db.prepare("DELETE FROM projects WHERE id = ?");
-    const result = deleteStmt.run(projectId);
+    const deleteResult = await db.execute({
+      sql: "DELETE FROM projects WHERE id = ?",
+      args: [projectId],
+    });
 
-    if (result.changes === 0) {
+    if (deleteResult.rowsAffected === 0) {
       return NextResponse.json(
         { error: "Failed to delete project" },
         { status: 500 }
@@ -167,7 +171,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Project deleted successfully" },
+      { message: "Project and all associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {
