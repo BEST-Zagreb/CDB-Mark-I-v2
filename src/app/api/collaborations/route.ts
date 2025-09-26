@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN people ON c.person_id = people.id
       LEFT JOIN projects ON c.project_id = projects.id
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (projectId) {
       query += " WHERE c.project_id = ?";

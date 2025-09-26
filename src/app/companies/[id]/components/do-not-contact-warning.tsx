@@ -11,9 +11,9 @@ export function DoNotContactWarning() {
       <div>
         <AlertTitle>Do Not Contact Warning</AlertTitle>
         <AlertDescription>
-          This company has been marked as "do not contact in future" in one or
-          more collaborations. Please review collaboration history before
-          initiating new contact.
+          This company has been marked as &quot;do not contact in future&quot;
+          in one or more collaborations. Please review collaboration history
+          before initiating new contact.
         </AlertDescription>
       </div>
     </Alert>

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   useProject,
   useDeleteProject,
@@ -12,7 +10,6 @@ import { Project, ProjectFormData } from "@/types/project";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 
 export function useProjectDetailOperations(projectId: number) {
-  const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);

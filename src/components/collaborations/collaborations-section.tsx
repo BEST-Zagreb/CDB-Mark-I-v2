@@ -18,7 +18,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
-import { Collaboration } from "@/types/collaboration";
+import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CollaborationsSectionProps {

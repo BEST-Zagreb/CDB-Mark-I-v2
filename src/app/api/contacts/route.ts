@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       FROM people p
       LEFT JOIN companies c ON p.company_id = c.id
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (companyId) {
       query += " WHERE p.company_id = ?";

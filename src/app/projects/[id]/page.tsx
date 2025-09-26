@@ -11,7 +11,6 @@ import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-projec
 import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Project } from "@/types/project";
-import { Collaboration } from "@/types/collaboration";
 import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 

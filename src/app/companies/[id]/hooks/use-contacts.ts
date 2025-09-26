@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { contactService } from "@/services/contact.service";
-import { Contact, ContactFormData } from "@/types/contact";
+import { ContactFormData } from "@/types/contact";
 import { toast } from "sonner";
 
 // Query keys
@@ -68,8 +68,10 @@ export function useCreateContact() {
 
       toast.success("Contact created successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create contact");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to create contact";
+      toast.error(message);
     },
   });
 }
@@ -107,8 +109,10 @@ export function useUpdateContact() {
       }
       toast.success("Contact updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update contact");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to update contact";
+      toast.error(message);
     },
   });
 }
@@ -124,8 +128,10 @@ export function useDeleteContact() {
       queryClient.invalidateQueries({ queryKey: contactKeys.all });
       toast.success("Contact deleted successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to delete contact");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete contact";
+      toast.error(message);
     },
   });
 }

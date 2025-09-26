@@ -23,13 +23,7 @@ interface VirtualizedCollaborationListProps {
     contactName?: string;
   })[];
   searchQuery: string;
-  tablePreferences: TablePreferences<
-    Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    }
-  >;
+  tablePreferences: TablePreferences;
   onEdit: (collaboration: Collaboration) => void;
   onDelete: (collaborationId: number) => Promise<void>;
   onSortColumn: (field: string) => void;

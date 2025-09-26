@@ -10,15 +10,10 @@ import {
 // GET /api/companies - Get all companies with optional search
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get("search");
-
     const db = getDatabase();
-    let stmt;
-    let companies: CompanyDB[];
 
     // Get all companies with do not contact status
-    stmt = db.prepare(`
+    const stmt = db.prepare(`
         SELECT 
           c.*,
           CASE WHEN EXISTS(
@@ -28,7 +23,9 @@ export async function GET(request: NextRequest) {
         FROM companies c
         ORDER BY name ASC
       `);
-    companies = stmt.all() as (CompanyDB & { hasDoNotContact: number })[];
+    const companies: CompanyDB[] = stmt.all() as (CompanyDB & {
+      hasDoNotContact: number;
+    })[];
 
     const formattedCompanies: Company[] = companies.map(dbCompanyToCompany);
 

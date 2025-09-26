@@ -1,18 +1,17 @@
-import { Dispatch, SetStateAction, ReactElement } from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import type { Company } from "@/types/company";
-import type { TablePreferences, SortDirection } from "@/types/table";
+import { ReactElement } from "react";
+import { ChevronsUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import type { TablePreferences } from "@/types/table";
 
 // Helper function to check if a column is visible
-export function isColumnVisible<T>(
+export function isColumnVisible(
   columnId: string,
-  tablePreferences: TablePreferences<T>
+  tablePreferences: TablePreferences
 ): boolean {
   return tablePreferences.visibleColumns.includes(columnId);
 }
 
 // Simple function that returns filtered visible columns
-export function updateVisibleColumns<T>(
+export function updateVisibleColumns(
   newVisibleColumns: string[],
   requiredColumn?: string
 ): string[] {
@@ -30,10 +29,10 @@ export function visibleColumnsToStrings(visibleColumns: string[]): string[] {
 }
 
 // Simple function that returns updated table preferences for sorting
-export function handleSort<T>(
-  currentPreferences: TablePreferences<T>,
+export function handleSort(
+  currentPreferences: TablePreferences,
   field: string
-): TablePreferences<T> {
+): TablePreferences {
   if (currentPreferences.sortField === field) {
     // Toggle direction if same field
     return {
@@ -52,16 +51,16 @@ export function handleSort<T>(
 }
 
 // Get sort icon JSX element
-export function getSortIcon<T>(
+export function getSortIcon(
   field: string,
-  tablePreferences: TablePreferences<T>
+  tablePreferences: TablePreferences
 ): ReactElement {
   if (tablePreferences.sortField !== field) {
-    return <ArrowUpDown className="h-4 w-4" />;
+    return <ChevronsUpDown className="size-4" />;
   }
   return tablePreferences.sortDirection === "asc" ? (
-    <ArrowUp className="h-4 w-4" />
+    <ChevronUp className="size-4" />
   ) : (
-    <ArrowDown className="h-4 w-4" />
+    <ChevronDown className="size-4" />
   );
 }

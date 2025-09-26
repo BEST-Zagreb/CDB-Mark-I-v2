@@ -1,12 +1,4 @@
-import {
-  User,
-  Mail,
-  Phone,
-  Briefcase,
-  Calendar,
-  Building2,
-  Hash,
-} from "lucide-react";
+import { User, Mail, Phone, Briefcase, Calendar, Hash } from "lucide-react";
 import { Contact } from "@/types/contact";
 
 // Define available columns for the contact table
@@ -24,6 +16,7 @@ export const CONTACT_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
+    icon: Hash,
   },
 
   {

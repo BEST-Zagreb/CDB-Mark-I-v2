@@ -16,6 +16,7 @@ export const PROJECT_FIELDS: Array<{
     required: false,
     sortable: true,
     center: true,
+    icon: Hash,
   },
   {
     id: "name",

@@ -18,7 +18,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
 import { useContactsTable } from "@/app/companies/[id]/hooks/use-contacts-table";
 import { useContactsOperations } from "@/app/companies/[id]/hooks/use-contacts-operations";
-import { Contact, ContactFormData } from "@/types/contact";
+import { Contact } from "@/types/contact";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ContactsSectionProps {

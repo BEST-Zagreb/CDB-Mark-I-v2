@@ -3,7 +3,6 @@ import { getDatabase } from "@/lib/db";
 import {
   updateProjectSchema,
   type ProjectDB,
-  type Project,
   dbProjectToProject,
 } from "@/types/project";
 
@@ -76,7 +75,7 @@ export async function PUT(
 
     // Build dynamic update query
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: (string | number | null)[] = [];
 
     if (validatedData.name !== undefined) {
       updateFields.push("name = ?");

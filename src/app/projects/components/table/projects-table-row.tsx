@@ -15,7 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectsTableRowProps {
   project: Project;
-  tablePreferences: TablePreferences<Project>;
+  tablePreferences: TablePreferences;
   onEdit: (project: Project) => void;
   onDeleteConfirm: (projectId: number) => Promise<void>;
 }

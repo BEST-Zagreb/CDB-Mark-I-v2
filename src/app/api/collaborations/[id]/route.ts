@@ -45,11 +45,12 @@ function transformCollaboration(
 // GET /api/collaborations/[id] - Get specific collaboration
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }
@@ -65,7 +66,7 @@ export async function GET(
       WHERE c.id = ?
     `;
 
-    const row = db.prepare(query).get(id) as
+    const row = db.prepare(query).get(collaborationId) as
       | (CollaborationDB & { companyName?: string; contactName?: string })
       | undefined;
 
@@ -93,11 +94,12 @@ export async function GET(
 // PUT /api/collaborations/[id] - Update collaboration
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }
@@ -138,7 +140,7 @@ export async function PUT(
           : null,
         data.type,
         now,
-        id
+        collaborationId
       );
 
     if (result.changes === 0) {
@@ -158,7 +160,9 @@ export async function PUT(
       WHERE c.id = ?
     `;
 
-    const updatedRow = db.prepare(getQuery).get(id) as CollaborationDB & {
+    const updatedRow = db
+      .prepare(getQuery)
+      .get(collaborationId) as CollaborationDB & {
       companyName?: string;
       contactName?: string;
     };
@@ -180,11 +184,12 @@ export async function PUT(
 // DELETE /api/collaborations/[id] - Delete collaboration
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }
@@ -194,7 +199,7 @@ export async function DELETE(
     const db = getDatabase();
     const result = db
       .prepare("DELETE FROM collaborations WHERE id = ?")
-      .run(id);
+      .run(collaborationId);
 
     if (result.changes === 0) {
       return NextResponse.json(

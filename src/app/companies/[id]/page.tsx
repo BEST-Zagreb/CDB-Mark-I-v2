@@ -12,7 +12,6 @@ import { CompanyDetailsSection } from "@/app/companies/[id]/components/sections/
 import { ContactsSection } from "@/app/companies/[id]/components/sections/contacts-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 import { DoNotContactWarning } from "@/app/companies/[id]/components/do-not-contact-warning";
-import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCompanyDetailOperations } from "@/app/companies/[id]/hooks/use-company-detail-operations";
 import { useIsMobile } from "@/hooks/use-mobile";

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Users, Building, Home } from "lucide-react";
+import { FolderOpen, Building, Home } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";

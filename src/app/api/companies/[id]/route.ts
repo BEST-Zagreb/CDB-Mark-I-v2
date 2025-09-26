@@ -3,7 +3,6 @@ import { getDatabase } from "@/lib/db";
 import {
   updateCompanySchema,
   type CompanyDB,
-  type Company,
   dbCompanyToCompany,
 } from "@/types/company";
 
@@ -84,7 +83,7 @@ export async function PUT(
 
     // Build dynamic update query
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: (string | number | null)[] = [];
 
     if (validatedData.name !== undefined) {
       updateFields.push("name = ?");

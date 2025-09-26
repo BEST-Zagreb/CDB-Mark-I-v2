@@ -5,10 +5,7 @@ import {
   ChevronDown,
   Database,
   FolderOpen,
-  Users,
   Building,
-  Handshake,
-  FileText,
   Home,
 } from "lucide-react";
 
@@ -26,7 +23,6 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -35,9 +31,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { projectService } from "@/services/project.service";
-import { companyService } from "@/services/company.service";
 import { Project } from "@/types/project";
-import { Company } from "@/types/company";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
 type OpenSection = "projects" | "companies" | null;
@@ -45,9 +39,7 @@ type OpenSection = "projects" | "companies" | null;
 export const AppSidebar = memo(function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<OpenSection>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
   const { setOpen, open, state } = useSidebar();
   const pathname = usePathname();
 
@@ -70,13 +62,6 @@ export const AppSidebar = memo(function AppSidebar() {
         .then(setProjects)
         .catch(console.error)
         .finally(() => setLoadingProjects(false));
-
-      setLoadingCompanies(true);
-      companyService
-        .getAll()
-        .then(setCompanies)
-        .catch(console.error)
-        .finally(() => setLoadingCompanies(false));
     }
   }, [state]);
 

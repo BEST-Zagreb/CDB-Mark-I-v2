@@ -13,7 +13,7 @@ import { type TablePreferences } from "@/types/table";
 
 interface ContactsTableRowProps {
   contact: Contact;
-  tablePreferences: TablePreferences<Contact>;
+  tablePreferences: TablePreferences;
   onEdit?: (contact: Contact) => void;
   onDelete?: (contactId: number) => Promise<void>;
   hiddenColumns?: string[];
@@ -119,7 +119,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
               }`}
             >
               <div className="text-pretty">
-                {String((contact as any)[column.id] || "—")}
+                {String(contact[column.id as keyof Contact] || "—")}
               </div>
             </TableCell>
           );

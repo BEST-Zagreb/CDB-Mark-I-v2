@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import type { Metadata } from "next";
 
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -35,7 +34,9 @@ export default function NotFound() {
               exist.
             </div>
 
-            <div className="text-gray-600">Let's get you back on track!</div>
+            <div className="text-gray-600">
+              Let&apos;s get you back on track!
+            </div>
           </CardDescription>
         </CardHeader>
 
