@@ -74,7 +74,9 @@ async function migrateTable(localDb, tursoDb, tableName, columns) {
 }
 
 async function createTablesIfNotExist(tursoDb) {
-  console.log("🔨 Creating tables in Turso with cascading deletes...");
+  console.log(
+    "🔨 Creating tables in Turso with cascading deletes and indexes..."
+  );
 
   // Enable foreign keys
   await tursoDb.execute("PRAGMA foreign_keys = ON");
@@ -135,11 +137,39 @@ async function createTablesIfNotExist(tursoDb) {
     )`,
   ];
 
+  // Create indexes for better query performance
+  const createIndexStatements = [
+    // Essential indexes for WHERE clauses and JOINs
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_company_id ON collaborations(company_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_project_id ON collaborations(project_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_person_id ON collaborations(person_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_people_company_id ON people(company_id)`,
+
+    // Essential indexes for ORDER BY clauses
+    `CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name)`,
+    `CREATE INDEX IF NOT EXISTS idx_people_name ON people(name)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_updated_at ON collaborations(updated_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_created_at ON collaborations(created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at DESC)`,
+
+    // Essential indexes for subqueries and EXISTS checks
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_company_contact_future ON collaborations(company_id, contact_in_future)`,
+
+    // Essential indexes for filtered queries
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_responsible_filtered ON collaborations(responsible) WHERE responsible IS NOT NULL AND responsible != ''`,
+  ];
+
   for (const sql of createTableStatements) {
     await tursoDb.execute(sql);
   }
 
   console.log("✅ Tables created with cascading deletes enabled");
+
+  for (const sql of createIndexStatements) {
+    await tursoDb.execute(sql);
+  }
+
+  console.log("✅ Indexes created for optimal query performance");
 }
 
 async function main() {

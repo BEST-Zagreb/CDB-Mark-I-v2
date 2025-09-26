@@ -19,12 +19,13 @@ export async function getDatabase() {
       authToken,
     });
 
-    // Enable foreign keys (if supported)
-    try {
-      await db.execute("PRAGMA foreign_keys = ON");
-    } catch (error) {
-      console.warn("Foreign keys pragma not supported:", error);
-    }
+    // Optimize for read-heavy workloads
+    await db.execute("PRAGMA foreign_keys = ON");
+    await db.execute("PRAGMA cache_size = -128000"); // 128MB cache for more reads
+    await db.execute("PRAGMA mmap_size = 268435456"); // 256MB memory mapping
+    await db.execute("PRAGMA synchronous = NORMAL");
+    await db.execute("PRAGMA journal_mode = WAL");
+    await db.execute("PRAGMA wal_autocheckpoint = 1000"); // Auto-checkpoint WAL
   }
   return db;
 }

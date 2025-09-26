@@ -29,19 +29,22 @@ export async function GET(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
-    const query = `
-      SELECT 
-        p.*,
-        c.name as companyName
-      FROM people p
-      LEFT JOIN companies c ON p.company_id = c.id
-      WHERE p.company_id = ?
-      ORDER BY p.name ASC
-    `;
+    const result = await db.execute({
+      sql: `
+        SELECT 
+          p.*,
+          c.name as companyName
+        FROM people p
+        LEFT JOIN companies c ON p.company_id = c.id
+        WHERE p.company_id = ?
+        ORDER BY p.name ASC
+      `,
+      args: [companyId],
+    });
 
-    const rows = db.prepare(query).all(companyId) as (ContactDB & {
+    const rows = result.rows as (ContactDB & {
       companyName?: string;
     })[];
 
