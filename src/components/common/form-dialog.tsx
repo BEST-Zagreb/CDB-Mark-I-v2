@@ -4,28 +4,27 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ReactNode } from "react";
 
-interface FormDialogProps<T = any> {
+interface FormDialogProps<T = Record<string, unknown>> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   entity: string;
   initialData?: T;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: T) => Promise<void>;
   isLoading?: boolean;
   children: (props: {
     initialData?: T;
-    onSubmit: (data: any) => Promise<void>;
+    onSubmit: (data: T) => Promise<void>;
     isLoading: boolean;
   }) => ReactNode;
 }
 
-export function FormDialog<T = any>({
+export function FormDialog<T = Record<string, unknown>>({
   open,
   onOpenChange,
   entity,
@@ -36,7 +35,7 @@ export function FormDialog<T = any>({
 }: FormDialogProps<T>) {
   const isEditing = !!initialData;
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: T) => {
     await onSubmit(data);
     onOpenChange(false);
   };

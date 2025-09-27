@@ -119,7 +119,7 @@ export function ProjectSelect({
           />
           <CommandList>
             <CommandEmpty>
-              No project with name "{searchValue}" found
+              No project with name &quot;{searchValue}&quot; found
             </CommandEmpty>
             <CommandGroup>
               {filteredProjects?.map((project) => (

@@ -3,7 +3,6 @@ import { getDatabase } from "@/lib/db";
 import {
   updateCompanySchema,
   type CompanyDB,
-  type Company,
   dbCompanyToCompany,
 } from "@/types/company";
 
@@ -37,7 +36,7 @@ export async function GET(
       args: [companyId],
     });
 
-    const company = result.rows[0] as CompanyDB | undefined;
+    const company = result.rows[0] as unknown as CompanyDB | undefined;
 
     if (!company) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
@@ -88,7 +87,7 @@ export async function PUT(
 
     // Build dynamic update query
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: (string | number | null)[] = [];
 
     if (validatedData.name !== undefined) {
       updateFields.push("name = ?");
@@ -167,7 +166,7 @@ export async function PUT(
       args: [companyId],
     });
 
-    const updatedCompany = getResult.rows[0] as CompanyDB;
+    const updatedCompany = getResult.rows[0] as unknown as CompanyDB;
 
     return NextResponse.json(dbCompanyToCompany(updatedCompany));
   } catch (error) {

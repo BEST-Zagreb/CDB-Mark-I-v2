@@ -7,12 +7,9 @@ import {
   dbCompanyToCompany,
 } from "@/types/company";
 
-// GET /api/companies - Get all companies with optional search
+// GET /api/companies - Get all companies
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const searchQuery = searchParams.get("search");
-
     const db = await getDatabase();
 
     // Get all companies with do not contact status
@@ -27,7 +24,7 @@ export async function GET(request: NextRequest) {
         ORDER BY name ASC
       `);
 
-    const companies = result.rows as (CompanyDB & {
+    const companies = result.rows as unknown as (CompanyDB & {
       hasDoNotContact: number;
     })[];
 
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
         args: [result.lastInsertRowid],
       });
 
-      const newCompany = getResult.rows[0] as CompanyDB;
+      const newCompany = getResult.rows[0] as unknown as CompanyDB;
 
       return NextResponse.json(dbCompanyToCompany(newCompany), { status: 201 });
     } else {

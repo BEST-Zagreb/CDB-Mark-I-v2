@@ -1,7 +1,7 @@
-import { createClient } from "@libsql/client";
+import { createClient, Client } from "@libsql/client";
 
 // Database client instance
-let db: any = null;
+let db: Client | null = null;
 
 export async function getDatabase() {
   if (!db) {
@@ -21,11 +21,6 @@ export async function getDatabase() {
 
     // Optimize for read-heavy workloads
     await db.execute("PRAGMA foreign_keys = ON");
-    await db.execute("PRAGMA cache_size = -128000"); // 128MB cache for more reads
-    await db.execute("PRAGMA mmap_size = 268435456"); // 256MB memory mapping
-    await db.execute("PRAGMA synchronous = NORMAL");
-    await db.execute("PRAGMA journal_mode = WAL");
-    await db.execute("PRAGMA wal_autocheckpoint = 1000"); // Auto-checkpoint WAL
   }
   return db;
 }

@@ -45,11 +45,12 @@ function transformCollaboration(
 // GET /api/collaborations/[id] - Get specific collaboration
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }
@@ -70,7 +71,7 @@ export async function GET(
       args: [id],
     });
 
-    const row = result.rows[0] as
+    const row = result.rows[0] as unknown as
       | (CollaborationDB & { companyName?: string; contactName?: string })
       | undefined;
 
@@ -98,11 +99,12 @@ export async function GET(
 // PUT /api/collaborations/[id] - Update collaboration
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }
@@ -168,7 +170,7 @@ export async function PUT(
       args: [id],
     });
 
-    const updatedRow = getResult.rows[0] as CollaborationDB & {
+    const updatedRow = getResult.rows[0] as unknown as CollaborationDB & {
       companyName?: string;
       contactName?: string;
     };
@@ -190,11 +192,12 @@ export async function PUT(
 // DELETE /api/collaborations/[id] - Delete collaboration
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const collaborationId = parseInt(id);
+    if (isNaN(collaborationId)) {
       return NextResponse.json(
         { error: "Invalid collaboration ID" },
         { status: 400 }

@@ -7,7 +7,6 @@ import {
   MultiSelectContent,
   MultiSelectItem,
 } from "@/components/ui/multi-select";
-import { Settings } from "lucide-react";
 
 interface ColumnField {
   id: string;

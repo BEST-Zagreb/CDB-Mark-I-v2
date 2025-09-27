@@ -26,14 +26,10 @@ export interface Contact {
 
 // Validation schema for contact forms
 export const contactSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z
-    .string()
-    .email("Valid email is required")
-    .or(z.literal(""))
-    .optional(),
-  phone: z.string().optional(),
   companyId: z.number().positive("Company is required"),
+  name: z.string().min(2, "Name is required"),
+  email: z.email("Valid email is required").or(z.literal("")).optional(),
+  phone: z.string().optional(),
   function: z.string().optional(),
 });
 

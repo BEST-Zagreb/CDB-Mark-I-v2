@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { collaborationService } from "@/services/collaboration.service";
-import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { CollaborationFormData } from "@/types/collaboration";
 import { toast } from "sonner";
 
 // Query keys
@@ -76,8 +76,12 @@ export function useCreateCollaboration() {
       }
       toast.success("Collaboration created successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create collaboration");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to create collaboration";
+      toast.error(message);
     },
   });
 }
@@ -113,8 +117,12 @@ export function useUpdateCollaboration() {
       }
       toast.success("Collaboration updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update collaboration");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update collaboration";
+      toast.error(message);
     },
   });
 }
@@ -130,8 +138,12 @@ export function useDeleteCollaboration() {
       queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
       toast.success("Collaboration deleted successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to delete collaboration");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to delete collaboration";
+      toast.error(message);
     },
   });
 }

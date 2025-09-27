@@ -21,7 +21,7 @@ export async function GET() {
       args: [],
     });
 
-    const projects: ProjectDB[] = result.rows as ProjectDB[];
+    const projects: ProjectDB[] = result.rows as unknown as ProjectDB[];
 
     const formattedProjects: Project[] = projects.map(dbProjectToProject);
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         args: [result.lastInsertRowid],
       });
 
-      const newProject: ProjectDB = getResult.rows[0] as ProjectDB;
+      const newProject: ProjectDB = getResult.rows[0] as unknown as ProjectDB;
 
       return NextResponse.json(dbProjectToProject(newProject), { status: 201 });
     } else {

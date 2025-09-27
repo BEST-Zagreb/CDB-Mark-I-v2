@@ -18,7 +18,7 @@ import { ContactsTableRow } from "@/app/companies/[id]/components/contacts/table
 interface ContactsTableProps {
   contacts: Contact[];
   searchQuery: string;
-  tablePreferences: TablePreferences<Contact>;
+  tablePreferences: TablePreferences;
   onEdit?: (contact: Contact) => void;
   onDelete?: (contactId: number) => Promise<void>;
   onSortColumn: (field: string) => void;
@@ -37,8 +37,8 @@ export function ContactsTable({
   // Sort contacts based on current sort field and direction
   const sortedContacts = useMemo(() => {
     return [...contacts].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number | null;
+      let bValue: string | number | null;
 
       const { sortField, sortDirection } = tablePreferences;
 
@@ -54,8 +54,8 @@ export function ContactsTable({
           break;
         default:
           // For string fields, convert to lowercase for case-insensitive sorting
-          aValue = (a as unknown as Record<string, unknown>)[sortField];
-          bValue = (b as unknown as Record<string, unknown>)[sortField];
+          aValue = a[sortField as keyof Contact] as string | number | null;
+          bValue = b[sortField as keyof Contact] as string | number | null;
           break;
       }
 
@@ -76,8 +76,8 @@ export function ContactsTable({
       }
 
       // Both values are valid, compare normally
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      if (aValue! < bValue!) return sortDirection === "asc" ? -1 : 1;
+      if (aValue! > bValue!) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
   }, [contacts, tablePreferences.sortField, tablePreferences.sortDirection]);
@@ -107,7 +107,7 @@ export function ContactsTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No contacts found matching "${searchQuery}"`
-          : "No contacts found. Add a contact to get started."}
+          : "No contacts found"}
       </div>
     );
   }

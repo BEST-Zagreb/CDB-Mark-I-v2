@@ -51,7 +51,7 @@ export const companySchema = z.object({
   phone: z.string().max(50, "Phone must be 50 characters or less"),
   budgeting_month: z
     .string()
-    .refine((val) => val === "" || VALID_MONTHS.includes(val as any), {
+    .refine((val) => val === "" || VALID_MONTHS.includes(val), {
       message: "Please select a valid month",
     }),
   comment: z.string().max(500, "Comment must be 500 characters or less"),

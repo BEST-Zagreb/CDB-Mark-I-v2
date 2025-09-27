@@ -19,7 +19,7 @@ import { useVirtualizedCompanies } from "@/app/companies/hooks/use-virtualized-c
 interface VirtualizedCompanyListProps {
   companies: Company[];
   searchQuery: string;
-  tablePreferences: TablePreferences<Company>;
+  tablePreferences: TablePreferences;
   onEdit: (company: Company) => void;
   onDelete: (companyId: number) => Promise<void>;
   onSortColumn: (field: keyof Company) => void;
@@ -38,8 +38,8 @@ export function CompaniesTable({
   // Sort companies based on current sort field and direction
   const sortedCompanies = useMemo(() => {
     return [...companies].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number | boolean | null;
+      let bValue: string | number | boolean | null;
 
       const { sortField, sortDirection } = tablePreferences;
 
@@ -88,7 +88,7 @@ export function CompaniesTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No companies found matching "${searchQuery}"`
-          : "No companies found. Create your first company to get started."}
+          : "Create your first company to get started"}
       </div>
     );
   }

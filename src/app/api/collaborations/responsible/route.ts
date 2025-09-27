@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       args: [],
     });
 
-    const rows = result.rows as { responsible: string }[];
+    const rows = result.rows as unknown as { responsible: string }[];
 
     // Extract just the responsible person names
     const responsiblePersons = rows.map((row) => row.responsible);

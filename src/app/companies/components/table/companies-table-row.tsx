@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, use, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
@@ -15,14 +15,14 @@ import {
 import { isColumnVisible } from "@/lib/table-utils";
 import { formatUrl } from "@/lib/format-utils";
 import { COMPANY_FIELDS } from "@/config/company-fields";
-import { ExternalLink, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 import { Company } from "@/types/company";
 import { type TablePreferences } from "@/types/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CompaniesTableRowProps {
   company: Company;
-  tablePreferences: TablePreferences<Company>;
+  tablePreferences: TablePreferences;
   onEdit: (company: Company) => void;
   onDeleteConfirm: (companyId: number) => Promise<void>;
 }
@@ -96,7 +96,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
               {formatUrl(company.url) ? (
                 <div className="truncate">
                   <a
-                    href={formatUrl(company.url)?.link!}
+                    href={formatUrl(company.url)?.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline text-pretty"

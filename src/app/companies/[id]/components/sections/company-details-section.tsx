@@ -1,9 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatUrl } from "@/lib/format-utils";
-import { ExternalLink } from "lucide-react";
 import type { Company } from "@/types/company";
 
 interface CompanyDetailsSectionProps {
@@ -22,10 +21,10 @@ export function CompanyDetailsSection({ company }: CompanyDetailsSectionProps) {
                 Website
               </label>
               <div className="mt-1">
-                {formatUrl(company.url) ? (
+                {company.url ? (
                   <div className="truncate">
                     <a
-                      href={formatUrl(company.url)?.link!}
+                      href={formatUrl(company.url)?.link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline text-pretty"

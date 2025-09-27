@@ -44,7 +44,7 @@ export async function GET(
       args: [companyId],
     });
 
-    const rows = result.rows as (ContactDB & {
+    const rows = result.rows as unknown as (ContactDB & {
       companyName?: string;
     })[];
 

@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useProjectsTable } from "@/app/projects/hooks/use-projects-table";
 import { useProjectOperations } from "@/app/projects/hooks/use-project-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Project } from "@/types/project";
+import { Project, ProjectFormData } from "@/types/project";
+import { Suspense } from "react";
 
 export default function ProjectsPage() {
   const isMobile = useIsMobile();
@@ -41,6 +42,14 @@ export default function ProjectsPage() {
     isSubmitting,
   } = useProjectOperations();
 
+  // Transform editingProject to ProjectFormData for FormDialog
+  const initialFormData: ProjectFormData | undefined = editingProject
+    ? {
+        name: editingProject.name,
+        frGoal: editingProject.frGoal,
+      }
+    : undefined;
+
   return (
     <div className="mx-auto p-4">
       <div className="space-y-6">
@@ -62,11 +71,13 @@ export default function ProjectsPage() {
 
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-          <SearchBar
-            placeholder="Search projects..."
-            onSearchChange={handleSearchChange}
-            searchParam="projects_search"
-          />
+          <Suspense>
+            <SearchBar
+              placeholder="Search projects..."
+              onSearchChange={handleSearchChange}
+              searchParam="projects_search"
+            />
+          </Suspense>
 
           <ColumnSelector
             fields={columnSelectorFields}
@@ -90,11 +101,11 @@ export default function ProjectsPage() {
         )}
       </div>
 
-      <FormDialog<Project>
+      <FormDialog<ProjectFormData>
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         entity="Project"
-        initialData={editingProject}
+        initialData={initialFormData}
         onSubmit={handleSubmitProject}
         isLoading={isSubmitting}
       >

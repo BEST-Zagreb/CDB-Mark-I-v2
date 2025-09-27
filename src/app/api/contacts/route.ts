@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       FROM people p
       LEFT JOIN companies c ON p.company_id = c.id
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (companyId) {
       query += " WHERE p.company_id = ?";
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       args: params,
     });
 
-    const rows = result.rows as (ContactDB & {
+    const rows = result.rows as unknown as (ContactDB & {
       companyName?: string;
     })[];
 
@@ -84,10 +84,10 @@ export async function POST(request: NextRequest) {
 
     const getResult = await db.execute({
       sql: "SELECT * FROM people WHERE id = ?",
-      args: [result.lastInsertRowid],
+      args: [result.lastInsertRowid!],
     });
 
-    const insertedContact = getResult.rows[0] as ContactDB;
+    const insertedContact = getResult.rows[0] as unknown as ContactDB;
 
     return NextResponse.json(transformContact(insertedContact), {
       status: 201,

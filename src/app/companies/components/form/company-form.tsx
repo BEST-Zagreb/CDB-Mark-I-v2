@@ -2,7 +2,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -22,7 +21,7 @@ import {
 } from "@/types/company";
 
 interface CompanyFormProps {
-  initialData?: Company;
+  initialData?: CompanyFormData | null;
   onSubmit: (data: CompanyFormData) => Promise<void>;
   isLoading?: boolean;
 }

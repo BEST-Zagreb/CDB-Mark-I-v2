@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -16,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Contact, ContactFormData, contactSchema } from "@/types/contact";
 
 interface ContactFormProps {
-  initialData?: Contact | null;
+  initialData?: ContactFormData | null;
   companyId: number;
   onSubmit: (data: ContactFormData) => Promise<void>;
   isLoading?: boolean;
@@ -28,8 +27,6 @@ export function ContactForm({
   onSubmit,
   isLoading = false,
 }: ContactFormProps) {
-  const [submitting, setSubmitting] = useState(false);
-
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -63,14 +60,11 @@ export function ContactForm({
 
   const handleSubmit = async (data: ContactFormData) => {
     try {
-      setSubmitting(true);
       await onSubmit(data);
       form.reset();
     } catch (error) {
       console.error("Form submission error:", error);
       // Error handling is done in the parent component
-    } finally {
-      setSubmitting(false);
     }
   };
 

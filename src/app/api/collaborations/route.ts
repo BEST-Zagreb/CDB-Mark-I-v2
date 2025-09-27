@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN people ON c.person_id = people.id
       LEFT JOIN projects ON c.project_id = projects.id
     `;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (projectId) {
       query += " WHERE c.project_id = ?";
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       args: params,
     });
 
-    const rows = result.rows as (CollaborationDB & {
+    const rows = result.rows as unknown as (CollaborationDB & {
       companyName?: string;
       contactName?: string;
       projectName?: string;
@@ -152,10 +152,10 @@ export async function POST(request: NextRequest) {
 
     const getResult = await db.execute({
       sql: getQuery,
-      args: [result.lastInsertRowid],
+      args: [result.lastInsertRowid!],
     });
 
-    const newRow = getResult.rows[0] as CollaborationDB & {
+    const newRow = getResult.rows[0] as unknown as CollaborationDB & {
       companyName?: string;
       contactName?: string;
       projectName?: string;

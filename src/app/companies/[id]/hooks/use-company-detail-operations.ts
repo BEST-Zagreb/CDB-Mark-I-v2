@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   useCompany,
   useDeleteCompany,
@@ -12,7 +10,6 @@ import { Company, CompanyFormData } from "@/types/company";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 
 export function useCompanyDetailOperations(companyId: number) {
-  const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);

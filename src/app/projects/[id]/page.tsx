@@ -10,8 +10,7 @@ import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-project-detail-operations";
 import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Project } from "@/types/project";
-import { Collaboration } from "@/types/collaboration";
+import { Project, ProjectFormData } from "@/types/project";
 import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 
@@ -53,6 +52,14 @@ export default function ProjectDetailPage() {
   }, [projectError, router]);
 
   const isSubmitting = isSubmittingProject;
+
+  // Transform project to ProjectFormData for FormDialog
+  const initialFormData: ProjectFormData | undefined = project
+    ? {
+        name: project.name,
+        frGoal: project.frGoal,
+      }
+    : undefined;
 
   if (isLoadingProject) {
     return <BlocksWaveLoader size={96} className="my-16" />;
@@ -113,11 +120,11 @@ export default function ProjectDetailPage() {
         <CollaborationsSection type="project" id={projectId} />
       </div>
 
-      <FormDialog<Project>
+      <FormDialog<ProjectFormData>
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         entity="Project"
-        initialData={project}
+        initialData={initialFormData}
         onSubmit={handleSubmitProject}
         isLoading={isSubmitting}
       >

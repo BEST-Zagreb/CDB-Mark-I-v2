@@ -92,7 +92,7 @@ function CommandList({
   // onWheel to preserve existing behaviour.
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     try {
-      onWheel?.(e as any);
+      onWheel?.(e);
     } catch (err) {
       // ignore
     }

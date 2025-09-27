@@ -16,10 +16,11 @@ function transformContact(dbContact: ContactDB): Contact {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const contactId = parseInt(params.id);
+    const { id } = await params;
+    const contactId = parseInt(id);
 
     if (isNaN(contactId)) {
       return NextResponse.json(
@@ -44,7 +45,7 @@ export async function GET(
       args: [contactId],
     });
 
-    const row = result.rows[0] as
+    const row = result.rows[0] as unknown as
       | (ContactDB & {
           companyName?: string;
         })
@@ -71,10 +72,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const contactId = parseInt(params.id);
+    const { id } = await params;
+    const contactId = parseInt(id);
 
     if (isNaN(contactId)) {
       return NextResponse.json(
@@ -111,7 +113,7 @@ export async function PUT(
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const updatedContact = getResult.rows[0] as ContactDB;
+    const updatedContact = getResult.rows[0] as unknown as ContactDB;
 
     return NextResponse.json(transformContact(updatedContact));
   } catch (error) {
@@ -125,10 +127,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const contactId = parseInt(params.id);
+    const { id } = await params;
+    const contactId = parseInt(id);
 
     if (isNaN(contactId)) {
       return NextResponse.json(

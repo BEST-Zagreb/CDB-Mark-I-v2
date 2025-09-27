@@ -41,8 +41,8 @@ export function DeleteAlert({
           </div>
 
           <AlertDialogDescription>
-            Are you sure you want to delete "{entityName}"? This action cannot
-            be undone.
+            Are you sure you want to delete &quot;{entityName}&quot;? This
+            action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

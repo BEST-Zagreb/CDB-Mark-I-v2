@@ -2,14 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { projectService } from "@/services/project.service";
-import { Project } from "@/types/project";
+import { CreateProjectData, UpdateProjectData } from "@/types/project";
 import { toast } from "sonner";
 
 // Query keys
 export const projectKeys = {
   all: ["projects"] as const,
   lists: () => [...projectKeys.all, "list"] as const,
-  list: (filters?: any) => [...projectKeys.lists(), { filters }] as const,
+  list: (filters?: Record<string, unknown>) =>
+    [...projectKeys.lists(), { filters }] as const,
   details: () => [...projectKeys.all, "detail"] as const,
   detail: (id: number) => [...projectKeys.details(), id] as const,
 };
@@ -35,15 +36,17 @@ export function useCreateProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: CreateProjectData) => {
       return projectService.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
       toast.success("Project created successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create project");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to create project";
+      toast.error(message);
     },
   });
 }
@@ -52,7 +55,7 @@ export function useUpdateProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name: string } }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdateProjectData }) =>
       projectService.update(id, data),
     onSuccess: (updatedProject) => {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
@@ -64,8 +67,10 @@ export function useUpdateProject() {
       }
       toast.success("Project updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update project");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to update project";
+      toast.error(message);
     },
   });
 }
@@ -81,8 +86,10 @@ export function useDeleteProject() {
       queryClient.invalidateQueries({ queryKey: projectKeys.all });
       toast.success("Project deleted successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to delete project");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete project";
+      toast.error(message);
     },
   });
 }

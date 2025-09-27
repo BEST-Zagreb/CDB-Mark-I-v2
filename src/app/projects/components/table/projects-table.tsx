@@ -19,7 +19,7 @@ import { useVirtualizedProjects } from "@/app/projects/hooks/use-virtualized-pro
 interface VirtualizedProjectListProps {
   projects: Project[];
   searchQuery: string;
-  tablePreferences: TablePreferences<Project>;
+  tablePreferences: TablePreferences;
   onEdit: (project: Project) => void;
   onDelete: (projectId: number) => Promise<void>;
   onSortColumn: (field: keyof Project) => void;
@@ -38,8 +38,8 @@ export function ProjectsTable({
   // Sort projects based on current sort field and direction
   const sortedProjects = useMemo(() => {
     return [...projects].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number | Date | null;
+      let bValue: string | number | Date | null;
 
       const { sortField, sortDirection } = tablePreferences;
 
@@ -81,8 +81,8 @@ export function ProjectsTable({
       }
 
       // Both values are valid, compare normally
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      if (aValue! < bValue!) return sortDirection === "asc" ? -1 : 1;
+      if (aValue! > bValue!) return sortDirection === "asc" ? 1 : -1;
       return 0;
     });
   }, [projects, tablePreferences.sortField, tablePreferences.sortDirection]);
@@ -100,7 +100,7 @@ export function ProjectsTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No projects found matching "${searchQuery}"`
-          : "No projects found. Create your first project to get started."}
+          : "Create your first project to get started"}
       </div>
     );
   }

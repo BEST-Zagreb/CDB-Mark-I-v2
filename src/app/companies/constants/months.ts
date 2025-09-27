@@ -1,5 +1,5 @@
 // Months for budgeting month selection
-export const MONTH_NAMES = [
+export const MONTH_NAMES: readonly string[] = [
   "01 - January",
   "02 - February",
   "03 - March",

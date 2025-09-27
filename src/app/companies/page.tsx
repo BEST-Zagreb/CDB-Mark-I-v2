@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useCompaniesTable } from "@/app/companies/hooks/use-companies-table";
 import { useCompanyOperations } from "@/app/companies/hooks/use-company-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Company } from "@/types/company";
+import { Company, CompanyFormData } from "@/types/company";
+import { Suspense } from "react";
 
 export default function CompaniesPage() {
   const isMobile = useIsMobile();
@@ -41,6 +42,21 @@ export default function CompaniesPage() {
     isSubmitting,
   } = useCompanyOperations();
 
+  // Transform editingCompany to CompanyFormData for FormDialog
+  const initialFormData: CompanyFormData | undefined = editingCompany
+    ? {
+        name: editingCompany.name,
+        url: editingCompany.url,
+        address: editingCompany.address,
+        city: editingCompany.city,
+        zip: editingCompany.zip,
+        country: editingCompany.country,
+        phone: editingCompany.phone,
+        budgeting_month: editingCompany.budgeting_month,
+        comment: editingCompany.comment,
+      }
+    : undefined;
+
   return (
     <div className="mx-auto p-4">
       <div className="space-y-6">
@@ -62,11 +78,13 @@ export default function CompaniesPage() {
 
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-          <SearchBar
-            placeholder="Search companies..."
-            onSearchChange={handleSearchChange}
-            searchParam="companies_search"
-          />
+          <Suspense>
+            <SearchBar
+              placeholder="Search companies..."
+              onSearchChange={handleSearchChange}
+              searchParam="companies_search"
+            />
+          </Suspense>
 
           <ColumnSelector
             fields={columnSelectorFields}
@@ -90,11 +108,11 @@ export default function CompaniesPage() {
         )}
       </div>
 
-      <FormDialog<Company>
+      <FormDialog<CompanyFormData>
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         entity="Company"
-        initialData={editingCompany}
+        initialData={initialFormData}
         onSubmit={handleSubmitCompany}
         isLoading={isSubmitting}
       >

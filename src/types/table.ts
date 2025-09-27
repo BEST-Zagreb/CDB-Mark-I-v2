@@ -1,7 +1,7 @@
 // Types for table functionality
 export type SortDirection = "asc" | "desc";
 
-export interface TablePreferences<T = any> {
+export interface TablePreferences {
   visibleColumns: string[];
   sortField: string;
   sortDirection: SortDirection;

@@ -3,7 +3,6 @@ import { getDatabase } from "@/lib/db";
 import {
   updateProjectSchema,
   type ProjectDB,
-  type Project,
   dbProjectToProject,
 } from "@/types/project";
 
@@ -29,7 +28,7 @@ export async function GET(
       args: [projectId],
     });
 
-    const project = result.rows[0] as ProjectDB | undefined;
+    const project = result.rows[0] as unknown as ProjectDB | undefined;
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -80,7 +79,7 @@ export async function PUT(
 
     // Build dynamic update query
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: (string | number | null)[] = [];
 
     if (validatedData.name !== undefined) {
       updateFields.push("name = ?");
@@ -121,7 +120,7 @@ export async function PUT(
       args: [projectId],
     });
 
-    const updatedProject = getResult.rows[0] as ProjectDB;
+    const updatedProject = getResult.rows[0] as unknown as ProjectDB;
 
     return NextResponse.json(dbProjectToProject(updatedProject));
   } catch (error) {

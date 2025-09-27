@@ -13,11 +13,11 @@ export type TableType =
 
 // Structure for all table preferences
 interface AppTablePreferences {
-  projects?: TablePreferences<any>;
-  companies?: TablePreferences<any>;
-  contacts?: TablePreferences<any>;
-  "collaborations-companies"?: TablePreferences<any>;
-  "collaborations-projects"?: TablePreferences<any>;
+  projects?: TablePreferences;
+  companies?: TablePreferences;
+  contacts?: TablePreferences;
+  "collaborations-companies"?: TablePreferences;
+  "collaborations-projects"?: TablePreferences;
 }
 
 /**
@@ -51,10 +51,10 @@ function saveAllTablePreferences(preferences: AppTablePreferences): void {
 /**
  * Get table preferences for a specific table type
  */
-export function getTablePreferences<T>(
+export function getTablePreferences(
   tableType: TableType,
-  defaultPreferences: TablePreferences<T>
-): TablePreferences<T> {
+  defaultPreferences: TablePreferences
+): TablePreferences {
   const allPreferences = getAllTablePreferences();
   const tablePreferences = allPreferences[tableType];
 
@@ -66,15 +66,15 @@ export function getTablePreferences<T>(
   return {
     ...defaultPreferences,
     ...tablePreferences,
-  } as TablePreferences<T>;
+  };
 }
 
 /**
  * Save table preferences for a specific table type
  */
-export function saveTablePreferences<T>(
+export function saveTablePreferences(
   tableType: TableType,
-  preferences: TablePreferences<T>
+  preferences: TablePreferences
 ): void {
   const allPreferences = getAllTablePreferences();
   allPreferences[tableType] = preferences;

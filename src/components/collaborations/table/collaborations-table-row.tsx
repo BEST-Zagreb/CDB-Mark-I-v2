@@ -19,8 +19,6 @@ import {
   Briefcase,
   BadgeEuro,
   ClockAlert,
-  AlertTriangle,
-  SearchX,
   ShieldAlert,
 } from "lucide-react";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
@@ -34,13 +32,7 @@ interface CollaborationsTableRowProps {
     projectName?: string;
     contactName?: string;
   };
-  tablePreferences: TablePreferences<
-    Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    }
-  >;
+  tablePreferences: TablePreferences;
   onEdit: (collaboration: Collaboration) => void;
   onDeleteConfirm: (collaborationId: number) => Promise<void>;
   hiddenColumns?: string[];

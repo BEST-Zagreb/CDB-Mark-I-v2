@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { companyService } from "@/services/company.service";
-import { Company } from "@/types/company";
+import { UpdateCompanyData, CreateCompanyData } from "@/types/company";
 import { toast } from "sonner";
 
 // Query keys
@@ -36,15 +36,17 @@ export function useCreateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: (data: CreateCompanyData) => {
       return companyService.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company created successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to create company");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to create company";
+      toast.error(message);
     },
   });
 }
@@ -53,7 +55,7 @@ export function useUpdateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Company, "id"> }) =>
+    mutationFn: ({ id, data }: { id: number; data: UpdateCompanyData }) =>
       companyService.update(id, data),
     onSuccess: (updatedCompany) => {
       queryClient.invalidateQueries({ queryKey: companyKeys.all });
@@ -65,8 +67,10 @@ export function useUpdateCompany() {
       }
       toast.success("Company updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to update company");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to update company";
+      toast.error(message);
     },
   });
 }
@@ -82,8 +86,10 @@ export function useDeleteCompany() {
       queryClient.invalidateQueries({ queryKey: companyKeys.all });
       toast.success("Company deleted successfully");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to delete company");
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete company";
+      toast.error(message);
     },
   });
 }

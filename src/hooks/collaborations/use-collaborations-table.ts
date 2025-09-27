@@ -10,15 +10,8 @@ import {
   visibleColumnsToStrings,
   handleSort,
 } from "@/lib/table-utils";
-import type { Collaboration } from "@/types/collaboration";
 
-const collaborationsDefaultPreferences: TablePreferences<
-  Collaboration & {
-    companyName?: string;
-    projectName?: string;
-    contactName?: string;
-  }
-> = {
+const collaborationsDefaultPreferences: TablePreferences = {
   visibleColumns: [
     "projectName",
     "responsible",

@@ -23,13 +23,7 @@ interface VirtualizedCollaborationListProps {
     contactName?: string;
   })[];
   searchQuery: string;
-  tablePreferences: TablePreferences<
-    Collaboration & {
-      companyName?: string;
-      projectName?: string;
-      contactName?: string;
-    }
-  >;
+  tablePreferences: TablePreferences;
   onEdit: (collaboration: Collaboration) => void;
   onDelete: (collaborationId: number) => Promise<void>;
   onSortColumn: (field: string) => void;
@@ -171,7 +165,7 @@ export function CollaborationsTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No collaborations found matching "${searchQuery}"`
-          : "No collaborations found. Create your first collaboration to get started."}
+          : "No collaborations found"}
       </div>
     );
   }
