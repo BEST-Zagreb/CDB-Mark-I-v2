@@ -16,6 +16,7 @@ import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { Collaboration } from "@/types/collaboration";
+import { Suspense } from "react";
 
 interface CollaborationsSectionProps {
   type: "company" | "project";
@@ -96,11 +97,13 @@ export function CollaborationsSection({
       <CardContent className="space-y-4">
         {/* Search Bar and Column Selector */}
         <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-          <SearchBar
-            placeholder="Search collaborations..."
-            onSearchChange={handleSearchChange}
-            searchParam="collaborations_search"
-          />
+          <Suspense>
+            <SearchBar
+              placeholder="Search collaborations..."
+              onSearchChange={handleSearchChange}
+              searchParam="collaborations_search"
+            />
+          </Suspense>
 
           <ColumnSelector
             fields={collaborationFields}

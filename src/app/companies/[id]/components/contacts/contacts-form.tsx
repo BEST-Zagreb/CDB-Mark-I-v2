@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Contact, ContactFormData, contactSchema } from "@/types/contact";
 
 interface ContactFormProps {
-  initialData?: Contact | null;
+  initialData?: ContactFormData | undefined;
   companyId: number;
   onSubmit: (data: ContactFormData) => Promise<void>;
   isLoading?: boolean;

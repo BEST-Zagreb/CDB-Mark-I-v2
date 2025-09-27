@@ -18,7 +18,7 @@ import {
 } from "@/types/project";
 
 interface ProjectFormProps {
-  initialData?: Project;
+  initialData?: ProjectFormData | null;
   onSubmit: (data: ProjectFormData) => Promise<void>;
   isLoading?: boolean;
 }

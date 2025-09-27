@@ -10,21 +10,20 @@ import {
   visibleColumnsToStrings,
   handleSort,
 } from "@/lib/table-utils";
-import type { Project } from "@/types/project";
 
 // Default preferences (outside hook to prevent recreation)
-const defaultPreferences: TablePreferences<Project> = {
+const defaultPreferences: TablePreferences = {
   visibleColumns: ["name", "frGoal", "created_at"],
   sortField: "name",
   sortDirection: "asc",
 };
 
 export function useProjectsTable() {
-  const [tablePreferences, setTablePreferences] = useState<
-    TablePreferences<Project>
-  >(() => {
-    return getTablePreferences("projects", defaultPreferences);
-  });
+  const [tablePreferences, setTablePreferences] = useState<TablePreferences>(
+    () => {
+      return getTablePreferences("projects", defaultPreferences);
+    }
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);

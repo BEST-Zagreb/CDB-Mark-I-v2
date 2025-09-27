@@ -36,7 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
 interface CollaborationFormProps {
-  initialData?: Collaboration | null;
+  initialData?: CollaborationFormData | null;
   projectId?: number;
   companyId?: number;
   onSubmit: (data: CollaborationFormData) => Promise<void>;

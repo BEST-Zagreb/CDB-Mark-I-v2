@@ -12,7 +12,7 @@ import {
 } from "@/lib/table-utils";
 import type { Contact } from "@/types/contact";
 
-const contactsDefaultPreferences: TablePreferences<Contact> = {
+const contactsDefaultPreferences: TablePreferences = {
   sortField: "name",
   sortDirection: "asc",
   visibleColumns: ["name", "email", "phone", "function"],

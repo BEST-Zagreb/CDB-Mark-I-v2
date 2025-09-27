@@ -18,8 +18,9 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { ContactForm } from "@/app/companies/[id]/components/contacts/contacts-form";
 import { useContactsTable } from "@/app/companies/[id]/hooks/use-contacts-table";
 import { useContactsOperations } from "@/app/companies/[id]/hooks/use-contacts-operations";
-import { Contact } from "@/types/contact";
+import { Contact, ContactFormData } from "@/types/contact";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Suspense } from "react";
 
 interface ContactsSectionProps {
   companyId: number;
@@ -51,6 +52,17 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
     visibleColumnsString,
   } = useContactsTable();
 
+  // Transform selectedContact to ContactFormData for FormDialog (handles nulls safely)
+  const initialFormData: ContactFormData | undefined = selectedContact
+    ? {
+        companyId: selectedContact.companyId,
+        name: selectedContact.name || "", // Map null to empty string
+        email: selectedContact.email || undefined, // Optional, so undefined is fine
+        phone: selectedContact.phone || undefined,
+        function: selectedContact.function || undefined,
+      }
+    : undefined;
+
   return (
     <>
       <Card>
@@ -79,11 +91,13 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
         <CardContent className="space-y-4">
           {/* Search Bar and Column Selector */}
           <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-            <SearchBar
-              placeholder="Search contacts..."
-              onSearchChange={handleSearchChange}
-              searchParam="contacts_search"
-            />
+            <Suspense>
+              <SearchBar
+                placeholder="Search contacts..."
+                onSearchChange={handleSearchChange}
+                searchParam="contacts_search"
+              />
+            </Suspense>
 
             <ColumnSelector
               fields={contactFields}
@@ -108,11 +122,11 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
         </CardContent>
       </Card>
 
-      <FormDialog<Contact>
+      <FormDialog<ContactFormData>
         open={contactDialogOpen}
         onOpenChange={setContactDialogOpen}
         entity="Contact"
-        initialData={selectedContact}
+        initialData={initialFormData}
         onSubmit={handleSubmitContact}
         isLoading={isSubmitting}
       >

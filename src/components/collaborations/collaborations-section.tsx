@@ -20,6 +20,7 @@ import { useCollaborationsTable } from "@/hooks/collaborations/use-collaboration
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Suspense } from "react";
 
 interface CollaborationsSectionProps {
   type: "company" | "project";
@@ -59,6 +60,30 @@ export function CollaborationsSection({
     collaborationFields,
     visibleColumnsString,
   } = useCollaborationsTable(storageKey, [hiddenColumn]);
+
+  // Transform editingCollaboration to CollaborationFormData for FormDialog
+  const initialFormData: CollaborationFormData | undefined =
+    editingCollaboration
+      ? {
+          companyId: editingCollaboration.companyId,
+          projectId: editingCollaboration.projectId,
+          contactId: editingCollaboration.contactId || undefined,
+          responsible: editingCollaboration.responsible || "",
+          comment: editingCollaboration.comment || "",
+          contacted: editingCollaboration.contacted,
+          successful: editingCollaboration.successful || undefined,
+          letter: editingCollaboration.letter,
+          meeting: editingCollaboration.meeting || undefined,
+          priority: editingCollaboration.priority,
+          amount: editingCollaboration.amount || undefined,
+          contactInFuture: editingCollaboration.contactInFuture || undefined,
+          type: editingCollaboration.type as
+            | "Financial"
+            | "Material"
+            | "Educational"
+            | null,
+        }
+      : undefined;
 
   return (
     <>
@@ -104,11 +129,13 @@ export function CollaborationsSection({
         <CardContent className="space-y-4">
           {/* Search Bar and Column Selector */}
           <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-            <SearchBar
-              placeholder="Search collaborations..."
-              onSearchChange={handleSearchChange}
-              searchParam="collaborations_search"
-            />
+            <Suspense>
+              <SearchBar
+                placeholder="Search collaborations..."
+                onSearchChange={handleSearchChange}
+                searchParam="collaborations_search"
+              />
+            </Suspense>
 
             <ColumnSelector
               fields={collaborationFields}
@@ -134,11 +161,11 @@ export function CollaborationsSection({
         </CardContent>
       </Card>
 
-      <FormDialog<Collaboration>
+      <FormDialog<CollaborationFormData>
         open={collaborationDialogOpen}
         onOpenChange={setCollaborationDialogOpen}
         entity="Collaboration"
-        initialData={editingCollaboration}
+        initialData={initialFormData}
         onSubmit={handleSubmitCollaboration}
         isLoading={isSubmitting}
       >

@@ -21,7 +21,7 @@ import {
 } from "@/types/company";
 
 interface CompanyFormProps {
-  initialData?: Company;
+  initialData?: CompanyFormData | null;
   onSubmit: (data: CompanyFormData) => Promise<void>;
   isLoading?: boolean;
 }

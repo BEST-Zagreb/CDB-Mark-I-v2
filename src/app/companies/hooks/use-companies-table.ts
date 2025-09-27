@@ -10,21 +10,20 @@ import {
   visibleColumnsToStrings,
   handleSort,
 } from "@/lib/table-utils";
-import type { Company } from "@/types/company";
 
 // Default preferences (outside hook to prevent recreation)
-const defaultPreferences: TablePreferences<Company> = {
+const defaultPreferences: TablePreferences = {
   visibleColumns: ["name", "url", "budgeting_month", "city", "comment"],
   sortField: "name",
   sortDirection: "asc",
 };
 
 export function useCompaniesTable() {
-  const [tablePreferences, setTablePreferences] = useState<
-    TablePreferences<Company>
-  >(() => {
-    return getTablePreferences("companies", defaultPreferences);
-  });
+  const [tablePreferences, setTablePreferences] = useState<TablePreferences>(
+    () => {
+      return getTablePreferences("companies", defaultPreferences);
+    }
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);

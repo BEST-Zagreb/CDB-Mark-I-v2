@@ -15,7 +15,7 @@ import { DoNotContactWarning } from "@/app/companies/[id]/components/do-not-cont
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useCompanyDetailOperations } from "@/app/companies/[id]/hooks/use-company-detail-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Company } from "@/types/company";
+import { Company, CompanyFormData } from "@/types/company";
 
 export default function CompanyDetailPage() {
   const params = useParams();
@@ -55,6 +55,21 @@ export default function CompanyDetailPage() {
   }, [companyError, router]);
 
   const isSubmitting = companyOps.isSubmitting;
+
+  // Transform company to CompanyFormData for FormDialog
+  const initialFormData: CompanyFormData | undefined = company
+    ? {
+        name: company.name,
+        url: company.url,
+        address: company.address,
+        city: company.city,
+        zip: company.zip,
+        country: company.country,
+        phone: company.phone,
+        budgeting_month: company.budgeting_month,
+        comment: company.comment,
+      }
+    : undefined;
 
   if (isLoadingCompany) {
     return <BlocksWaveLoader size={64} className="my-16" />;
@@ -118,11 +133,11 @@ export default function CompanyDetailPage() {
         <CollaborationsSection type="company" id={companyId} />
       </div>
 
-      <FormDialog<Company>
+      <FormDialog<CompanyFormData>
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         entity="Company"
-        initialData={company}
+        initialData={initialFormData}
         onSubmit={handleSubmitCompany}
         isLoading={isSubmitting}
       >
