@@ -91,7 +91,7 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
         <CardContent className="space-y-4">
           {/* Search Bar and Column Selector */}
           <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-            <Suspense>
+            <Suspense fallback={null}>
               <SearchBar
                 placeholder="Search contacts..."
                 onSearchChange={handleSearchChange}

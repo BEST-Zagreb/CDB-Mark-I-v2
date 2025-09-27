@@ -129,7 +129,7 @@ export function CollaborationsSection({
         <CardContent className="space-y-4">
           {/* Search Bar and Column Selector */}
           <div className="flex flex-row flex-wrap gap-4 items-center justify-between">
-            <Suspense>
+            <Suspense fallback={<BlocksWaveLoader size={24} />}>
               <SearchBar
                 placeholder="Search collaborations..."
                 onSearchChange={handleSearchChange}
