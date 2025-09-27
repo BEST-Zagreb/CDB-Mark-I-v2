@@ -29,7 +29,7 @@
     "@tanstack/react-virtual": "^3.13.12",
     "@types/sqlite3": "^5.1.0",
     "axios": "^1.12.2",
-    "better-sqlite3": "^12.2.0",
+    "better-sqlite3": "^12.4.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
