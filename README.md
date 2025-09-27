@@ -93,8 +93,14 @@ This work is licensed under a
 ### 3. Install Dependencies
 
 ```bash
+# Install main dependencies
 pnpm install
+
+# Install better-sqlite3 for database scripts (requires native compilation)
+npm install better-sqlite3 --build-from-source
 ```
+
+**Note:** The second command installs `better-sqlite3` with native bindings required for the database utility scripts. This package needs to be compiled for your specific platform and Node.js version.
 
 ### 4. Database Schema Setup
 
