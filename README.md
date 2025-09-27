@@ -47,19 +47,95 @@ This work is licensed under a
 
 ### Prerequisites
 
-- Node.js 22.19.0+ (or latest LTS)
-- pnpm (or npm/yarn)
+- **Node.js 22.19.0+** (or latest LTS) - [Download here](https://nodejs.org/)
+- **pnpm** (recommended) or npm/yarn
+  ```bash
+  npm install -g pnpm
+  ```
 
-### Running app
+### 1. Turso Database Setup
 
-- Install and run:
-  pnpm install
-  pnpm run dev
-- The app runs on port 3000 by default: http://localhost:3000
+#### Create a Turso Account
 
-## Database
+1. Go to [Turso](https://turso.tech/) and sign up for an account
+2. Verify your email address
 
-This project uses a local SQLite database. For local development, create a folder named `db` at the repository root and add a SQLite database file named `db.sqlite3`.
+#### Create a Database via Web Interface
+
+1. **Log in** to your Turso account at [https://app.turso.tech](https://app.turso.tech)
+2. **Click "Create database"** in the dashboard
+3. **Enter a database name** (e.g., `company-database`) and select your preferred location
+4. **Click "Create"** to create the database
+5. **Copy the Database URL** from the database details page (it will look like `libsql://your-database-name.turso.io`)
+
+#### Create an Authentication Token
+
+1. In your database details page, go to the **"Tokens"** tab
+2. **Click "Generate token"**
+3. **Copy the generated token** (save this securely - you'll need it for your environment variables)
+4. **Note:** Keep this token private and never commit it to version control
+
+### 2. Environment Setup
+
+1. **Copy the environment template:**
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. **Edit `.env.local` and add your Turso credentials:**
+   ```bash
+   # Replace with your actual database URL and token
+   TURSO_DB_URL=libsql://your-database-url.turso.io
+   TURSO_DB_TOKEN=your-database-token-here
+   ```
+
+### 3. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 4. Database Schema Setup
+
+The application will automatically create the required database schema when it first runs. The schema includes:
+
+- **companies** - Organization information
+- **projects** - Project tracking
+- **people** - Contact persons (linked to companies)
+- **collaborations** - Partnership tracking between companies (contacts) and projects
+
+If you have existing data from a local SQLite database, you can migrate it using the provided script (db.sqlite3 file should be located in folder (root)/db):
+
+```bash
+# Make sure your .env.local is configured first
+node db/scripts/migrate_to_turso.js
+```
+
+### 5. Run the Application
+
+```bash
+# Start development server
+pnpm run dev
+```
+
+The app will be available at: **http://localhost:3000**
+
+### 6. Build for Production
+
+```bash
+# Build the application
+pnpm run build
+```
+
+## Database Scripts
+
+Available utility scripts in `db/scripts/`:
+
+- `migrate_to_turso.js` - Migrate data from local SQLite to Turso
+- `normalize_db.js` - Database normalization utilities
+- `enable_cascading_deletes.js` - Enable cascading deletes
+- `analyze_db_cardinality.js` - Analyze database relationships
 
 ## How to contribute
 
@@ -89,25 +165,51 @@ Contributions are welcome — whether it's a bug report, feature idea, documenta
    - Screenshots or short recordings for UI changes.
    - Links to related issues.
 
-### Pull request checklist
+### Troubleshooting
 
-- [ ] Code builds and tests pass locally.
-- [ ] Linting/formatting applied.
-- [ ] No sensitive data (passwords, secrets) included.
+#### Database Connection Issues
 
-### Non-code contributions
+**Error: "TURSO_DB_URL and TURSO_DB_TOKEN environment variables are required"**
 
-- Other improvements such as translations, UI & UX suggestions, icons and designs are welcome. Open issues or PRs just like for code.
-- Propose larger ideas in an issue first so maintainers can provide feedback before an implementation.
+- Make sure `.env.local` exists and contains the correct values
+- Verify your Turso database URL and token are correct
+- Check that the token hasn't expired
 
-### Review process
+**Error: "SQL not allowed statement: PRAGMA cache_size = -128000"**
 
-- Maintainers will review PRs, request changes if necessary, and merge when ready.
-- Code Rabbit (an automated code-review tool) runs on pull requests and posts suggestions. Please review and address its recommendations before requesting a final review; if you disagree with a suggestion, explain why in the PR comments. Maintainers may require resolving important warnings before merging.
-- Please be responsive to review comments - small follow-ups are common.
+- This error indicates you're using an older version of the database setup
+- The application has been updated to work with Turso's restrictions on PRAGMA statements
+- Make sure you're using the latest code from the repository
 
-### Communication & conduct
+#### Build Issues
 
-- Be respectful and constructive. This project follows the license in the repository; if a Code of Conduct is added later, contributors must follow it.
+**TypeScript compilation errors**
 
-Thank you for helping improve Company Database - every contribution helps!
+```bash
+# Clear Next.js cache and rebuild
+rm -rf .next
+pnpm run build
+```
+
+**Port already in use**
+
+```bash
+# Kill process using port 3000
+lsof -ti:3000 | xargs kill -9
+# Or use a different port
+pnpm run dev -- -p 3001
+```
+
+#### Database Migration Issues
+
+**Migration script fails**
+
+- Ensure your local SQLite database exists at `db/db.sqlite3`
+- Verify environment variables are set correctly
+- Check that you have read permissions for the local database
+
+**Data verification fails after migration**
+
+- Check the migration script output for specific error messages
+- Verify table schemas match between local and Turso databases
+- Ensure foreign key constraints are satisfied
