@@ -88,7 +88,7 @@ export function CompaniesTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No companies found matching "${searchQuery}"`
-          : "No companies found. Create your first company to get started."}
+          : "Create your first company to get started"}
       </div>
     );
   }

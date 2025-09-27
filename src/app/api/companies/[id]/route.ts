@@ -22,8 +22,9 @@ export async function GET(
       );
     }
 
-    const db = getDatabase();
-    const stmt = db.prepare(`
+    const db = await getDatabase();
+    const result = await db.execute({
+      sql: `
       SELECT 
         c.*,
         CASE WHEN EXISTS(
@@ -31,10 +32,11 @@ export async function GET(
           WHERE company_id = c.id AND contact_in_future = 0
         ) THEN 1 ELSE 0 END as hasDoNotContact
       FROM companies c WHERE c.id = ?
-    `);
-    const company: CompanyDB | undefined = stmt.get(companyId) as
-      | CompanyDB
-      | undefined;
+    `,
+      args: [companyId],
+    });
+
+    const company = result.rows[0] as unknown as CompanyDB | undefined;
 
     if (!company) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
@@ -71,13 +73,15 @@ export async function PUT(
     // Validate the request body
     const validatedData = updateCompanySchema.parse(body);
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Check if company exists
-    const checkStmt = db.prepare("SELECT id FROM companies WHERE id = ?");
-    const existingCompany = checkStmt.get(companyId);
+    const checkResult = await db.execute({
+      sql: "SELECT id FROM companies WHERE id = ?",
+      args: [companyId],
+    });
 
-    if (!existingCompany) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
@@ -139,16 +143,18 @@ export async function PUT(
 
     updateValues.push(companyId);
 
-    const updateStmt = db.prepare(`
+    await db.execute({
+      sql: `
       UPDATE companies 
       SET ${updateFields.join(", ")} 
       WHERE id = ?
-    `);
-
-    updateStmt.run(...updateValues);
+    `,
+      args: updateValues,
+    });
 
     // Fetch and return the updated company
-    const getStmt = db.prepare(`
+    const getResult = await db.execute({
+      sql: `
       SELECT 
         c.*,
         CASE WHEN EXISTS(
@@ -156,8 +162,11 @@ export async function PUT(
           WHERE company_id = c.id AND contact_in_future = 0
         ) THEN 1 ELSE 0 END as hasDoNotContact
       FROM companies c WHERE c.id = ?
-    `);
-    const updatedCompany: CompanyDB = getStmt.get(companyId) as CompanyDB;
+    `,
+      args: [companyId],
+    });
+
+    const updatedCompany = getResult.rows[0] as unknown as CompanyDB;
 
     return NextResponse.json(dbCompanyToCompany(updatedCompany));
   } catch (error) {
@@ -193,20 +202,24 @@ export async function DELETE(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Check if company exists before deletion
-    const checkStmt = db.prepare("SELECT id FROM companies WHERE id = ?");
-    const existingCompany = checkStmt.get(companyId);
+    const checkResult = await db.execute({
+      sql: "SELECT id FROM companies WHERE id = ?",
+      args: [companyId],
+    });
 
-    if (!existingCompany) {
+    if (checkResult.rows.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
-    const deleteStmt = db.prepare("DELETE FROM companies WHERE id = ?");
-    const result = deleteStmt.run(companyId);
+    const deleteResult = await db.execute({
+      sql: "DELETE FROM companies WHERE id = ?",
+      args: [companyId],
+    });
 
-    if (result.changes === 0) {
+    if (deleteResult.rowsAffected === 0) {
       return NextResponse.json(
         { error: "Failed to delete company" },
         { status: 500 }
@@ -214,7 +227,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { message: "Company deleted successfully" },
+      { message: "Company and all associated data deleted successfully" },
       { status: 200 }
     );
   } catch (error) {

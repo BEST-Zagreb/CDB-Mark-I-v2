@@ -100,7 +100,7 @@ export function ProjectsTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No projects found matching "${searchQuery}"`
-          : "No projects found. Create your first project to get started."}
+          : "Create your first project to get started"}
       </div>
     );
   }

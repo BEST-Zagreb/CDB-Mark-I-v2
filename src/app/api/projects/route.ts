@@ -10,14 +10,18 @@ import {
 // GET /api/projects - Get all projects
 export async function GET() {
   try {
-    const db = getDatabase();
-    const stmt = db.prepare(`
-      SELECT * FROM projects 
-      ORDER BY 
-        CASE WHEN created_at IS NULL OR created_at = 'null' THEN 1 ELSE 0 END,
-        created_at DESC
-    `);
-    const projects: ProjectDB[] = stmt.all() as ProjectDB[];
+    const db = await getDatabase();
+    const result = await db.execute({
+      sql: `
+        SELECT * FROM projects 
+        ORDER BY 
+          CASE WHEN created_at IS NULL OR created_at = 'null' THEN 1 ELSE 0 END,
+          created_at DESC
+      `,
+      args: [],
+    });
+
+    const projects: ProjectDB[] = result.rows as unknown as ProjectDB[];
 
     const formattedProjects: Project[] = projects.map(dbProjectToProject);
 
@@ -39,27 +43,25 @@ export async function POST(request: NextRequest) {
     // Validate the request body
     const validatedData = projectSchema.parse(body);
 
-    const db = getDatabase();
+    const db = await getDatabase();
     const now = new Date().toISOString();
 
-    const stmt = db.prepare(`
-      INSERT INTO projects (name, fr_goal, created_at, updated_at)
-      VALUES (?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
-      validatedData.name,
-      validatedData.frGoal || null,
-      now,
-      now
-    );
+    const result = await db.execute({
+      sql: `
+        INSERT INTO projects (name, fr_goal, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
+      `,
+      args: [validatedData.name, validatedData.frGoal || null, now, now],
+    });
 
     if (result.lastInsertRowid) {
       // Fetch the created project
-      const getStmt = db.prepare("SELECT * FROM projects WHERE id = ?");
-      const newProject: ProjectDB = getStmt.get(
-        result.lastInsertRowid
-      ) as ProjectDB;
+      const getResult = await db.execute({
+        sql: "SELECT * FROM projects WHERE id = ?",
+        args: [result.lastInsertRowid],
+      });
+
+      const newProject: ProjectDB = getResult.rows[0] as unknown as ProjectDB;
 
       return NextResponse.json(dbProjectToProject(newProject), { status: 201 });
     } else {

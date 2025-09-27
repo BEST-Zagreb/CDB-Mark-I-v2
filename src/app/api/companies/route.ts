@@ -7,13 +7,13 @@ import {
   dbCompanyToCompany,
 } from "@/types/company";
 
-// GET /api/companies - Get all companies with optional search
+// GET /api/companies - Get all companies
 export async function GET(request: NextRequest) {
   try {
-    const db = getDatabase();
+    const db = await getDatabase();
 
     // Get all companies with do not contact status
-    const stmt = db.prepare(`
+    const result = await db.execute(`
         SELECT 
           c.*,
           CASE WHEN EXISTS(
@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         FROM companies c
         ORDER BY name ASC
       `);
-    const companies: CompanyDB[] = stmt.all() as (CompanyDB & {
+
+    const companies = result.rows as unknown as (CompanyDB & {
       hasDoNotContact: number;
     })[];
 
@@ -47,28 +48,30 @@ export async function POST(request: NextRequest) {
     // Validate the request body
     const validatedData = companySchema.parse(body);
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
-    const stmt = db.prepare(`
+    const result = await db.execute({
+      sql: `
       INSERT INTO companies (name, url, address, city, zip, country, phone, budgeting_month, comment)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const result = stmt.run(
-      validatedData.name,
-      validatedData.url || null,
-      validatedData.address || null,
-      validatedData.city || null,
-      validatedData.zip || null,
-      validatedData.country || null,
-      validatedData.phone || null,
-      validatedData.budgeting_month || null,
-      validatedData.comment || null
-    );
+    `,
+      args: [
+        validatedData.name,
+        validatedData.url || null,
+        validatedData.address || null,
+        validatedData.city || null,
+        validatedData.zip || null,
+        validatedData.country || null,
+        validatedData.phone || null,
+        validatedData.budgeting_month || null,
+        validatedData.comment || null,
+      ],
+    });
 
     if (result.lastInsertRowid) {
       // Fetch the created company with do not contact status
-      const getStmt = db.prepare(`
+      const getResult = await db.execute({
+        sql: `
         SELECT 
           c.*,
           CASE WHEN EXISTS(
@@ -76,10 +79,11 @@ export async function POST(request: NextRequest) {
             WHERE company_id = c.id AND contact_in_future = 0
           ) THEN 1 ELSE 0 END as hasDoNotContact
         FROM companies c WHERE c.id = ?
-      `);
-      const newCompany: CompanyDB = getStmt.get(
-        result.lastInsertRowid
-      ) as CompanyDB;
+      `,
+        args: [result.lastInsertRowid],
+      });
+
+      const newCompany = getResult.rows[0] as unknown as CompanyDB;
 
       return NextResponse.json(dbCompanyToCompany(newCompany), { status: 201 });
     } else {

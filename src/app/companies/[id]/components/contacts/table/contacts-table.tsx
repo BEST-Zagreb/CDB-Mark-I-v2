@@ -107,7 +107,7 @@ export function ContactsTable({
       <div className="text-center py-8 text-muted-foreground">
         {searchQuery
           ? `No contacts found matching "${searchQuery}"`
-          : "No contacts found. Add a contact to get started."}
+          : "No contacts found"}
       </div>
     );
   }

@@ -29,7 +29,7 @@ export async function GET(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     const query = `
       SELECT 
@@ -40,7 +40,12 @@ export async function GET(
       WHERE p.id = ?
     `;
 
-    const row = db.prepare(query).get(contactId) as
+    const result = await db.execute({
+      sql: query,
+      args: [contactId],
+    });
+
+    const row = result.rows[0] as unknown as
       | (ContactDB & {
           companyName?: string;
         })
@@ -81,31 +86,34 @@ export async function PUT(
     }
 
     const data = await request.json();
-    const db = getDatabase();
+    const db = await getDatabase();
 
-    const stmt = db.prepare(`
-      UPDATE people 
-      SET name = ?, email = ?, phone = ?, company_id = ?, function = ?
-      WHERE id = ?
-    `);
+    await db.execute({
+      sql: `
+        UPDATE people 
+        SET name = ?, email = ?, phone = ?, company_id = ?, function = ?
+        WHERE id = ?
+      `,
+      args: [
+        data.name,
+        data.email || null,
+        data.phone || null,
+        data.companyId,
+        data.function || null,
+        contactId,
+      ],
+    });
 
-    const result = stmt.run(
-      data.name,
-      data.email || null,
-      data.phone || null,
-      data.companyId,
-      data.function || null,
-      contactId
-    );
+    const getResult = await db.execute({
+      sql: "SELECT * FROM people WHERE id = ?",
+      args: [contactId],
+    });
 
-    if (result.changes === 0) {
-      db.close();
+    if (getResult.rows.length === 0) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const updatedContact = db
-      .prepare("SELECT * FROM people WHERE id = ?")
-      .get(contactId) as ContactDB;
+    const updatedContact = getResult.rows[0] as unknown as ContactDB;
 
     return NextResponse.json(transformContact(updatedContact));
   } catch (error) {
@@ -132,12 +140,14 @@ export async function DELETE(
       );
     }
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
-    const stmt = db.prepare("DELETE FROM people WHERE id = ?");
-    const result = stmt.run(contactId);
+    const result = await db.execute({
+      sql: "DELETE FROM people WHERE id = ?",
+      args: [contactId],
+    });
 
-    if (result.changes === 0) {
+    if (result.rowsAffected === 0) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 

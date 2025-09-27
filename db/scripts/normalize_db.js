@@ -6,14 +6,14 @@
  * Run all migrations using: node migrate_db.js all
  *
  * Available migrations:
- * - priorities: Standardize collaboration priority values
- * - countries: Normalize country names in companies table
- * - round_goals: Round fr_goal values in projects table to full numbers
- * - standardize_months: Standardize budgeting_month values to English format
- * - standardize_booleans: Standardize boolean columns in collaborations table
- * - round_amounts: Round amount values in collaborations table to whole numbers
- * - standardize_types: Standardize collaboration type values to English
- * - invert_contact_in_future: Invert contact_in_future boolean values (1↔0)
+ * - prio: Standardize collaboration priority values
+ * - country: Normalize country names in companies table
+ * - goal: Round fr_goal values in projects table to full numbers
+ * - month: Standardize budgeting_month values to English format
+ * - bool: Standardize boolean columns in collaborations table
+ * - amount: Round amount values in collaborations table to whole numbers
+ * - type: Standardize collaboration type values to English
+ * - inv_cif: Invert contact_in_future boolean values (1↔0)
  */
 
 const Database = require("better-sqlite3");
@@ -27,7 +27,7 @@ const migrations = {
    * Standardize collaboration priority values
    * Converts numeric and inconsistent string values to standardized strings
    */
-  priorities: async (db) => {
+  prio: async (db) => {
     console.log("🔄 Starting priority standardization...");
 
     // Check current priority values
@@ -49,11 +49,11 @@ const migrations = {
 
     // Define the priority mappings
     const updates = [
-      { from: 1, to: "Low" },
-      { from: 2, to: "Low" },
-      { from: 3, to: "Medium" },
-      { from: 4, to: "High" },
-      { from: 5, to: "High" },
+      { from: "1", to: "Low" },
+      { from: "2", to: "Low" },
+      { from: "3", to: "Medium" },
+      { from: "4", to: "High" },
+      { from: "5", to: "High" },
       { from: null, to: "Medium" }, // Optional: set null priorities to 'Medium'
       { from: "t", to: "High" },
       { from: "f", to: "Low" },
@@ -118,7 +118,7 @@ const migrations = {
    * Normalize country names in companies table
    * Standardizes various misspellings and abbreviations to proper country names (case insensitive)
    */
-  countries: async (db) => {
+  country: async (db) => {
     console.log("🔄 Starting country name normalization...");
 
     // Check current country values
@@ -228,7 +228,7 @@ const migrations = {
    * Round fr_goal values in projects table to full numbers
    * Converts decimal values like 10000.01 to 10000
    */
-  round_goals: async (db) => {
+  goal: async (db) => {
     console.log("🔄 Starting fr_goal rounding...");
 
     // Check current fr_goal values
@@ -323,7 +323,7 @@ const migrations = {
    * Standardize budgeting_month values in companies table to English format
    * Converts Croatian month names to "01 - January" format
    */
-  standardize_months: async (db) => {
+  month: async (db) => {
     console.log("🔄 Starting budgeting_month standardization...");
 
     // Check current budgeting_month values
@@ -434,7 +434,7 @@ const migrations = {
    * Standardize boolean columns in collaborations table
    * Converts mixed boolean formats (0/1/f/t) to consistent true/false
    */
-  standardize_booleans: async (db) => {
+  bool: async (db) => {
     console.log("🔄 Starting boolean column standardization...");
 
     // Define the boolean columns to standardize
@@ -537,7 +537,7 @@ const migrations = {
    * Round amount values in collaborations table to whole numbers
    * Converts decimal values like 100.50 to 101 (rounded)
    */
-  round_amounts: async (db) => {
+  amount: async (db) => {
     console.log("🔄 Starting amount rounding...");
 
     // Check current amount values
@@ -638,7 +638,7 @@ const migrations = {
    * Standardize collaboration type values to English
    * Converts Croatian type names to English equivalents
    */
-  standardize_types: async (db) => {
+  type: async (db) => {
     console.log("🔄 Starting collaboration type standardization...");
 
     // Check current type values
@@ -727,7 +727,7 @@ const migrations = {
    * Invert contact_in_future boolean values
    * Switches 1 to 0 and 0 to 1 for the contact_in_future column
    */
-  invert_contact_in_future: async (db) => {
+  inv_cif: async (db) => {
     console.log("🔄 Starting contact_in_future inversion...");
 
     // Check current contact_in_future values
@@ -829,7 +829,7 @@ ${Object.keys(migrations)
   .join("\n")}
 
 Examples:
-  node migrate_db.js priorities
+  node migrate_db.js prio
   node migrate_db.js all
     `);
     process.exit(0);

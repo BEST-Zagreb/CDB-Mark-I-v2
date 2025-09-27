@@ -10,7 +10,6 @@ import {
   visibleColumnsToStrings,
   handleSort,
 } from "@/lib/table-utils";
-import type { Contact } from "@/types/contact";
 
 const contactsDefaultPreferences: TablePreferences = {
   sortField: "name",

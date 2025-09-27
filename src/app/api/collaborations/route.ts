@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
 
-    const db = getDatabase();
+    const db = await getDatabase();
 
     let query = `
       SELECT c.*, companies.name as companyName, people.name as contactName, projects.name as projectName
@@ -70,7 +70,12 @@ export async function GET(request: NextRequest) {
 
     query += " ORDER BY c.updated_at DESC, c.created_at DESC";
 
-    const rows = db.prepare(query).all(...params) as (CollaborationDB & {
+    const result = await db.execute({
+      sql: query,
+      args: params,
+    });
+
+    const rows = result.rows as unknown as (CollaborationDB & {
       companyName?: string;
       contactName?: string;
       projectName?: string;
@@ -99,20 +104,20 @@ export async function POST(request: NextRequest) {
   try {
     const data: CollaborationFormData = await request.json();
 
-    const db = getDatabase();
+    const db = await getDatabase();
     const now = new Date().toISOString();
 
     const insertQuery = `
       INSERT INTO collaborations (
-        company_id, project_id, person_id, responsible, comment, contacted, 
-        successful, letter, meeting, priority, amount, contact_in_future, 
+        company_id, project_id, person_id, responsible, comment, contacted,
+        successful, letter, meeting, priority, amount, contact_in_future,
         type, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const result = db
-      .prepare(insertQuery)
-      .run(
+    const result = await db.execute({
+      sql: insertQuery,
+      args: [
         data.companyId,
         data.projectId,
         data.contactId || null,
@@ -131,8 +136,9 @@ export async function POST(request: NextRequest) {
           : null,
         data.type,
         now,
-        now
-      );
+        now,
+      ],
+    });
 
     // Get the created collaboration with related data
     const getQuery = `
@@ -144,9 +150,12 @@ export async function POST(request: NextRequest) {
       WHERE c.id = ?
     `;
 
-    const newRow = db
-      .prepare(getQuery)
-      .get(result.lastInsertRowid) as CollaborationDB & {
+    const getResult = await db.execute({
+      sql: getQuery,
+      args: [result.lastInsertRowid!],
+    });
+
+    const newRow = getResult.rows[0] as unknown as CollaborationDB & {
       companyName?: string;
       contactName?: string;
       projectName?: string;

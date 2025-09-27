@@ -16,7 +16,7 @@ function transformContact(dbContact: ContactDB): Contact {
 
 export async function GET(request: NextRequest) {
   try {
-    const db = getDatabase();
+    const db = await getDatabase();
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
@@ -36,7 +36,12 @@ export async function GET(request: NextRequest) {
 
     query += " ORDER BY p.name ASC";
 
-    const rows = db.prepare(query).all(...params) as (ContactDB & {
+    const result = await db.execute({
+      sql: query,
+      args: params,
+    });
+
+    const rows = result.rows as unknown as (ContactDB & {
       companyName?: string;
     })[];
 
@@ -61,24 +66,28 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const db = getDatabase();
+    const db = await getDatabase();
 
-    const stmt = db.prepare(`
-      INSERT INTO people (name, email, phone, company_id, function, created_at)
-      VALUES (?, ?, ?, ?, ?, datetime('now'))
-    `);
+    const result = await db.execute({
+      sql: `
+        INSERT INTO people (name, email, phone, company_id, function, created_at)
+        VALUES (?, ?, ?, ?, ?, datetime('now'))
+      `,
+      args: [
+        data.name,
+        data.email || null,
+        data.phone || null,
+        data.companyId,
+        data.function || null,
+      ],
+    });
 
-    const result = stmt.run(
-      data.name,
-      data.email || null,
-      data.phone || null,
-      data.companyId,
-      data.function || null
-    );
+    const getResult = await db.execute({
+      sql: "SELECT * FROM people WHERE id = ?",
+      args: [result.lastInsertRowid!],
+    });
 
-    const insertedContact = db
-      .prepare("SELECT * FROM people WHERE id = ?")
-      .get(result.lastInsertRowid) as ContactDB;
+    const insertedContact = getResult.rows[0] as unknown as ContactDB;
 
     return NextResponse.json(transformContact(insertedContact), {
       status: 201,
