@@ -10,6 +10,7 @@ import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-project-detail-operations";
 import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Project, ProjectFormData } from "@/types/project";
 import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
@@ -20,6 +21,7 @@ export default function ProjectDetailPage() {
   const rawId = params.id as string;
   const projectId = rawId ? parseInt(rawId) : 0;
   const isMobile = useIsMobile();
+  const { isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   // Custom hooks for operations
   const projectOps = useProjectDetailOperations(projectId);
@@ -93,23 +95,25 @@ export default function ProjectDetailPage() {
             </h1>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-            <Button
-              onClick={handleEditProject}
-              size={isMobile ? "icon" : "default"}
-            >
-              <Pencil className="size-4" />
-              {!isMobile && "Edit Project"}
-            </Button>
+          {isAdmin && (
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+              <Button
+                onClick={handleEditProject}
+                size={isMobile ? "icon" : "default"}
+              >
+                <Pencil className="size-4" />
+                {!isMobile && "Edit Project"}
+              </Button>
 
-            <Button
-              onClick={() => handleDeleteProject(project)}
-              size={isMobile ? "icon" : "default"}
-            >
-              <Trash2 className="size-4" />
-              {!isMobile && " Delete Project"}
-            </Button>
-          </div>
+              <Button
+                onClick={() => handleDeleteProject(project)}
+                size={isMobile ? "icon" : "default"}
+              >
+                <Trash2 className="size-4" />
+                {!isMobile && " Delete Project"}
+              </Button>
+            </div>
+          )}
         </div>
 
         <ProjectDetailsSection

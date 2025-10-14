@@ -3,10 +3,16 @@
 import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, LockOpen } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { TableActions } from "@/components/common/table/table-actions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { isColumnVisible } from "@/lib/table-utils";
 import { formatDate } from "@/lib/format-utils";
 import { USER_FIELDS } from "@/config/user-fields";
@@ -17,8 +23,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface UsersTableRowProps {
   user: User;
   tablePreferences: TablePreferences;
-  onEdit: (user: User) => void;
-  onDeleteConfirm: (userId: string) => Promise<void>;
+  onEdit?: (user: User) => void;
+  onDeleteConfirm?: (userId: string) => Promise<void>;
 }
 
 export const UsersTableRow = memo(function UsersTableRow({
@@ -40,6 +46,7 @@ export const UsersTableRow = memo(function UsersTableRow({
   // Memoize the delete handler to prevent recreation
   const handleDelete = useCallback(
     (user: User) => {
+      if (!onDeleteConfirm) return;
       showDeleteAlert({
         entity: "user",
         entityName: user.fullName,
@@ -51,6 +58,12 @@ export const UsersTableRow = memo(function UsersTableRow({
 
   return (
     <TableRow key={user.id}>
+      {isColumnVisible("id", tablePreferences) && (
+        <TableCell className="text-center">
+          <div className="text-pretty">{user.id}</div>
+        </TableCell>
+      )}
+
       {isColumnVisible("fullName", tablePreferences) && (
         <TableCell className="max-w-50 font-medium">
           <Link
@@ -76,24 +89,44 @@ export const UsersTableRow = memo(function UsersTableRow({
 
       {isColumnVisible("description", tablePreferences) && (
         <TableCell className="max-w-50">
-          <div className="text-pretty line-clamp-2">
-            {user.description || "—"}
-          </div>
+          {user.description ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="truncate">{user.description}</div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs font-medium whitespace-pre-wrap p-1">
+                    {user.description}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            "—"
+          )}
         </TableCell>
       )}
 
       {isColumnVisible("isLocked", tablePreferences) && (
-        <TableCell className="max-w-50">
-          {user.isLocked ? (
-            <Lock className="h-4 w-4 text-primary inline-block" />
-          ) : (
-            <LockOpen className="h-4 w-4 text-primary inline-block" />
+        <TableCell className="max-w-50 text-center">
+          {user.isLocked && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Lock className="h-4 w-4 text-primary inline-block" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Account is locked</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </TableCell>
       )}
 
       {isColumnVisible("lastLogin", tablePreferences) && (
-        <TableCell className="max-w-50">
+        <TableCell className="max-w-50 text-center">
           <div className="text-pretty">
             {user.lastLogin ? formatDate(user.lastLogin) : "Never"}
           </div>
@@ -101,13 +134,13 @@ export const UsersTableRow = memo(function UsersTableRow({
       )}
 
       {isColumnVisible("createdAt", tablePreferences) && (
-        <TableCell className="max-w-50">
+        <TableCell className="max-w-50 text-center">
           <div className="text-pretty">{formatDate(user.createdAt)}</div>
         </TableCell>
       )}
 
       {isColumnVisible("updatedAt", tablePreferences) && (
-        <TableCell className="max-w-50">
+        <TableCell className="max-w-50 text-center">
           <div className="text-pretty">{formatDate(user.updatedAt)}</div>
         </TableCell>
       )}
@@ -117,7 +150,7 @@ export const UsersTableRow = memo(function UsersTableRow({
         item={user}
         onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
-        onDelete={handleDelete}
+        onDelete={onDeleteConfirm ? handleDelete : undefined}
       />
     </TableRow>
   );

@@ -7,10 +7,10 @@ import { userSchema, type User } from "@/types/user";
 // GET /api/users/[id] - Get a specific user
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
 
     const results = await db
       .select()
@@ -48,14 +48,39 @@ export async function GET(
 // PUT /api/users/[id] - Update a user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
     const body = await request.json();
 
     // Validate the request body
     const validatedData = userSchema.partial().parse(body);
+
+    // Check if trying to lock an admin account or current user's account
+    if (
+      validatedData.isLocked !== undefined &&
+      validatedData.isLocked === true
+    ) {
+      // Fetch the user to check their role
+      const existingUser = await db
+        .select()
+        .from(appUsers)
+        .where(eq(appUsers.id, userId))
+        .limit(1);
+
+      if (existingUser.length === 0) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      // Prevent locking administrator accounts
+      if (existingUser[0].role === "Administrator") {
+        return NextResponse.json(
+          { error: "Cannot lock administrator accounts" },
+          { status: 403 }
+        );
+      }
+    }
 
     const nowISO = new Date().toISOString();
 
@@ -107,10 +132,10 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete a user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
+    const { id: userId } = await params;
 
     const result = await db
       .delete(appUsers)

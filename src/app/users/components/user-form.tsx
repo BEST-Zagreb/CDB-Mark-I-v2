@@ -22,18 +22,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { userSchema, type UserFormData, UserRole } from "@/types/user";
+import { useSession } from "@/lib/auth-client";
 
 interface UserFormProps {
   initialData?: UserFormData | null;
   onSubmit: (data: UserFormData) => Promise<void>;
   isLoading?: boolean;
+  editingUserId?: string;
 }
 
 export function UserForm({
   initialData,
   onSubmit,
   isLoading = false,
+  editingUserId,
 }: UserFormProps) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
+  // Determine if we should hide the lock checkbox
+  // Hide if editing own account OR if the account is an administrator
+  const isEditingOwnAccount = editingUserId && editingUserId === currentUserId;
+  const isAdminAccount = initialData?.role === UserRole.ADMINISTRATOR;
+  const shouldHideLockField = isEditingOwnAccount || isAdminAccount;
+
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -110,7 +122,7 @@ export function UserForm({
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={isLoading}
+                disabled={isLoading || !!isEditingOwnAccount}
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
@@ -153,28 +165,31 @@ export function UserForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="isLocked"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  disabled={isLoading}
-                />
-              </FormControl>
+        {/* Only show lock account checkbox if not editing own account and not admin account */}
+        {!shouldHideLockField && (
+          <FormField
+            control={form.control}
+            name="isLocked"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isLoading}
+                  />
+                </FormControl>
 
-              <div>
-                <FormLabel>Lock Account</FormLabel>
-                <FormDescription>
-                  If checked, this user will not be able to login.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
+                <div>
+                  <FormLabel>Lock Account</FormLabel>
+                  <FormDescription>
+                    If checked, this user will not be able to login.
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        )}
       </form>
     </Form>
   );

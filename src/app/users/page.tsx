@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { useUsersTable } from "@/app/users/hooks/use-users-table";
 import { useUserOperations } from "@/app/users/hooks/use-user-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { UserFormData } from "@/types/user";
 import { Suspense } from "react";
 
 export default function UsersPage() {
   const isMobile = useIsMobile();
+  const { isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   // Custom hooks for table management and user operations
   const {
@@ -45,8 +47,11 @@ export default function UsersPage() {
   // Transform editingUser to UserFormData for FormDialog
   const initialFormData: UserFormData | undefined = editingUser
     ? {
-        name: editingUser.name,
+        fullName: editingUser.fullName,
         email: editingUser.email,
+        role: editingUser.role,
+        description: editingUser.description,
+        isLocked: editingUser.isLocked,
       }
     : undefined;
 
@@ -60,10 +65,15 @@ export default function UsersPage() {
             </h1>
             <Badge variant="secondary">{users.length}</Badge>
           </div>
-          <Button onClick={handleCreateUser} size={isMobile ? "sm" : "default"}>
-            <Plus className="size-4" />
-            New User
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={handleCreateUser}
+              size={isMobile ? "sm" : "default"}
+            >
+              <Plus className="size-4" />
+              New User
+            </Button>
+          )}
         </div>
 
         {/* Search Bar and Column Selector */}
@@ -91,8 +101,8 @@ export default function UsersPage() {
             users={users}
             searchQuery={searchQuery}
             tablePreferences={tablePreferences}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
+            onEdit={isAdmin ? handleEditUser : undefined}
+            onDelete={isAdmin ? handleDeleteUser : undefined}
             onSortColumn={handleSortColumn}
           />
         )}
@@ -111,6 +121,7 @@ export default function UsersPage() {
             initialData={formProps.initialData}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
+            editingUserId={editingUser?.id}
           />
         )}
       </FormDialog>

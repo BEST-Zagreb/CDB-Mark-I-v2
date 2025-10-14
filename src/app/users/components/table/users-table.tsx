@@ -19,8 +19,8 @@ interface UsersTableProps {
   users: User[];
   searchQuery: string;
   tablePreferences: TablePreferences;
-  onEdit: (user: User) => void;
-  onDelete: (userId: string) => Promise<void>;
+  onEdit?: (user: User) => void;
+  onDelete?: (userId: string) => Promise<void>;
   onSortColumn: (field: keyof User) => void;
 }
 
@@ -40,7 +40,7 @@ export function UsersTable({
       const query = searchQuery.toLowerCase();
       filtered = users.filter(
         (user) =>
-          user.name.toLowerCase().includes(query) ||
+          user.fullName.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query)
       );
     }
@@ -54,13 +54,27 @@ export function UsersTable({
 
       // Handle different field types
       switch (sortField) {
-        case "name":
+        case "id":
+          aValue = a[sortField];
+          bValue = b[sortField];
+          break;
+        case "fullName":
         case "email":
+        case "role":
+        case "description":
           aValue = a[sortField];
           bValue = b[sortField];
           break;
         case "createdAt":
         case "updatedAt":
+          aValue = a[sortField] ? new Date(a[sortField]) : null;
+          bValue = b[sortField] ? new Date(b[sortField]) : null;
+          break;
+        case "isLocked":
+          aValue = a[sortField] ? "locked" : "unlocked";
+          bValue = b[sortField] ? "locked" : "unlocked";
+          break;
+        case "lastLogin":
           aValue = a[sortField] ? new Date(a[sortField]) : null;
           bValue = b[sortField] ? new Date(b[sortField]) : null;
           break;
@@ -123,13 +137,19 @@ export function UsersTable({
               if (!isColumnVisible(column.id, tablePreferences)) return null;
 
               return (
-                <TableHead key={column.id}>
+                <TableHead
+                  key={column.id}
+                  className={column.center ? "text-center" : ""}
+                >
                   <Button
                     variant="ghost"
                     onClick={() => onSortColumn(column.id as keyof User)}
                     className="h-auto p-0 font-bold hover:bg-transparent"
                   >
                     <span className="flex items-center gap-2">
+                      {column.icon && (
+                        <column.icon className="h-4 w-4 text-muted-foreground" />
+                      )}
                       {column.label}
                       {getSortIcon(column.id, tablePreferences)}
                     </span>

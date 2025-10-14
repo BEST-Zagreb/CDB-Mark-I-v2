@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { useProjectsTable } from "@/app/projects/hooks/use-projects-table";
 import { useProjectOperations } from "@/app/projects/hooks/use-project-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Project, ProjectFormData } from "@/types/project";
 import { Suspense } from "react";
 
 export default function ProjectsPage() {
   const isMobile = useIsMobile();
+  const { isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   // Custom hooks for table management and project operations
   const {
@@ -60,13 +62,15 @@ export default function ProjectsPage() {
             </h1>
             <Badge variant="secondary">{projects.length}</Badge>
           </div>
-          <Button
-            onClick={handleCreateProject}
-            size={isMobile ? "sm" : "default"}
-          >
-            <Plus className="size-4" />
-            New Project
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={handleCreateProject}
+              size={isMobile ? "sm" : "default"}
+            >
+              <Plus className="size-4" />
+              New Project
+            </Button>
+          )}
         </div>
 
         {/* Search Bar and Column Selector */}
@@ -94,8 +98,8 @@ export default function ProjectsPage() {
             projects={projects}
             searchQuery={searchQuery}
             tablePreferences={tablePreferences}
-            onEdit={handleEditProject}
-            onDelete={handleDeleteProject}
+            onEdit={isAdmin ? handleEditProject : undefined}
+            onDelete={isAdmin ? handleDeleteProject : undefined}
             onSortColumn={handleSortColumn}
           />
         )}

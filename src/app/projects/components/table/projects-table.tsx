@@ -20,8 +20,8 @@ interface VirtualizedProjectListProps {
   projects: Project[];
   searchQuery: string;
   tablePreferences: TablePreferences;
-  onEdit: (project: Project) => void;
-  onDelete: (projectId: number) => Promise<void>;
+  onEdit?: (project: Project) => void;
+  onDelete?: (projectId: number) => Promise<void>;
   onSortColumn: (field: keyof Project) => void;
 }
 

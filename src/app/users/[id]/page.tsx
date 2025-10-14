@@ -10,6 +10,7 @@ import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useUserDetailOperations } from "@/app/users/[id]/hooks/use-user-detail-operations";
 import { useCollaborations } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { UserFormData } from "@/types/user";
 import { UserDetailsSection } from "@/app/users/[id]/components/sections/user-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
@@ -19,6 +20,7 @@ export default function UserDetailPage() {
   const router = useRouter();
   const userId = params.id as string;
   const isMobile = useIsMobile();
+  const { isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   // Custom hooks for operations
   const userOps = useUserDetailOperations(userId);
@@ -42,7 +44,7 @@ export default function UserDetailPage() {
   const userCollaborations = useMemo(() => {
     if (!user) return [];
     return allCollaborations.filter(
-      (collab) => collab.responsible === user.name
+      (collab) => collab.responsible === user.fullName
     );
   }, [allCollaborations, user]);
 
@@ -65,8 +67,11 @@ export default function UserDetailPage() {
   // Transform user to UserFormData for FormDialog
   const initialFormData: UserFormData | undefined = user
     ? {
-        name: user.name,
+        fullName: user.fullName,
         email: user.email,
+        role: user.role,
+        description: user.description,
+        isLocked: user.isLocked,
       }
     : undefined;
 
@@ -97,26 +102,30 @@ export default function UserDetailPage() {
               <ArrowLeft className="size-5" />
             </Button>
 
-            <h1 className="text-3xl font-bold tracking-tight">{user.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {user.fullName}
+            </h1>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-            <Button
-              onClick={handleEditUser}
-              size={isMobile ? "icon" : "default"}
-            >
-              <Pencil className="size-4" />
-              {!isMobile && "Edit User"}
-            </Button>
+          {isAdmin && (
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+              <Button
+                onClick={handleEditUser}
+                size={isMobile ? "icon" : "default"}
+              >
+                <Pencil className="size-4" />
+                {!isMobile && "Edit User"}
+              </Button>
 
-            <Button
-              onClick={() => handleDeleteUser(user)}
-              size={isMobile ? "icon" : "default"}
-            >
-              <Trash2 className="size-4" />
-              {!isMobile && " Delete User"}
-            </Button>
-          </div>
+              <Button
+                onClick={() => handleDeleteUser(user)}
+                size={isMobile ? "icon" : "default"}
+              >
+                <Trash2 className="size-4" />
+                {!isMobile && " Delete User"}
+              </Button>
+            </div>
+          )}
         </div>
 
         <UserDetailsSection user={user} />
@@ -180,6 +189,7 @@ export default function UserDetailPage() {
             initialData={formProps.initialData}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
+            editingUserId={user?.id}
           />
         )}
       </FormDialog>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { User } from "@/types/user";
 
@@ -61,15 +62,16 @@ export function UserDetailsSection({ user }: UserDetailsSectionProps) {
 
           <div className="flex-1">
             <label className="text-sm font-medium text-muted-foreground">
-              Account Status
+              Account Locked Status
             </label>
             <p className="mt-1 text-sm">
               {user.isLocked ? (
-                <span className="text-destructive font-medium">Locked</span>
-              ) : (
-                <span className="text-green-600 dark:text-green-500 font-medium">
-                  Active
+                <span className="flex items-center gap-2 text-primary font-medium">
+                  <Lock className="h-4 w-4" />
+                  Locked
                 </span>
+              ) : (
+                <span className="font-medium">Unlocked</span>
               )}
             </p>
           </div>

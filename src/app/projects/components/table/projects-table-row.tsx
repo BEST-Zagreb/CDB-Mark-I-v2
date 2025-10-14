@@ -16,8 +16,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface ProjectsTableRowProps {
   project: Project;
   tablePreferences: TablePreferences;
-  onEdit: (project: Project) => void;
-  onDeleteConfirm: (projectId: number) => Promise<void>;
+  onEdit?: (project: Project) => void;
+  onDeleteConfirm?: (projectId: number) => Promise<void>;
 }
 
 export const ProjectsTableRow = memo(function ProjectTableRow({
@@ -39,6 +39,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
   // Memoize the delete handler to prevent recreation
   const handleDelete = useCallback(
     (project: Project) => {
+      if (!onDeleteConfirm) return;
       showDeleteAlert({
         entity: "project",
         entityName: project.name,
@@ -115,7 +116,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
         item={project}
         onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
-        onDelete={handleDelete}
+        onDelete={onDeleteConfirm ? handleDelete : undefined}
       />
     </TableRow>
   );
