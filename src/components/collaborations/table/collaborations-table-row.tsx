@@ -56,10 +56,17 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
 
   // Memoize the delete handler to prevent recreation
   const handleDelete = useCallback(
-    (collaboration: Collaboration) => {
+    (
+      collaboration: Collaboration & {
+        companyName?: string;
+        projectName?: string;
+      }
+    ) => {
+      const companyText = collaboration.companyName || "Unknown Company";
+      const projectText = collaboration.projectName || "Unknown Project";
       showDeleteAlert({
-        entity: "collaboration",
-        entityName: collaboration.responsible || "Unknown",
+        entityType: "collaboration",
+        entityDescription: `collaboration with "${companyText}" on "${projectText}"`,
         onConfirm: () => onDeleteConfirm(collaboration.id),
       });
     },

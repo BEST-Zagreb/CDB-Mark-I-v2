@@ -47,8 +47,8 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
   const handleDelete = useCallback(
     (company: Company) => {
       showDeleteAlert({
-        entity: "company",
-        entityName: company.name,
+        entityType: "company",
+        entityDescription: `company "${company.name}"`,
         onConfirm: () => onDeleteConfirm(company.id),
       });
     },

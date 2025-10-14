@@ -31,8 +31,8 @@ export function useUserDetailOperations(userId: string) {
 
   const handleDeleteUser = (user: User) => {
     showDeleteAlert({
-      entity: "user",
-      entityName: user.fullName,
+      entityType: "user",
+      entityDescription: `user "${user.fullName}"`,
       onConfirm: () => deleteUserMutation.mutate(user.id),
     });
   };

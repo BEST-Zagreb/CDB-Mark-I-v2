@@ -31,8 +31,8 @@ export function useProjectDetailOperations(projectId: number) {
 
   const handleDeleteProject = (project: Project) => {
     showDeleteAlert({
-      entity: "project",
-      entityName: project.name,
+      entityType: "project",
+      entityDescription: `project "${project.name}"`,
       onConfirm: () => deleteProjectMutation.mutate(project.id),
     });
   };

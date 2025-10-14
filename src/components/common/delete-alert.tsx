@@ -15,8 +15,8 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 interface DeleteAlertProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entity: string;
-  entityName: string;
+  entityType: string;
+  entityDescription: string;
   isLoading?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
@@ -25,8 +25,8 @@ interface DeleteAlertProps {
 export function DeleteAlert({
   open,
   onOpenChange,
-  entity,
-  entityName,
+  entityType,
+  entityDescription,
   isLoading = false,
   onCancel,
   onConfirm,
@@ -37,12 +37,12 @@ export function DeleteAlert({
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-6 w-6 text-destructive shrink-0" />
-            <AlertDialogTitle>Delete {entity}</AlertDialogTitle>
+            <AlertDialogTitle>Delete {entityType}</AlertDialogTitle>
           </div>
 
           <AlertDialogDescription>
-            Are you sure you want to delete &quot;{entityName}&quot;? This
-            action cannot be undone.
+            Are you sure you want to delete {entityDescription}? This action
+            cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

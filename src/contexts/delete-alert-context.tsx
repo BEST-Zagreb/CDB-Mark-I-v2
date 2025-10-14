@@ -4,8 +4,8 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { DeleteAlert } from "@/components/common/delete-alert";
 
 interface DeleteAlertConfig {
-  entity: string;
-  entityName?: string;
+  entityType: string;
+  entityDescription: string;
   onConfirm: () => void | Promise<void>;
 }
 
@@ -62,8 +62,8 @@ export function DeleteAlertProvider({ children }: DeleteAlertProviderProps) {
       <DeleteAlert
         open={isOpen}
         onOpenChange={setIsOpen}
-        entity={config?.entity || ""}
-        entityName={config?.entityName || ""}
+        entityType={config?.entityType || "item"}
+        entityDescription={config?.entityDescription || "this item"}
         isLoading={isLoading}
         onCancel={handleCancel}
         onConfirm={handleConfirm}

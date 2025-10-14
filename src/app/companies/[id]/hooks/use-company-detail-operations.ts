@@ -31,8 +31,8 @@ export function useCompanyDetailOperations(companyId: number) {
 
   const handleDeleteCompany = (company: Company) => {
     showDeleteAlert({
-      entity: "company",
-      entityName: company.name,
+      entityType: "company",
+      entityDescription: `company "${company.name}"`,
       onConfirm: () => deleteCompanyMutation.mutate(company.id),
     });
   };

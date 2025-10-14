@@ -48,8 +48,8 @@ export const UsersTableRow = memo(function UsersTableRow({
     (user: User) => {
       if (!onDeleteConfirm) return;
       showDeleteAlert({
-        entity: "user",
-        entityName: user.fullName,
+        entityType: "user",
+        entityDescription: `user "${user.fullName}"`,
         onConfirm: () => onDeleteConfirm(user.id),
       });
     },

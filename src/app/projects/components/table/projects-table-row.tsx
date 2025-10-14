@@ -41,8 +41,8 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
     (project: Project) => {
       if (!onDeleteConfirm) return;
       showDeleteAlert({
-        entity: "project",
-        entityName: project.name,
+        entityType: "project",
+        entityDescription: `project "${project.name}"`,
         onConfirm: () => onDeleteConfirm(project.id),
       });
     },
