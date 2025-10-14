@@ -11,10 +11,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogIn, LogOut, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function AuthButton() {
   const { data: session, isPending } = useSession();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   if (isPending) {
@@ -88,7 +90,7 @@ export function AuthButton() {
           <DropdownMenuItem
             onClick={async () => {
               await signOut();
-              window.location.href = "/";
+              router.push("/");
             }}
             className="cursor-pointer"
           >
