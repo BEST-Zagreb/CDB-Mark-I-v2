@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { userSchema, type User } from "@/types/user";
+import { userSchema, type User, type UserRoleType } from "@/types/user";
+import { checkIsAdmin } from "@/lib/server-auth";
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
@@ -26,7 +27,7 @@ export async function GET(
       id: u.id,
       fullName: u.fullName,
       email: u.email,
-      role: u.role as any,
+      role: u.role as UserRoleType,
       description: u.description,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
@@ -52,27 +53,56 @@ export async function PUT(
 ) {
   try {
     const { id: userId } = await params;
+    
+    // Check if user is an administrator or editing their own profile
+    const authCheck = await checkIsAdmin(request);
+    const isEditingOwnProfile = authCheck.userId === userId;
+    
+    if (!authCheck.isAdmin && !isEditingOwnProfile) {
+      return NextResponse.json(
+        { error: "Unauthorized: You can only edit your own profile" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate the request body
     const validatedData = userSchema.partial().parse(body);
+    
+    // If user is editing their own profile (non-admin), restrict what they can change
+    if (isEditingOwnProfile && !authCheck.isAdmin) {
+      // Non-admin users can only edit fullName and description
+      const allowedFields = ['fullName', 'description'];
+      const attemptedFields = Object.keys(validatedData);
+      const unauthorizedFields = attemptedFields.filter(
+        field => !allowedFields.includes(field)
+      );
+      
+      if (unauthorizedFields.length > 0) {
+        return NextResponse.json(
+          { error: `You can only edit your name and description. Cannot edit: ${unauthorizedFields.join(', ')}` },
+          { status: 403 }
+        );
+      }
+    }
 
-    // Check if trying to lock an admin account or current user's account
+    // Fetch the user to check their role
+    const existingUser = await db
+      .select()
+      .from(appUsers)
+      .where(eq(appUsers.id, userId))
+      .limit(1);
+
+    if (existingUser.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    
+    // Check if trying to lock an admin account
     if (
       validatedData.isLocked !== undefined &&
       validatedData.isLocked === true
     ) {
-      // Fetch the user to check their role
-      const existingUser = await db
-        .select()
-        .from(appUsers)
-        .where(eq(appUsers.id, userId))
-        .limit(1);
-
-      if (existingUser.length === 0) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-
       // Prevent locking administrator accounts
       if (existingUser[0].role === "Administrator") {
         return NextResponse.json(
@@ -102,7 +132,7 @@ export async function PUT(
       id: updatedUser.id,
       fullName: updatedUser.fullName,
       email: updatedUser.email,
-      role: updatedUser.role as any,
+      role: updatedUser.role as UserRoleType,
       description: updatedUser.description,
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
@@ -135,6 +165,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check if user is an administrator
+    const authCheck = await checkIsAdmin(request);
+    if (!authCheck.isAdmin) {
+      return NextResponse.json(
+        { error: authCheck.error || "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const { id: userId } = await params;
 
     const result = await db

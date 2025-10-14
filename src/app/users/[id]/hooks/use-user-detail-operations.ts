@@ -32,7 +32,7 @@ export function useUserDetailOperations(userId: string) {
   const handleDeleteUser = (user: User) => {
     showDeleteAlert({
       entity: "user",
-      entityName: user.name,
+      entityName: user.fullName,
       onConfirm: () => deleteUserMutation.mutate(user.id),
     });
   };

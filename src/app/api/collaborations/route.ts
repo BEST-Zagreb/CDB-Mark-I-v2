@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
 
-    let query = db
+    const baseQuery = db
       .select({
         id: collaborations.id,
         companyId: collaborations.companyId,
@@ -36,20 +36,21 @@ export async function GET(request: NextRequest) {
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
-      .leftJoin(projects, eq(collaborations.projectId, projects.id))
-      .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
+      .leftJoin(projects, eq(collaborations.projectId, projects.id));
 
+    let result;
     if (projectId) {
-      query = query.where(
-        eq(collaborations.projectId, parseInt(projectId))
-      ) as any;
+      result = await baseQuery
+        .where(eq(collaborations.projectId, parseInt(projectId)))
+        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
     } else if (companyId) {
-      query = query.where(
-        eq(collaborations.companyId, parseInt(companyId))
-      ) as any;
+      result = await baseQuery
+        .where(eq(collaborations.companyId, parseInt(companyId)))
+        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
+    } else {
+      result = await baseQuery
+        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
     }
-
-    const result = await query;
 
     const formattedCollaborations: Collaboration[] = result.map((row) => ({
       id: row.id,

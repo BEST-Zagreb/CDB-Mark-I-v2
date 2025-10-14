@@ -47,8 +47,8 @@ export function UsersTable({
 
     // Sort users
     return [...filtered].sort((a, b) => {
-      let aValue: string | Date | null;
-      let bValue: string | Date | null;
+      let aValue: string | number | null;
+      let bValue: string | number | null;
 
       const { sortField, sortDirection } = tablePreferences;
 
@@ -67,20 +67,22 @@ export function UsersTable({
           break;
         case "createdAt":
         case "updatedAt":
-          aValue = a[sortField] ? new Date(a[sortField]) : null;
-          bValue = b[sortField] ? new Date(b[sortField]) : null;
+          // Convert dates to timestamps for comparison
+          aValue = a[sortField] ? new Date(a[sortField]).getTime() : null;
+          bValue = b[sortField] ? new Date(b[sortField]).getTime() : null;
           break;
         case "isLocked":
           aValue = a[sortField] ? "locked" : "unlocked";
           bValue = b[sortField] ? "locked" : "unlocked";
           break;
         case "lastLogin":
-          aValue = a[sortField] ? new Date(a[sortField]) : null;
-          bValue = b[sortField] ? new Date(b[sortField]) : null;
+          // Convert dates to timestamps for comparison
+          aValue = a[sortField] ? new Date(a[sortField]).getTime() : null;
+          bValue = b[sortField] ? new Date(b[sortField]).getTime() : null;
           break;
         default:
-          aValue = a[sortField as keyof User] as string | Date | null;
-          bValue = b[sortField as keyof User] as string | Date | null;
+          aValue = a[sortField as keyof User] as string | number | null;
+          bValue = b[sortField as keyof User] as string | number | null;
       }
 
       // Handle null/undefined values
@@ -97,12 +99,6 @@ export function UsersTable({
       if (typeof aValue === "string" && typeof bValue === "string") {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
-      }
-
-      // Compare dates by time
-      if (aValue instanceof Date && bValue instanceof Date) {
-        aValue = aValue.getTime() as any;
-        bValue = bValue.getTime() as any;
       }
 
       // Both values are valid, compare normally

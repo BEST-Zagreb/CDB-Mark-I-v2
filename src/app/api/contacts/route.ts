@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
-    let query = db
+    const baseQuery = db
       .select({
         id: people.id,
         name: people.name,
@@ -21,14 +21,13 @@ export async function GET(request: NextRequest) {
         companyName: companies.name,
       })
       .from(people)
-      .leftJoin(companies, eq(people.companyId, companies.id))
-      .orderBy(people.name);
+      .leftJoin(companies, eq(people.companyId, companies.id));
 
-    if (companyId) {
-      query = query.where(eq(people.companyId, parseInt(companyId))) as any;
-    }
-
-    const result = await query;
+    const result = companyId
+      ? await baseQuery
+          .where(eq(people.companyId, parseInt(companyId)))
+          .orderBy(people.name)
+      : await baseQuery.orderBy(people.name);
 
     const contacts: Contact[] = result.map((row) => ({
       id: row.id,

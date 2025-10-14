@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers } from "@/db/schema";
 import { desc } from "drizzle-orm";
-import { userSchema, type User } from "@/types/user";
+import { userSchema, type User, type UserRoleType } from "@/types/user";
+import { checkIsAdmin } from "@/lib/server-auth";
 
 // GET /api/users - Get all users
 export async function GET() {
@@ -16,7 +17,7 @@ export async function GET() {
       id: u.id,
       fullName: u.fullName,
       email: u.email,
-      role: u.role as any,
+      role: u.role as UserRoleType,
       description: u.description,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
@@ -38,12 +39,19 @@ export async function GET() {
 // POST /api/users - Create a new user
 export async function POST(request: NextRequest) {
   try {
+    // Check if user is an administrator
+    const authCheck = await checkIsAdmin(request);
+    if (!authCheck.isAdmin) {
+      return NextResponse.json(
+        { error: authCheck.error || "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate the request body
     const validatedData = userSchema.parse(body);
-
-    const now = Date.now();
 
     const nowISO = new Date().toISOString();
 
@@ -58,7 +66,7 @@ export async function POST(request: NextRequest) {
         isLocked: validatedData.isLocked ?? false,
         createdAt: nowISO,
         updatedAt: nowISO,
-        addedBy: null, // TODO: Get from session
+        addedBy: authCheck.userId,
         lastLogin: null,
       })
       .returning();
@@ -70,7 +78,7 @@ export async function POST(request: NextRequest) {
         id: newUser.id,
         fullName: newUser.fullName,
         email: newUser.email,
-        role: newUser.role as any,
+        role: newUser.role as UserRoleType,
         description: newUser.description,
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,

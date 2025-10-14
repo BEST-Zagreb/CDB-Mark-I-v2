@@ -1,33 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Shield } from "lucide-react";
+import { Suspense } from "react";
+import { AuthRequiredAlert } from "@/components/common/auth-required-alert";
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const [showAuthAlert, setShowAuthAlert] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get("auth_required") === "true") {
-      setShowAuthAlert(true);
-    }
-  }, [searchParams]);
-
   return (
     <div className="max-w-5xl mx-auto w-full px-4">
-      {showAuthAlert && (
-        <div className="mt-4 w-fit mx-auto">
-          <Alert variant="destructive">
-            <Shield className="h-4 w-4" />
-            <AlertTitle>
-              Authentication is required for accessing this page.
-            </AlertTitle>
-          </Alert>
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <AuthRequiredAlert />
+      </Suspense>
 
       <div className="w-fit text-pretty flex items-center justify-center gap-6 mt-[30dvh] mx-auto">
         <Image

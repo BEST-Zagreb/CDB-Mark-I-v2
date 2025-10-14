@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { projects } from "@/db/schema";
 import { desc, sql } from "drizzle-orm";
 import { projectSchema, type Project } from "@/types/project";
+import { checkIsAdmin } from "@/lib/server-auth";
 
 // GET /api/projects - Get all projects
 export async function GET() {
@@ -44,6 +45,15 @@ export async function GET() {
 // POST /api/projects - Create a new project
 export async function POST(request: NextRequest) {
   try {
+    // Check if user is an administrator
+    const authCheck = await checkIsAdmin(request);
+    if (!authCheck.isAdmin) {
+      return NextResponse.json(
+        { error: authCheck.error || "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate the request body

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { userSchema, type UserFormData, UserRole } from "@/types/user";
 import { useSession } from "@/lib/auth-client";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 interface UserFormProps {
   initialData?: UserFormData | null;
@@ -38,6 +39,7 @@ export function UserForm({
   editingUserId,
 }: UserFormProps) {
   const { data: session } = useSession();
+  const { isAdmin } = useIsAdmin();
   const currentUserId = session?.user?.id;
 
   // Determine if we should hide the lock checkbox
@@ -45,6 +47,9 @@ export function UserForm({
   const isEditingOwnAccount = editingUserId && editingUserId === currentUserId;
   const isAdminAccount = initialData?.role === UserRole.ADMINISTRATOR;
   const shouldHideLockField = isEditingOwnAccount || isAdminAccount;
+
+  // Non-admin users editing their own profile can only edit name and description
+  const isRestrictedEdit = isEditingOwnAccount && !isAdmin;
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -59,7 +64,18 @@ export function UserForm({
 
   const handleSubmit = async (data: UserFormData) => {
     try {
-      await onSubmit(data);
+      // If non-admin editing their own profile, only send allowed fields
+      if (isRestrictedEdit) {
+        // Only include fullName and description for non-admin self-edit
+        const restrictedData: Partial<UserFormData> = {
+          fullName: data.fullName,
+          description: data.description,
+        };
+        await onSubmit(restrictedData as UserFormData);
+      } else {
+        await onSubmit(data);
+      }
+      
       if (!initialData) {
         // Reset form only for new users
         form.reset();
@@ -105,9 +121,10 @@ export function UserForm({
                   type="email"
                   placeholder="Enter user email"
                   {...field}
-                  disabled={isLoading}
+                  disabled={isLoading || !!isRestrictedEdit}
                 />
               </FormControl>
+
               <FormMessage />
             </FormItem>
           )}
@@ -122,7 +139,7 @@ export function UserForm({
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                disabled={isLoading || !!isEditingOwnAccount}
+                disabled={isLoading || !!isRestrictedEdit}
               >
                 <FormControl>
                   <SelectTrigger className="w-full">
@@ -142,6 +159,7 @@ export function UserForm({
                   <SelectItem value={UserRole.OBSERVER}>Observer</SelectItem>
                 </SelectContent>
               </Select>
+
               <FormMessage />
             </FormItem>
           )}

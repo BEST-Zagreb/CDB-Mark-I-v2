@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { projects } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { updateProjectSchema, type Project } from "@/types/project";
+import { checkIsAdmin } from "@/lib/server-auth";
 
 // Helper function to parse dates
 function parseDate(dateString: string | null): Date | null {
@@ -61,6 +62,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check if user is an administrator
+    const authCheck = await checkIsAdmin(request);
+    if (!authCheck.isAdmin) {
+      return NextResponse.json(
+        { error: authCheck.error || "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -140,6 +150,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check if user is an administrator
+    const authCheck = await checkIsAdmin(request);
+    if (!authCheck.isAdmin) {
+      return NextResponse.json(
+        { error: authCheck.error || "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const projectId = parseInt(id);
 

@@ -11,6 +11,7 @@ import { useUserDetailOperations } from "@/app/users/[id]/hooks/use-user-detail-
 import { useCollaborations } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useSession } from "@/lib/auth-client";
 import { UserFormData } from "@/types/user";
 import { UserDetailsSection } from "@/app/users/[id]/components/sections/user-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
@@ -21,6 +22,10 @@ export default function UserDetailPage() {
   const userId = params.id as string;
   const isMobile = useIsMobile();
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
+  const { data: session } = useSession();
+  
+  // Check if current user is viewing their own profile
+  const isOwnProfile = session?.user?.id === userId;
 
   // Custom hooks for operations
   const userOps = useUserDetailOperations(userId);
@@ -107,23 +112,25 @@ export default function UserDetailPage() {
             </h1>
           </div>
 
-          {isAdmin && (
+          {(isAdmin || isOwnProfile) && (
             <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
               <Button
                 onClick={handleEditUser}
                 size={isMobile ? "icon" : "default"}
               >
                 <Pencil className="size-4" />
-                {!isMobile && "Edit User"}
+                {!isMobile && (isOwnProfile && !isAdmin ? "Edit Profile" : "Edit User")}
               </Button>
 
-              <Button
-                onClick={() => handleDeleteUser(user)}
-                size={isMobile ? "icon" : "default"}
-              >
-                <Trash2 className="size-4" />
-                {!isMobile && " Delete User"}
-              </Button>
+              {isAdmin && (
+                <Button
+                  onClick={() => handleDeleteUser(user)}
+                  size={isMobile ? "icon" : "default"}
+                >
+                  <Trash2 className="size-4" />
+                  {!isMobile && " Delete User"}
+                </Button>
+              )}
             </div>
           )}
         </div>
