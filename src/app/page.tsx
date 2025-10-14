@@ -23,7 +23,7 @@ export default function Home() {
           <Alert variant="destructive">
             <Shield className="h-4 w-4" />
             <AlertTitle>
-              Authentication required for accessing this page.
+              Authentication is required for accessing this page.
             </AlertTitle>
           </Alert>
         </div>
