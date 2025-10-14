@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Building,
   Home,
+  Users,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -192,33 +193,53 @@ export const AppSidebar = memo(function AppSidebar() {
               </SidebarMenuItem>
 
               {/* Companies - only show when authenticated */}
+              {session && (
+                <SidebarMenuItem>
+                  <Collapsible
+                    open={openMenu === "companies"}
+                    onOpenChange={(open) =>
+                      setOpenMenu(open ? "companies" : null)
+                    }
+                    className="group/collapsible"
+                  >
+                    <div className="flex items-center">
+                      {/* Main link to companies page */}
+                      <SidebarMenuButton asChild className="flex-1">
+                        <Link
+                          href="/companies"
+                          className={`flex items-center gap-2 ${
+                            isActivePath("/companies")
+                              ? "text-primary bg-accent font-medium"
+                              : ""
+                          }`}
+                        >
+                          <Building className="size-5" />
+                          <span>Companies</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </div>
+                  </Collapsible>
+                </SidebarMenuItem>
+              )}
 
-              <SidebarMenuItem>
-                <Collapsible
-                  open={openMenu === "companies"}
-                  onOpenChange={(open) =>
-                    setOpenMenu(open ? "companies" : null)
-                  }
-                  className="group/collapsible"
-                >
-                  <div className="flex items-center">
-                    {/* Main link to companies page */}
-                    <SidebarMenuButton asChild className="flex-1">
-                      <Link
-                        href="/companies"
-                        className={`flex items-center gap-2 ${
-                          isActivePath("/companies")
-                            ? "text-primary bg-accent font-medium"
-                            : ""
-                        }`}
-                      >
-                        <Building className="size-5" />
-                        <span>Companies</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </div>
-                </Collapsible>
-              </SidebarMenuItem>
+              {/* Users - only show when authenticated */}
+              {session && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link
+                      href="/users"
+                      className={`flex items-center gap-2 ${
+                        isActivePath("/users")
+                          ? "text-primary bg-accent font-bold"
+                          : ""
+                      }`}
+                    >
+                      <Users className="size-5" />
+                      <span>Users</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -96,6 +96,20 @@ export const collaborationsRelations = relations(collaborations, ({ one }) => ({
   }),
 }));
 
+// App Users table (extends Better Auth user)
+export const appUsers = sqliteTable("app_users", {
+  id: text("id").primaryKey(), // References Better Auth user.id
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull(), // Administrator, Project responsible, Project team member, Observer
+  description: text("description"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+  addedBy: text("added_by"), // User ID who added this user
+  lastLogin: text("last_login"),
+  isLocked: integer("is_locked", { mode: "boolean" }).notNull().default(false),
+});
+
 // Better Auth tables
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -161,3 +175,6 @@ export type NewPerson = typeof people.$inferInsert;
 
 export type Collaboration = typeof collaborations.$inferSelect;
 export type NewCollaboration = typeof collaborations.$inferInsert;
+
+export type AppUser = typeof appUsers.$inferSelect;
+export type NewAppUser = typeof appUsers.$inferInsert;

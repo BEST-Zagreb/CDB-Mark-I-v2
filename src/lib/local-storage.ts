@@ -8,6 +8,7 @@ export type TableType =
   | "projects"
   | "companies"
   | "contacts"
+  | "users"
   | "collaborations-companies"
   | "collaborations-projects";
 
@@ -16,6 +17,7 @@ interface AppTablePreferences {
   projects?: TablePreferences;
   companies?: TablePreferences;
   contacts?: TablePreferences;
+  users?: TablePreferences;
   "collaborations-companies"?: TablePreferences;
   "collaborations-projects"?: TablePreferences;
 }

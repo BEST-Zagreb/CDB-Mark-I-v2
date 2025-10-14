@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Building, Home } from "lucide-react";
+import { FolderOpen, Building, Home, Users } from "lucide-react";
 import { JSX, useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -155,6 +155,37 @@ export default function Header(): JSX.Element {
                       )}
                     >
                       Companies
+                    </span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/users"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/users")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <Users
+                      className={cn(
+                        "size-5 transition-colors",
+                        isActivePath("/users")
+                          ? "text-primary"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/users")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    >
+                      Users
                     </span>
                   </Link>
                 </li>
