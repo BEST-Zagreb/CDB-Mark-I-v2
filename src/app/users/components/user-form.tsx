@@ -75,7 +75,7 @@ export function UserForm({
       } else {
         await onSubmit(data);
       }
-      
+
       if (!initialData) {
         // Reset form only for new users
         form.reset();

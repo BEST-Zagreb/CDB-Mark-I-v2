@@ -42,14 +42,22 @@ export async function GET(request: NextRequest) {
     if (projectId) {
       result = await baseQuery
         .where(eq(collaborations.projectId, parseInt(projectId)))
-        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
+        .orderBy(
+          desc(collaborations.updatedAt),
+          desc(collaborations.createdAt)
+        );
     } else if (companyId) {
       result = await baseQuery
         .where(eq(collaborations.companyId, parseInt(companyId)))
-        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
+        .orderBy(
+          desc(collaborations.updatedAt),
+          desc(collaborations.createdAt)
+        );
     } else {
-      result = await baseQuery
-        .orderBy(desc(collaborations.updatedAt), desc(collaborations.createdAt));
+      result = await baseQuery.orderBy(
+        desc(collaborations.updatedAt),
+        desc(collaborations.createdAt)
+      );
     }
 
     const formattedCollaborations: Collaboration[] = result.map((row) => ({

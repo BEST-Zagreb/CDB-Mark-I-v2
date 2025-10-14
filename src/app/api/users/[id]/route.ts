@@ -53,11 +53,11 @@ export async function PUT(
 ) {
   try {
     const { id: userId } = await params;
-    
+
     // Check if user is an administrator or editing their own profile
     const authCheck = await checkIsAdmin(request);
     const isEditingOwnProfile = authCheck.userId === userId;
-    
+
     if (!authCheck.isAdmin && !isEditingOwnProfile) {
       return NextResponse.json(
         { error: "Unauthorized: You can only edit your own profile" },
@@ -69,19 +69,23 @@ export async function PUT(
 
     // Validate the request body
     const validatedData = userSchema.partial().parse(body);
-    
+
     // If user is editing their own profile (non-admin), restrict what they can change
     if (isEditingOwnProfile && !authCheck.isAdmin) {
       // Non-admin users can only edit fullName and description
-      const allowedFields = ['fullName', 'description'];
+      const allowedFields = ["fullName", "description"];
       const attemptedFields = Object.keys(validatedData);
       const unauthorizedFields = attemptedFields.filter(
-        field => !allowedFields.includes(field)
+        (field) => !allowedFields.includes(field)
       );
-      
+
       if (unauthorizedFields.length > 0) {
         return NextResponse.json(
-          { error: `You can only edit your name and description. Cannot edit: ${unauthorizedFields.join(', ')}` },
+          {
+            error: `You can only edit your name and description. Cannot edit: ${unauthorizedFields.join(
+              ", "
+            )}`,
+          },
           { status: 403 }
         );
       }
@@ -97,7 +101,7 @@ export async function PUT(
     if (existingUser.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // Check if trying to lock an admin account
     if (
       validatedData.isLocked !== undefined &&

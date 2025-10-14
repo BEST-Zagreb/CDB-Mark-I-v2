@@ -23,7 +23,7 @@ export default function UserDetailPage() {
   const isMobile = useIsMobile();
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
   const { data: session } = useSession();
-  
+
   // Check if current user is viewing their own profile
   const isOwnProfile = session?.user?.id === userId;
 
@@ -119,7 +119,8 @@ export default function UserDetailPage() {
                 size={isMobile ? "icon" : "default"}
               >
                 <Pencil className="size-4" />
-                {!isMobile && (isOwnProfile && !isAdmin ? "Edit Profile" : "Edit User")}
+                {!isMobile &&
+                  (isOwnProfile && !isAdmin ? "Edit Profile" : "Edit User")}
               </Button>
 
               {isAdmin && (
