@@ -36,6 +36,7 @@ interface CollaborationsTableRowProps {
   onEdit: (collaboration: Collaboration) => void;
   onDeleteConfirm: (collaborationId: number) => Promise<void>;
   hiddenColumns?: string[];
+  currentUserName?: string;
 }
 
 export const CollaborationsTableRow = memo(function CollaborationTableRow({
@@ -44,8 +45,14 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
   onEdit,
   onDeleteConfirm,
   hiddenColumns = [],
+  currentUserName,
 }: CollaborationsTableRowProps) {
   const { showDeleteAlert } = useDeleteAlert();
+
+  // Check if the current user can edit/delete this collaboration
+  // User can edit if they're the responsible person, or if no currentUserName is passed (admin view)
+  const canEdit =
+    !currentUserName || collaboration.responsible === currentUserName;
 
   // Memoize the delete handler to prevent recreation
   const handleDelete = useCallback(
@@ -332,8 +339,8 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
       {/* Actions - Always visible */}
       <TableActions
         item={collaboration}
-        onEdit={onEdit}
-        onDelete={handleDelete}
+        onEdit={canEdit ? onEdit : undefined}
+        onDelete={canEdit ? handleDelete : undefined}
       />
     </TableRow>
   );

@@ -138,50 +138,12 @@ export default function UserDetailPage() {
 
         <UserDetailsSection user={user} />
 
-        {/* Show collaborations where this user is responsible */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold">
-            Collaborations ({userCollaborations.length})
-          </h2>
-          {userCollaborations.length > 0 ? (
-            <div className="space-y-2">
-              {userCollaborations.map((collab) => (
-                <div
-                  key={collab.id}
-                  className="p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">
-                        Company ID: {collab.companyId}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Project ID: {collab.projectId}
-                      </p>
-                      {collab.comment && (
-                        <p className="text-sm mt-1">{collab.comment}</p>
-                      )}
-                    </div>
-                    <div className="text-right text-sm">
-                      {collab.amount && (
-                        <p className="font-medium">€{collab.amount}</p>
-                      )}
-                      {collab.priority && (
-                        <p className="text-muted-foreground">
-                          {collab.priority}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center py-8">
-              No collaborations assigned to this user
-            </p>
-          )}
-        </div>
+        {/* Collaborations Section - showing all collaborations for this user */}
+        <CollaborationsSection
+          type="user"
+          id={user.fullName}
+          userName={user.fullName}
+        />
       </div>
 
       <FormDialog<UserFormData>

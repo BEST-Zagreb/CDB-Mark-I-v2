@@ -28,6 +28,7 @@ interface VirtualizedCollaborationListProps {
   onDelete: (collaborationId: number) => Promise<void>;
   onSortColumn: (field: string) => void;
   hiddenColumns?: string[];
+  currentUserName?: string;
 }
 
 export function CollaborationsTable({
@@ -38,6 +39,7 @@ export function CollaborationsTable({
   onDelete,
   onSortColumn,
   hiddenColumns = [],
+  currentUserName,
 }: VirtualizedCollaborationListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -242,6 +244,7 @@ export function CollaborationsTable({
                 onEdit={onEdit}
                 onDeleteConfirm={onDelete}
                 hiddenColumns={hiddenColumns}
+                currentUserName={currentUserName}
               />
             );
           })}

@@ -39,20 +39,20 @@ export const COLLABORATION_FIELDS: Array<{
   },
 
   {
-    id: "companyName",
-    label: "Company",
-    required: true,
-    sortable: true,
-    center: false,
-    icon: Building2,
-  },
-  {
     id: "projectName",
     label: "Project",
     required: true,
     sortable: true,
     center: false,
     icon: Briefcase,
+  },
+  {
+    id: "companyName",
+    label: "Company",
+    required: true,
+    sortable: true,
+    center: false,
+    icon: Building2,
   },
 
   {
