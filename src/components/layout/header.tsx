@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AuthButton } from "@/components/layout/auth-button";
 
 export default function Header(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -57,7 +58,8 @@ export default function Header(): JSX.Element {
                         pathname === "/" ? "text-primary" : "text-primary"
                       )}
                     >
-                      Company Database
+                      <span className="sm:hidden">CDB</span>
+                      <span className="hidden sm:inline">Company Database</span>
                     </span>
                   </Link>
                 </div>
@@ -157,6 +159,8 @@ export default function Header(): JSX.Element {
                   </Link>
                 </li>
               </ul>
+
+              <AuthButton />
             </div>
           </div>
         </nav>

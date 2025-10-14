@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
+import { db } from "@/lib/db";
+import { collaborations } from "@/db/schema";
+import { sql, isNotNull, ne, asc } from "drizzle-orm";
 
 // GET /api/collaborations/responsible - Get all unique responsible persons
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDatabase();
-
     // Get all unique responsible persons from collaborations
-    const result = await db.execute({
-      sql: `
-        SELECT DISTINCT responsible 
-        FROM collaborations 
-        WHERE responsible IS NOT NULL 
-          AND responsible != '' 
-        ORDER BY responsible ASC
-      `,
-      args: [],
-    });
-
-    const rows = result.rows as unknown as { responsible: string }[];
+    const result = await db
+      .selectDistinct({ responsible: collaborations.responsible })
+      .from(collaborations)
+      .where(
+        sql`${collaborations.responsible} IS NOT NULL AND ${collaborations.responsible} != ''`
+      )
+      .orderBy(asc(collaborations.responsible));
 
     // Extract just the responsible person names
-    const responsiblePersons = rows.map((row) => row.responsible);
+    const responsiblePersons = result
+      .map((row) => row.responsible)
+      .filter(Boolean);
 
     return NextResponse.json(responsiblePersons);
   } catch (error) {

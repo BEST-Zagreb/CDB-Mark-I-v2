@@ -33,6 +33,7 @@ import {
 import { projectService } from "@/services/project.service";
 import { Project } from "@/types/project";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
+import { useSession } from "@/lib/auth-client";
 
 type OpenSection = "projects" | "companies" | null;
 
@@ -42,6 +43,7 @@ export const AppSidebar = memo(function AppSidebar() {
   const [loadingProjects, setLoadingProjects] = useState(false);
   const { setOpen, open, state } = useSidebar();
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   // Helper function to check if a path is active
   const isActivePath = (path: string) => {
@@ -53,17 +55,30 @@ export const AppSidebar = memo(function AppSidebar() {
     setOpen(false);
   }, [pathname]);
 
-  // Fetch projects and companies when sidebar is expanded
+  // Fetch projects when sidebar is expanded and user is authenticated
   useEffect(() => {
-    if (state === "expanded") {
+    if (state === "expanded" && session) {
       setLoadingProjects(true);
       projectService
         .getAll()
-        .then(setProjects)
-        .catch(console.error)
+        .then((data) => {
+          // Ensure data is an array before setting
+          if (Array.isArray(data)) {
+            setProjects(data);
+          } else {
+            setProjects([]);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching projects:", error);
+          setProjects([]);
+        })
         .finally(() => setLoadingProjects(false));
+    } else if (!session) {
+      // Clear projects if no session
+      setProjects([]);
     }
-  }, [state]);
+  }, [state, session]);
 
   return (
     <Sidebar variant="floating" className="mt-24 h-fit">
@@ -97,7 +112,8 @@ export const AppSidebar = memo(function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Projects with collapsible list */}
+              {/* Projects with collapsible list - only show when authenticated */}
+
               <SidebarMenuItem>
                 <Collapsible
                   open={openMenu === "projects"}
@@ -121,49 +137,61 @@ export const AppSidebar = memo(function AppSidebar() {
                     </SidebarMenuButton>
 
                     {/* Separate chevron trigger for collapsible */}
-                    <CollapsibleTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                        <span className="sr-only">Toggle Projects</span>
-                      </button>
-                    </CollapsibleTrigger>
+                    {session && (
+                      <CollapsibleTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                          <span className="sr-only">Toggle Projects</span>
+                        </button>
+                      </CollapsibleTrigger>
+                    )}
                   </div>
 
-                  <CollapsibleContent>
-                    <SidebarMenuSub className="max-h-128 overflow-y-auto">
-                      {loadingProjects ? (
-                        <SidebarMenuSubItem>
-                          <BlocksWaveLoader size={32} />
-                        </SidebarMenuSubItem>
-                      ) : (
-                        projects.map((project) => (
-                          <SidebarMenuSubItem key={project.id}>
-                            <Link
-                              href={`/projects/${project.id}`}
-                              className={`flex items-center space-x-2 w-full rounded-md px-2 py-1 ${
-                                pathname === `/projects/${project.id}`
-                                  ? "bg-accent text-accent-foreground font-bold"
-                                  : "hover:bg-accent hover:text-accent-foreground"
-                              }`}
-                            >
-                              {/* <FileText className="h-4 w-4" /> */}
-                              <div className="flex flex-col min-w-0">
-                                <span className="truncate text-sm">
-                                  {project.name}
-                                </span>
-                              </div>
-                            </Link>
+                  {session && (
+                    <CollapsibleContent>
+                      <SidebarMenuSub className="max-h-128 overflow-y-auto">
+                        {loadingProjects ? (
+                          <SidebarMenuSubItem>
+                            <BlocksWaveLoader size={32} />
                           </SidebarMenuSubItem>
-                        ))
-                      )}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+                        ) : projects.length === 0 ? (
+                          <SidebarMenuSubItem>
+                            <div className="px-2 py-1 text-sm text-muted-foreground">
+                              No projects found
+                            </div>
+                          </SidebarMenuSubItem>
+                        ) : (
+                          projects.map((project) => (
+                            <SidebarMenuSubItem key={project.id}>
+                              <Link
+                                href={`/projects/${project.id}`}
+                                className={`flex items-center space-x-2 w-full rounded-md px-2 py-1 ${
+                                  pathname === `/projects/${project.id}`
+                                    ? "bg-accent text-accent-foreground font-bold"
+                                    : "hover:bg-accent hover:text-accent-foreground"
+                                }`}
+                              >
+                                {/* <FileText className="h-4 w-4" /> */}
+                                <div className="flex flex-col min-w-0">
+                                  <span className="truncate text-sm">
+                                    {project.name}
+                                  </span>
+                                </div>
+                              </Link>
+                            </SidebarMenuSubItem>
+                          ))
+                        )}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  )}
                 </Collapsible>
               </SidebarMenuItem>
+
+              {/* Companies - only show when authenticated */}
 
               <SidebarMenuItem>
                 <Collapsible

@@ -1,35 +1,23 @@
-import { createClient, Client } from "@libsql/client";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import * as schema from "@/db/schema";
 
 // Database client instance
-let db: Client | null = null;
+const client = createClient({
+  url: process.env.TURSO_DB_URL!,
+  authToken: process.env.TURSO_DB_TOKEN!,
+});
 
+// Drizzle ORM instance with schema
+export const db = drizzle(client, { schema });
+
+// Legacy function for backward compatibility during migration
 export async function getDatabase() {
-  if (!db) {
-    const url = process.env.TURSO_DB_URL;
-    const authToken = process.env.TURSO_DB_TOKEN;
-
-    if (!url || !authToken) {
-      throw new Error(
-        "TURSO_DB_URL and TURSO_DB_TOKEN environment variables are required"
-      );
-    }
-
-    db = createClient({
-      url,
-      authToken,
-    });
-
-    // Optimize for read-heavy workloads
-    await db.execute("PRAGMA foreign_keys = ON");
-  }
-  return db;
+  return client;
 }
 
 export async function closeDatabase() {
-  if (db) {
-    await db.close();
-    db = null;
-  }
+  await client.close();
 }
 
 // Graceful shutdown

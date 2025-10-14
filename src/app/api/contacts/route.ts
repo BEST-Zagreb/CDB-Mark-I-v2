@@ -1,57 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import { Contact, ContactDB } from "@/types/contact";
-
-function transformContact(dbContact: ContactDB): Contact {
-  return {
-    id: dbContact.id,
-    name: dbContact.name,
-    email: dbContact.email,
-    phone: dbContact.phone,
-    companyId: dbContact.company_id,
-    function: dbContact.function,
-    createdAt: dbContact.created_at ? new Date(dbContact.created_at) : null,
-  };
-}
+import { db } from "@/lib/db";
+import { people, companies } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { Contact } from "@/types/contact";
 
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDatabase();
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
-    let query = `
-      SELECT 
-        p.*,
-        c.name as companyName
-      FROM people p
-      LEFT JOIN companies c ON p.company_id = c.id
-    `;
-    const params: (string | number)[] = [];
+    let query = db
+      .select({
+        id: people.id,
+        name: people.name,
+        email: people.email,
+        phone: people.phone,
+        companyId: people.companyId,
+        function: people.function,
+        createdAt: people.createdAt,
+        companyName: companies.name,
+      })
+      .from(people)
+      .leftJoin(companies, eq(people.companyId, companies.id))
+      .orderBy(people.name);
 
     if (companyId) {
-      query += " WHERE p.company_id = ?";
-      params.push(parseInt(companyId));
+      query = query.where(eq(people.companyId, parseInt(companyId))) as any;
     }
 
-    query += " ORDER BY p.name ASC";
+    const result = await query;
 
-    const result = await db.execute({
-      sql: query,
-      args: params,
-    });
-
-    const rows = result.rows as unknown as (ContactDB & {
-      companyName?: string;
-    })[];
-
-    const contacts = rows.map((row) => {
-      const contact = transformContact(row);
-      if (row.companyName) {
-        contact.companyName = row.companyName;
-      }
-      return contact;
-    });
+    const contacts: Contact[] = result.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      companyId: row.companyId ?? 0,
+      function: row.function,
+      createdAt: row.createdAt ? new Date(row.createdAt) : null,
+      companyName: row.companyName ?? undefined,
+    }));
 
     return NextResponse.json(contacts);
   } catch (error) {
@@ -66,32 +54,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const db = await getDatabase();
 
-    const result = await db.execute({
-      sql: `
-        INSERT INTO people (name, email, phone, company_id, function, created_at)
-        VALUES (?, ?, ?, ?, ?, datetime('now'))
-      `,
-      args: [
-        data.name,
-        data.email || null,
-        data.phone || null,
-        data.companyId,
-        data.function || null,
-      ],
-    });
+    const result = await db
+      .insert(people)
+      .values({
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        companyId: data.companyId,
+        function: data.function || null,
+        createdAt: new Date().toISOString(),
+      })
+      .returning();
 
-    const getResult = await db.execute({
-      sql: "SELECT * FROM people WHERE id = ?",
-      args: [result.lastInsertRowid!],
-    });
+    const insertedContact = result[0];
 
-    const insertedContact = getResult.rows[0] as unknown as ContactDB;
+    const contact: Contact = {
+      id: insertedContact.id,
+      name: insertedContact.name,
+      email: insertedContact.email,
+      phone: insertedContact.phone,
+      companyId: insertedContact.companyId ?? 0,
+      function: insertedContact.function,
+      createdAt: insertedContact.createdAt
+        ? new Date(insertedContact.createdAt)
+        : null,
+    };
 
-    return NextResponse.json(transformContact(insertedContact), {
-      status: 201,
-    });
+    return NextResponse.json(contact, { status: 201 });
   } catch (error) {
     console.error("Error creating contact:", error);
     return NextResponse.json(

@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import { Contact, ContactDB } from "@/types/contact";
-
-function transformContact(dbContact: ContactDB): Contact {
-  return {
-    id: dbContact.id,
-    name: dbContact.name,
-    email: dbContact.email,
-    phone: dbContact.phone,
-    companyId: dbContact.company_id,
-    function: dbContact.function,
-    createdAt: dbContact.created_at ? new Date(dbContact.created_at) : null,
-  };
-}
+import { db } from "@/lib/db";
+import { people, companies } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { Contact } from "@/types/contact";
 
 export async function GET(
   request: NextRequest,
@@ -29,32 +19,32 @@ export async function GET(
       );
     }
 
-    const db = await getDatabase();
+    const result = await db
+      .select({
+        id: people.id,
+        name: people.name,
+        email: people.email,
+        phone: people.phone,
+        companyId: people.companyId,
+        function: people.function,
+        createdAt: people.createdAt,
+        companyName: companies.name,
+      })
+      .from(people)
+      .leftJoin(companies, eq(people.companyId, companies.id))
+      .where(eq(people.companyId, companyId))
+      .orderBy(people.name);
 
-    const result = await db.execute({
-      sql: `
-        SELECT 
-          p.*,
-          c.name as companyName
-        FROM people p
-        LEFT JOIN companies c ON p.company_id = c.id
-        WHERE p.company_id = ?
-        ORDER BY p.name ASC
-      `,
-      args: [companyId],
-    });
-
-    const rows = result.rows as unknown as (ContactDB & {
-      companyName?: string;
-    })[];
-
-    const contacts = rows.map((row) => {
-      const contact = transformContact(row);
-      if (row.companyName) {
-        contact.companyName = row.companyName;
-      }
-      return contact;
-    });
+    const contacts: Contact[] = result.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      companyId: row.companyId ?? 0,
+      function: row.function,
+      createdAt: row.createdAt ? new Date(row.createdAt) : null,
+      companyName: row.companyName ?? undefined,
+    }));
 
     return NextResponse.json(contacts);
   } catch (error) {

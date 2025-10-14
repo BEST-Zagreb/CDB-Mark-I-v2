@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import { Contact, ContactDB } from "@/types/contact";
-
-function transformContact(dbContact: ContactDB): Contact {
-  return {
-    id: dbContact.id,
-    name: dbContact.name,
-    email: dbContact.email,
-    phone: dbContact.phone,
-    companyId: dbContact.company_id,
-    function: dbContact.function,
-    createdAt: dbContact.created_at ? new Date(dbContact.created_at) : null,
-  };
-}
+import { db } from "@/lib/db";
+import { people, companies } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { Contact } from "@/types/contact";
 
 export async function GET(
   request: NextRequest,
@@ -29,36 +19,37 @@ export async function GET(
       );
     }
 
-    const db = await getDatabase();
+    const result = await db
+      .select({
+        id: people.id,
+        name: people.name,
+        email: people.email,
+        phone: people.phone,
+        companyId: people.companyId,
+        function: people.function,
+        createdAt: people.createdAt,
+        companyName: companies.name,
+      })
+      .from(people)
+      .leftJoin(companies, eq(people.companyId, companies.id))
+      .where(eq(people.id, contactId));
 
-    const query = `
-      SELECT 
-        p.*,
-        c.name as companyName
-      FROM people p
-      LEFT JOIN companies c ON p.company_id = c.id
-      WHERE p.id = ?
-    `;
-
-    const result = await db.execute({
-      sql: query,
-      args: [contactId],
-    });
-
-    const row = result.rows[0] as unknown as
-      | (ContactDB & {
-          companyName?: string;
-        })
-      | undefined;
+    const row = result[0];
 
     if (!row) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const contact = transformContact(row);
-    if (row.companyName) {
-      contact.companyName = row.companyName;
-    }
+    const contact: Contact = {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      companyId: row.companyId ?? 0,
+      function: row.function,
+      createdAt: row.createdAt ? new Date(row.createdAt) : null,
+      companyName: row.companyName ?? undefined,
+    };
 
     return NextResponse.json(contact);
   } catch (error) {
@@ -86,36 +77,38 @@ export async function PUT(
     }
 
     const data = await request.json();
-    const db = await getDatabase();
 
-    await db.execute({
-      sql: `
-        UPDATE people 
-        SET name = ?, email = ?, phone = ?, company_id = ?, function = ?
-        WHERE id = ?
-      `,
-      args: [
-        data.name,
-        data.email || null,
-        data.phone || null,
-        data.companyId,
-        data.function || null,
-        contactId,
-      ],
-    });
+    const result = await db
+      .update(people)
+      .set({
+        name: data.name,
+        email: data.email || null,
+        phone: data.phone || null,
+        companyId: data.companyId,
+        function: data.function || null,
+      })
+      .where(eq(people.id, contactId))
+      .returning();
 
-    const getResult = await db.execute({
-      sql: "SELECT * FROM people WHERE id = ?",
-      args: [contactId],
-    });
-
-    if (getResult.rows.length === 0) {
+    if (result.length === 0) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
-    const updatedContact = getResult.rows[0] as unknown as ContactDB;
+    const updatedContact = result[0];
 
-    return NextResponse.json(transformContact(updatedContact));
+    const contact: Contact = {
+      id: updatedContact.id,
+      name: updatedContact.name,
+      email: updatedContact.email,
+      phone: updatedContact.phone,
+      companyId: updatedContact.companyId ?? 0,
+      function: updatedContact.function,
+      createdAt: updatedContact.createdAt
+        ? new Date(updatedContact.createdAt)
+        : null,
+    };
+
+    return NextResponse.json(contact);
   } catch (error) {
     console.error("Error updating contact:", error);
     return NextResponse.json(
@@ -140,14 +133,12 @@ export async function DELETE(
       );
     }
 
-    const db = await getDatabase();
+    const result = await db
+      .delete(people)
+      .where(eq(people.id, contactId))
+      .returning();
 
-    const result = await db.execute({
-      sql: "DELETE FROM people WHERE id = ?",
-      args: [contactId],
-    });
-
-    if (result.rowsAffected === 0) {
+    if (result.length === 0) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 

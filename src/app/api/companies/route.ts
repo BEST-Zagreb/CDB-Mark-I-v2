@@ -1,34 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import {
-  companySchema,
-  type CompanyDB,
-  type Company,
-  dbCompanyToCompany,
-} from "@/types/company";
+import { db } from "@/lib/db";
+import { companies, collaborations } from "@/db/schema";
+import { eq, asc, sql } from "drizzle-orm";
+import { companySchema, type Company } from "@/types/company";
 
 // GET /api/companies - Get all companies
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDatabase();
-
     // Get all companies with do not contact status
-    const result = await db.execute(`
-        SELECT 
-          c.*,
-          CASE WHEN EXISTS(
-            SELECT 1 FROM collaborations 
-            WHERE company_id = c.id AND contact_in_future = 0
-          ) THEN 1 ELSE 0 END as hasDoNotContact
-        FROM companies c
-        ORDER BY name ASC
-      `);
+    const results = await db
+      .select({
+        id: companies.id,
+        name: companies.name,
+        url: companies.url,
+        address: companies.address,
+        city: companies.city,
+        zip: companies.zip,
+        country: companies.country,
+        phone: companies.phone,
+        budgetingMonth: companies.budgetingMonth,
+        comment: companies.comment,
+        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
+          SELECT 1 FROM ${collaborations} 
+          WHERE ${collaborations.companyId} = ${companies.id} 
+          AND ${collaborations.contactInFuture} = 0
+        ) THEN 1 ELSE 0 END`,
+      })
+      .from(companies)
+      .orderBy(asc(companies.name));
 
-    const companies = result.rows as unknown as (CompanyDB & {
-      hasDoNotContact: number;
-    })[];
-
-    const formattedCompanies: Company[] = companies.map(dbCompanyToCompany);
+    const formattedCompanies: Company[] = results.map((company) => ({
+      id: company.id!,
+      name: company.name || "",
+      url: company.url || "",
+      address: company.address || "",
+      city: company.city || "",
+      zip: company.zip || "",
+      country: company.country || "",
+      phone: company.phone || "",
+      budgeting_month: company.budgetingMonth || "",
+      comment: company.comment || "",
+      hasDoNotContact: company.hasDoNotContact === 1,
+    }));
 
     return NextResponse.json(formattedCompanies);
   } catch (error) {
@@ -48,44 +61,64 @@ export async function POST(request: NextRequest) {
     // Validate the request body
     const validatedData = companySchema.parse(body);
 
-    const db = await getDatabase();
+    // Insert new company
+    const result = await db
+      .insert(companies)
+      .values({
+        name: validatedData.name,
+        url: validatedData.url || null,
+        address: validatedData.address || null,
+        city: validatedData.city || null,
+        zip: validatedData.zip || null,
+        country: validatedData.country || null,
+        phone: validatedData.phone || null,
+        budgetingMonth: validatedData.budgeting_month || null,
+        comment: validatedData.comment || null,
+      })
+      .returning();
 
-    const result = await db.execute({
-      sql: `
-      INSERT INTO companies (name, url, address, city, zip, country, phone, budgeting_month, comment)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-      args: [
-        validatedData.name,
-        validatedData.url || null,
-        validatedData.address || null,
-        validatedData.city || null,
-        validatedData.zip || null,
-        validatedData.country || null,
-        validatedData.phone || null,
-        validatedData.budgeting_month || null,
-        validatedData.comment || null,
-      ],
-    });
+    if (result && result.length > 0) {
+      const newCompanyId = result[0].id;
 
-    if (result.lastInsertRowid) {
       // Fetch the created company with do not contact status
-      const getResult = await db.execute({
-        sql: `
-        SELECT 
-          c.*,
-          CASE WHEN EXISTS(
-            SELECT 1 FROM collaborations 
-            WHERE company_id = c.id AND contact_in_future = 0
-          ) THEN 1 ELSE 0 END as hasDoNotContact
-        FROM companies c WHERE c.id = ?
-      `,
-        args: [result.lastInsertRowid],
-      });
+      const newCompanyData = await db
+        .select({
+          id: companies.id,
+          name: companies.name,
+          url: companies.url,
+          address: companies.address,
+          city: companies.city,
+          zip: companies.zip,
+          country: companies.country,
+          phone: companies.phone,
+          budgetingMonth: companies.budgetingMonth,
+          comment: companies.comment,
+          hasDoNotContact: sql<number>`CASE WHEN EXISTS(
+            SELECT 1 FROM ${collaborations} 
+            WHERE ${collaborations.companyId} = ${companies.id} 
+            AND ${collaborations.contactInFuture} = 0
+          ) THEN 1 ELSE 0 END`,
+        })
+        .from(companies)
+        .where(eq(companies.id, newCompanyId!));
 
-      const newCompany = getResult.rows[0] as unknown as CompanyDB;
+      const company = newCompanyData[0];
 
-      return NextResponse.json(dbCompanyToCompany(newCompany), { status: 201 });
+      const formattedCompany: Company = {
+        id: company.id!,
+        name: company.name || "",
+        url: company.url || "",
+        address: company.address || "",
+        city: company.city || "",
+        zip: company.zip || "",
+        country: company.country || "",
+        phone: company.phone || "",
+        budgeting_month: company.budgetingMonth || "",
+        comment: company.comment || "",
+        hasDoNotContact: company.hasDoNotContact === 1,
+      };
+
+      return NextResponse.json(formattedCompany, { status: 201 });
     } else {
       throw new Error("Failed to create company");
     }

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import {
-  updateProjectSchema,
-  type ProjectDB,
-  dbProjectToProject,
-} from "@/types/project";
+import { db } from "@/lib/db";
+import { projects } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { updateProjectSchema, type Project } from "@/types/project";
+
+// Helper function to parse dates
+function parseDate(dateString: string | null): Date | null {
+  if (!dateString) return null;
+  return new Date(dateString);
+}
 
 // GET /api/projects/[id] - Get a specific project
 export async function GET(
@@ -22,19 +26,26 @@ export async function GET(
       );
     }
 
-    const db = await getDatabase();
-    const result = await db.execute({
-      sql: "SELECT * FROM projects WHERE id = ?",
-      args: [projectId],
-    });
+    const result = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
 
-    const project = result.rows[0] as unknown as ProjectDB | undefined;
+    const project = result[0];
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    return NextResponse.json(dbProjectToProject(project));
+    const formattedProject: Project = {
+      id: project.id,
+      name: project.name ?? "",
+      frGoal: project.frGoal ?? 0,
+      created_at: parseDate(project.createdAt),
+      updated_at: parseDate(project.updatedAt),
+    };
+
+    return NextResponse.json(formattedProject);
   } catch (error) {
     console.error("Error fetching project:", error);
     return NextResponse.json(
@@ -65,64 +76,47 @@ export async function PUT(
     // Validate the request body
     const validatedData = updateProjectSchema.parse(body);
 
-    const db = await getDatabase();
-
     // Check if project exists
-    const checkResult = await db.execute({
-      sql: "SELECT id FROM projects WHERE id = ?",
-      args: [projectId],
-    });
+    const checkResult = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
 
-    if (checkResult.rows.length === 0) {
+    if (checkResult.length === 0) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Build dynamic update query
-    const updateFields: string[] = [];
-    const updateValues: (string | number | null)[] = [];
+    // Build update object dynamically
+    const updateData: Partial<typeof projects.$inferInsert> = {
+      updatedAt: new Date().toISOString(),
+    };
 
     if (validatedData.name !== undefined) {
-      updateFields.push("name = ?");
-      updateValues.push(validatedData.name);
+      updateData.name = validatedData.name;
     }
 
     if (validatedData.frGoal !== undefined) {
-      updateFields.push("fr_goal = ?");
-      updateValues.push(validatedData.frGoal);
+      updateData.frGoal = validatedData.frGoal;
     }
 
-    if (updateFields.length === 0) {
-      return NextResponse.json(
-        { error: "No fields to update" },
-        { status: 400 }
-      );
-    }
+    // Perform the update
+    const result = await db
+      .update(projects)
+      .set(updateData)
+      .where(eq(projects.id, projectId))
+      .returning();
 
-    // Always update the updated_at timestamp
-    updateFields.push("updated_at = ?");
-    updateValues.push(new Date().toISOString());
-    updateValues.push(projectId);
+    const updatedProject = result[0];
 
-    const updateSql = `
-      UPDATE projects
-      SET ${updateFields.join(", ")}
-      WHERE id = ?
-    `;
+    const formattedProject: Project = {
+      id: updatedProject.id,
+      name: updatedProject.name ?? "",
+      frGoal: updatedProject.frGoal ?? 0,
+      created_at: parseDate(updatedProject.createdAt),
+      updated_at: parseDate(updatedProject.updatedAt),
+    };
 
-    await db.execute({
-      sql: updateSql,
-      args: updateValues,
-    });
-
-    // Fetch and return the updated project
-    const getResult = await db.execute({
-      sql: "SELECT * FROM projects WHERE id = ?",
-      args: [projectId],
-    });
-
-    const updatedProject = getResult.rows[0] as unknown as ProjectDB;
-
-    return NextResponse.json(dbProjectToProject(updatedProject));
+    return NextResponse.json(formattedProject);
   } catch (error) {
     console.error("Error updating project:", error);
 
@@ -156,29 +150,18 @@ export async function DELETE(
       );
     }
 
-    const db = await getDatabase();
-
     // Check if project exists before deletion
-    const checkResult = await db.execute({
-      sql: "SELECT id FROM projects WHERE id = ?",
-      args: [projectId],
-    });
+    const checkResult = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, projectId));
 
-    if (checkResult.rows.length === 0) {
+    if (checkResult.length === 0) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const deleteResult = await db.execute({
-      sql: "DELETE FROM projects WHERE id = ?",
-      args: [projectId],
-    });
-
-    if (deleteResult.rowsAffected === 0) {
-      return NextResponse.json(
-        { error: "Failed to delete project" },
-        { status: 500 }
-      );
-    }
+    // Delete the project (cascading deletes will handle related records)
+    await db.delete(projects).where(eq(projects.id, projectId));
 
     return NextResponse.json(
       { message: "Project and all associated data deleted successfully" },

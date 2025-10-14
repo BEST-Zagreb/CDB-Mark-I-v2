@@ -1,29 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import {
-  projectSchema,
-  type ProjectDB,
-  type Project,
-  dbProjectToProject,
-} from "@/types/project";
+import { db } from "@/lib/db";
+import { projects } from "@/db/schema";
+import { desc, sql } from "drizzle-orm";
+import { projectSchema, type Project } from "@/types/project";
 
 // GET /api/projects - Get all projects
 export async function GET() {
   try {
-    const db = await getDatabase();
-    const result = await db.execute({
-      sql: `
-        SELECT * FROM projects 
-        ORDER BY 
-          CASE WHEN created_at IS NULL OR created_at = 'null' THEN 1 ELSE 0 END,
-          created_at DESC
-      `,
-      args: [],
+    const results = await db
+      .select()
+      .from(projects)
+      .orderBy(
+        sql`CASE WHEN ${projects.createdAt} IS NULL OR ${projects.createdAt} = 'null' THEN 1 ELSE 0 END`,
+        desc(projects.createdAt)
+      );
+
+    const formattedProjects: Project[] = results.map((project) => {
+      const parseDate = (dateStr: string | null): Date | null => {
+        if (!dateStr || dateStr === "null") return null;
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      };
+
+      return {
+        id: project.id!,
+        name: project.name || "",
+        frGoal: project.frGoal,
+        created_at: parseDate(project.createdAt),
+        updated_at: parseDate(project.updatedAt),
+      };
     });
-
-    const projects: ProjectDB[] = result.rows as unknown as ProjectDB[];
-
-    const formattedProjects: Project[] = projects.map(dbProjectToProject);
 
     return NextResponse.json(formattedProjects);
   } catch (error) {
@@ -43,27 +49,36 @@ export async function POST(request: NextRequest) {
     // Validate the request body
     const validatedData = projectSchema.parse(body);
 
-    const db = await getDatabase();
     const now = new Date().toISOString();
 
-    const result = await db.execute({
-      sql: `
-        INSERT INTO projects (name, fr_goal, created_at, updated_at)
-        VALUES (?, ?, ?, ?)
-      `,
-      args: [validatedData.name, validatedData.frGoal || null, now, now],
-    });
+    const result = await db
+      .insert(projects)
+      .values({
+        name: validatedData.name,
+        frGoal: validatedData.frGoal || null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
 
-    if (result.lastInsertRowid) {
-      // Fetch the created project
-      const getResult = await db.execute({
-        sql: "SELECT * FROM projects WHERE id = ?",
-        args: [result.lastInsertRowid],
-      });
+    if (result && result.length > 0) {
+      const newProject = result[0];
 
-      const newProject: ProjectDB = getResult.rows[0] as unknown as ProjectDB;
+      const parseDate = (dateStr: string | null): Date | null => {
+        if (!dateStr || dateStr === "null") return null;
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      };
 
-      return NextResponse.json(dbProjectToProject(newProject), { status: 201 });
+      const formattedProject: Project = {
+        id: newProject.id!,
+        name: newProject.name || "",
+        frGoal: newProject.frGoal,
+        created_at: parseDate(newProject.createdAt),
+        updated_at: parseDate(newProject.updatedAt),
+      };
+
+      return NextResponse.json(formattedProject, { status: 201 });
     } else {
       throw new Error("Failed to create project");
     }

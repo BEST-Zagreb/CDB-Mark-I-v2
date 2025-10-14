@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDatabase } from "@/lib/db";
-import {
-  updateCompanySchema,
-  type CompanyDB,
-  dbCompanyToCompany,
-} from "@/types/company";
+import { db } from "@/lib/db";
+import { companies, collaborations } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { updateCompanySchema, type Company } from "@/types/company";
 
 // GET /api/companies/[id] - Get a specific company
 export async function GET(
@@ -22,27 +20,47 @@ export async function GET(
       );
     }
 
-    const db = await getDatabase();
-    const result = await db.execute({
-      sql: `
-      SELECT 
-        c.*,
-        CASE WHEN EXISTS(
-          SELECT 1 FROM collaborations 
-          WHERE company_id = c.id AND contact_in_future = 0
-        ) THEN 1 ELSE 0 END as hasDoNotContact
-      FROM companies c WHERE c.id = ?
-    `,
-      args: [companyId],
-    });
+    const results = await db
+      .select({
+        id: companies.id,
+        name: companies.name,
+        url: companies.url,
+        address: companies.address,
+        city: companies.city,
+        zip: companies.zip,
+        country: companies.country,
+        phone: companies.phone,
+        budgetingMonth: companies.budgetingMonth,
+        comment: companies.comment,
+        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
+          SELECT 1 FROM ${collaborations} 
+          WHERE ${collaborations.companyId} = ${companies.id} 
+          AND ${collaborations.contactInFuture} = 0
+        ) THEN 1 ELSE 0 END`,
+      })
+      .from(companies)
+      .where(eq(companies.id, companyId));
 
-    const company = result.rows[0] as unknown as CompanyDB | undefined;
-
-    if (!company) {
+    if (!results || results.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
-    return NextResponse.json(dbCompanyToCompany(company));
+    const company = results[0];
+    const formattedCompany: Company = {
+      id: company.id!,
+      name: company.name || "",
+      url: company.url || "",
+      address: company.address || "",
+      city: company.city || "",
+      zip: company.zip || "",
+      country: company.country || "",
+      phone: company.phone || "",
+      budgeting_month: company.budgetingMonth || "",
+      comment: company.comment || "",
+      hasDoNotContact: company.hasDoNotContact === 1,
+    };
+
+    return NextResponse.json(formattedCompany);
   } catch (error) {
     console.error("Error fetching company:", error);
     return NextResponse.json(
@@ -73,102 +91,98 @@ export async function PUT(
     // Validate the request body
     const validatedData = updateCompanySchema.parse(body);
 
-    const db = await getDatabase();
-
     // Check if company exists
-    const checkResult = await db.execute({
-      sql: "SELECT id FROM companies WHERE id = ?",
-      args: [companyId],
-    });
+    const existing = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(eq(companies.id, companyId));
 
-    if (checkResult.rows.length === 0) {
+    if (existing.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
-    // Build dynamic update query
-    const updateFields: string[] = [];
-    const updateValues: (string | number | null)[] = [];
+    // Build update object with only provided fields
+    const updateData: Partial<typeof companies.$inferInsert> = {};
 
     if (validatedData.name !== undefined) {
-      updateFields.push("name = ?");
-      updateValues.push(validatedData.name);
+      updateData.name = validatedData.name;
     }
-
     if (validatedData.url !== undefined) {
-      updateFields.push("url = ?");
-      updateValues.push(validatedData.url || null);
+      updateData.url = validatedData.url || null;
     }
-
     if (validatedData.address !== undefined) {
-      updateFields.push("address = ?");
-      updateValues.push(validatedData.address || null);
+      updateData.address = validatedData.address || null;
     }
-
     if (validatedData.city !== undefined) {
-      updateFields.push("city = ?");
-      updateValues.push(validatedData.city || null);
+      updateData.city = validatedData.city || null;
     }
-
     if (validatedData.zip !== undefined) {
-      updateFields.push("zip = ?");
-      updateValues.push(validatedData.zip || null);
+      updateData.zip = validatedData.zip || null;
     }
-
     if (validatedData.country !== undefined) {
-      updateFields.push("country = ?");
-      updateValues.push(validatedData.country || null);
+      updateData.country = validatedData.country || null;
     }
-
     if (validatedData.phone !== undefined) {
-      updateFields.push("phone = ?");
-      updateValues.push(validatedData.phone || null);
+      updateData.phone = validatedData.phone || null;
     }
-
     if (validatedData.budgeting_month !== undefined) {
-      updateFields.push("budgeting_month = ?");
-      updateValues.push(validatedData.budgeting_month || null);
+      updateData.budgetingMonth = validatedData.budgeting_month || null;
     }
-
     if (validatedData.comment !== undefined) {
-      updateFields.push("comment = ?");
-      updateValues.push(validatedData.comment || null);
+      updateData.comment = validatedData.comment || null;
     }
 
-    if (updateFields.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
         { error: "No fields to update" },
         { status: 400 }
       );
     }
 
-    updateValues.push(companyId);
-
-    await db.execute({
-      sql: `
-      UPDATE companies 
-      SET ${updateFields.join(", ")} 
-      WHERE id = ?
-    `,
-      args: updateValues,
-    });
+    // Update the company
+    await db
+      .update(companies)
+      .set(updateData)
+      .where(eq(companies.id, companyId));
 
     // Fetch and return the updated company
-    const getResult = await db.execute({
-      sql: `
-      SELECT 
-        c.*,
-        CASE WHEN EXISTS(
-          SELECT 1 FROM collaborations 
-          WHERE company_id = c.id AND contact_in_future = 0
-        ) THEN 1 ELSE 0 END as hasDoNotContact
-      FROM companies c WHERE c.id = ?
-    `,
-      args: [companyId],
-    });
+    const results = await db
+      .select({
+        id: companies.id,
+        name: companies.name,
+        url: companies.url,
+        address: companies.address,
+        city: companies.city,
+        zip: companies.zip,
+        country: companies.country,
+        phone: companies.phone,
+        budgetingMonth: companies.budgetingMonth,
+        comment: companies.comment,
+        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
+          SELECT 1 FROM ${collaborations} 
+          WHERE ${collaborations.companyId} = ${companies.id} 
+          AND ${collaborations.contactInFuture} = 0
+        ) THEN 1 ELSE 0 END`,
+      })
+      .from(companies)
+      .where(eq(companies.id, companyId));
 
-    const updatedCompany = getResult.rows[0] as unknown as CompanyDB;
+    const company = results[0];
+    const formattedCompany: Company = {
+      id: company.id!,
+      name: company.name || "",
+      url: company.url || "",
+      address: company.address || "",
+      city: company.city || "",
+      zip: company.zip || "",
+      country: company.country || "",
+      phone: company.phone || "",
+      budgeting_month: company.budgetingMonth || "",
+      comment: company.comment || "",
+      hasDoNotContact: company.hasDoNotContact === 1,
+    };
 
-    return NextResponse.json(dbCompanyToCompany(updatedCompany));
+    return NextResponse.json(formattedCompany);
   } catch (error) {
     console.error("Error updating company:", error);
 
@@ -202,29 +216,18 @@ export async function DELETE(
       );
     }
 
-    const db = await getDatabase();
-
     // Check if company exists before deletion
-    const checkResult = await db.execute({
-      sql: "SELECT id FROM companies WHERE id = ?",
-      args: [companyId],
-    });
+    const existing = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(eq(companies.id, companyId));
 
-    if (checkResult.rows.length === 0) {
+    if (existing.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 });
     }
 
-    const deleteResult = await db.execute({
-      sql: "DELETE FROM companies WHERE id = ?",
-      args: [companyId],
-    });
-
-    if (deleteResult.rowsAffected === 0) {
-      return NextResponse.json(
-        { error: "Failed to delete company" },
-        { status: 500 }
-      );
-    }
+    // Delete the company (cascading deletes will handle related records)
+    await db.delete(companies).where(eq(companies.id, companyId));
 
     return NextResponse.json(
       { message: "Company and all associated data deleted successfully" },
