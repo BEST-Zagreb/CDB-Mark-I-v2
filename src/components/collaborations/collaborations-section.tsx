@@ -135,14 +135,36 @@ export function CollaborationsSection({
   const finalIsSubmitting = type === "user" ? userIsSubmitting : isSubmitting;
 
   const storageKey = (
-    type === "company" ? "collaborations-companies" : "collaborations-projects"
-  ) as "collaborations-companies" | "collaborations-projects";
+    type === "company"
+      ? "collaborations-companies"
+      : type === "project"
+      ? "collaborations-projects"
+      : "collaborations-users"
+  ) as
+    | "collaborations-companies"
+    | "collaborations-projects"
+    | "collaborations-users";
+  // hiddenColumns: columns to completely hide (not show in selector or table)
+  // - company page: hide companyName (redundant since we're viewing a specific company)
+  // - project page: hide projectName (redundant since we're viewing a specific project)
+  // - user page: show both (need context for which company/project)
   const hiddenColumns =
     type === "company"
       ? ["companyName"]
       : type === "project"
       ? ["projectName"]
       : [];
+
+  // requiredColumns: columns that must always be visible (can't be deselected)
+  // - company page: projectName is required
+  // - project page: companyName is required
+  // - user page: both are required
+  const requiredColumns =
+    type === "company"
+      ? ["projectName"]
+      : type === "project"
+      ? ["companyName"]
+      : ["projectName", "companyName"];
 
   const {
     tablePreferences,
@@ -152,7 +174,7 @@ export function CollaborationsSection({
     handleSearchChange,
     collaborationFields,
     visibleColumnsString,
-  } = useCollaborationsTable(storageKey, hiddenColumns);
+  } = useCollaborationsTable(storageKey, hiddenColumns, requiredColumns);
 
   // Transform editingCollaboration to CollaborationFormData for FormDialog
   const initialFormData: CollaborationFormData | undefined = finalEditingCollab

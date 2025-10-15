@@ -23,20 +23,68 @@ const collaborationsDefaultPreferences: TablePreferences = {
   sortDirection: "desc",
 };
 
+const collaborationsUsersDefaultPreferences: TablePreferences = {
+  visibleColumns: [
+    "projectName",
+    "companyName",
+    "priority",
+    "contactName",
+    "comment",
+  ],
+  sortField: "priority",
+  sortDirection: "desc",
+};
+
 export function useCollaborationsTable(
   storageKey:
     | "collaborations-companies"
-    | "collaborations-projects" = "collaborations-companies",
-  hiddenColumns: string[] = []
+    | "collaborations-projects"
+    | "collaborations-users" = "collaborations-companies",
+  hiddenColumns: string[] = [],
+  requiredColumns: string[] = []
 ) {
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Select default preferences based on storage key
+  const defaultPreferences =
+    storageKey === "collaborations-users"
+      ? collaborationsUsersDefaultPreferences
+      : collaborationsDefaultPreferences;
+
   // Table preferences state for collaborations
   const [tablePreferences, setTablePreferences] = useState(() => {
-    return getTablePreferences(storageKey, collaborationsDefaultPreferences);
+    const prefs = getTablePreferences(storageKey, defaultPreferences);
+    // Ensure requiredColumns are included in visible columns
+    const visibleColumnsSet = new Set(prefs.visibleColumns);
+    requiredColumns.forEach((col) => visibleColumnsSet.add(col));
+    return {
+      ...prefs,
+      visibleColumns: Array.from(visibleColumnsSet),
+    };
   });
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Ensure requiredColumns are always in visibleColumns when they change
+  useEffect(() => {
+    setTablePreferences((prev) => {
+      const visibleColumnsSet = new Set(prev.visibleColumns);
+      let hasChanges = false;
+      requiredColumns.forEach((col) => {
+        if (!visibleColumnsSet.has(col)) {
+          visibleColumnsSet.add(col);
+          hasChanges = true;
+        }
+      });
+      if (hasChanges) {
+        return {
+          ...prev,
+          visibleColumns: Array.from(visibleColumnsSet),
+        };
+      }
+      return prev;
+    });
+  }, [requiredColumns]);
 
   // Save table preferences to localStorage
   useEffect(() => {
@@ -80,9 +128,10 @@ export function useCollaborationsTable(
       }).map((field) => ({
         id: field.id as string,
         label: field.label,
-        required: field.required,
+        // Mark field as required if it's in the original required list OR in requiredColumns
+        required: field.required || requiredColumns.includes(field.id),
       })),
-    [hiddenColumns]
+    [hiddenColumns, requiredColumns]
   );
 
   const visibleColumnsString = useMemo(
