@@ -17,6 +17,8 @@ export const collaborationKeys = {
     [...collaborationKeys.all, "project", projectId] as const,
   byCompany: (companyId: number) =>
     [...collaborationKeys.all, "company", companyId] as const,
+  byResponsible: (responsible: string) =>
+    [...collaborationKeys.all, "responsible", responsible] as const,
 };
 
 // Custom hooks
@@ -42,6 +44,15 @@ export function useCollaborationsByCompany(companyId: number) {
     queryKey: collaborationKeys.byCompany(companyId),
     queryFn: () => collaborationService.getByCompany(companyId),
     enabled: !!companyId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useCollaborationsByResponsible(responsible: string) {
+  return useQuery({
+    queryKey: collaborationKeys.byResponsible(responsible),
+    queryFn: () => collaborationService.getByResponsible(responsible),
+    enabled: !!responsible,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -72,6 +83,14 @@ export function useCreateCollaboration() {
       if (newCollaboration?.companyId) {
         queryClient.invalidateQueries({
           queryKey: collaborationKeys.byCompany(newCollaboration.companyId),
+        });
+      }
+      // Invalidate responsible person specific queries
+      if (newCollaboration?.responsible) {
+        queryClient.invalidateQueries({
+          queryKey: collaborationKeys.byResponsible(
+            newCollaboration.responsible
+          ),
         });
       }
       toast.success("Collaboration created successfully");
@@ -111,6 +130,14 @@ export function useUpdateCollaboration() {
           queryClient.invalidateQueries({
             queryKey: collaborationKeys.byCompany(
               updatedCollaboration.companyId
+            ),
+          });
+        }
+        // Invalidate responsible person specific queries
+        if (updatedCollaboration.responsible) {
+          queryClient.invalidateQueries({
+            queryKey: collaborationKeys.byResponsible(
+              updatedCollaboration.responsible
             ),
           });
         }

@@ -19,7 +19,7 @@ import { CollaborationForm } from "@/components/collaborations/form/collaboratio
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import {
-  useCollaborations,
+  useCollaborationsByResponsible,
   useUpdateCollaboration,
   useDeleteCollaboration,
 } from "@/hooks/collaborations/use-collaborations";
@@ -46,9 +46,9 @@ export function CollaborationsSection() {
   const { data: user } = useUser(pageType === "users" ? pageId : "");
   const userName = user?.fullName;
 
-  // For users type, fetch all collaborations and filter client-side
-  const { data: allCollabs = [], isLoading: isLoadingAllCollabs } =
-    useCollaborations();
+  // For users type, fetch collaborations filtered by responsible on server-side
+  const { data: userCollaborations = [], isLoading: isLoadingUserCollabs } =
+    useCollaborationsByResponsible(userName || "");
 
   // Only use the operations hook for companies/projects types
   const operationsResult =
@@ -83,16 +83,16 @@ export function CollaborationsSection() {
     isSubmitting: false,
   };
 
-  // Filter collaborations for users type
+  // Select collaborations based on page type (server-side filtering for all types)
   const collaborations = useMemo(() => {
     if (pageType === "users") {
-      return allCollabs.filter((collab) => collab.responsible === userName);
+      return userCollaborations;
     }
     return typeCollaborations;
-  }, [pageType, allCollabs, userName, typeCollaborations]);
+  }, [pageType, userCollaborations, typeCollaborations]);
 
   const isLoadingCollaborations =
-    pageType === "users" ? isLoadingAllCollabs : isLoadingType;
+    pageType === "users" ? isLoadingUserCollabs : isLoadingType;
 
   // For user type, we need separate state and handlers
   const [userDialogOpen, setUserDialogOpen] = useState(false);

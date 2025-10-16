@@ -4,12 +4,13 @@ import { collaborations, companies, people, projects } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
-// GET /api/collaborations - Get all collaborations with optional project or company filter
+// GET /api/collaborations - Get all collaborations with optional project, company, or responsible filter
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
+    const responsible = searchParams.get("responsible");
 
     const baseQuery = db
       .select({
@@ -49,6 +50,13 @@ export async function GET(request: NextRequest) {
     } else if (companyId) {
       result = await baseQuery
         .where(eq(collaborations.companyId, parseInt(companyId)))
+        .orderBy(
+          desc(collaborations.updatedAt),
+          desc(collaborations.createdAt)
+        );
+    } else if (responsible) {
+      result = await baseQuery
+        .where(eq(collaborations.responsible, responsible))
         .orderBy(
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)

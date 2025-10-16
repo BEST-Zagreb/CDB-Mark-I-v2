@@ -51,6 +51,13 @@ export const collaborationService = {
     return response.data;
   },
 
+  // Get collaborations for a specific responsible person
+  async getByResponsible(responsible: string): Promise<Collaboration[]> {
+    const params = { responsible };
+    const response = await axios.get(API_BASE, { params });
+    return response.data;
+  },
+
   // Get all unique responsible persons
   async getResponsiblePersons(): Promise<string[]> {
     const response = await axios.get(`${API_BASE}/responsible`);
