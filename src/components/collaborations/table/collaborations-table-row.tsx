@@ -296,7 +296,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               <div className="text-pretty">
                 {formatCurrency(
                   collaboration.amount || 0,
-                  collaboration.updatedAt
+                  collaboration.updatedAt || collaboration.createdAt
                 )}
               </div>
             </TableCell>
