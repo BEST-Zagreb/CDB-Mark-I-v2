@@ -121,7 +121,7 @@ export default function ProjectDetailPage() {
           collaborations={collaborations}
         />
 
-        <CollaborationsSection type="project" id={projectId} />
+        <CollaborationsSection />
       </div>
 
       <FormDialog<ProjectFormData>

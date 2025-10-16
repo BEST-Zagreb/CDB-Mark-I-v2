@@ -130,7 +130,7 @@ export default function CompanyDetailPage() {
         <ContactsSection companyId={companyId} />
 
         {/* Collaborations Section */}
-        <CollaborationsSection type="company" id={companyId} />
+        <CollaborationsSection />
       </div>
 
       <FormDialog<CompanyFormData>

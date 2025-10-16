@@ -26,27 +26,39 @@ import {
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Suspense, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface CollaborationsSectionProps {
-  type: "company" | "project" | "user";
-  id: number | string;
-  userName?: string; // Required when type is "user"
+  userName?: string; // Required when on user page
 }
 
 export function CollaborationsSection({
-  type,
-  id,
   userName,
 }: CollaborationsSectionProps) {
+  const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // For user type, fetch all collaborations and filter client-side
+  // Extract type and id from pathname
+  // Format: /companies/:id, /projects/:id, /users/:id
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const pageType = pathSegments[0] as "companies" | "projects" | "users";
+  const pageId = pathSegments[1] as string;
+
+  // Parse id as number for companies/projects
+  const id = pageType !== "users" ? parseInt(pageId) : pageId;
+
+  // For users type, fetch all collaborations and filter client-side
   const { data: allCollabs = [], isLoading: isLoadingAllCollabs } =
     useCollaborations();
 
-  // Only use the operations hook for company/project types
+  // Only use the operations hook for companies/projects types
   const operationsResult =
-    type !== "user" ? useCollaborationsOperations(type, id as number) : null;
+    pageType !== "users"
+      ? useCollaborationsOperations(
+          pageType === "companies" ? "company" : "project",
+          id as number
+        )
+      : null;
 
   const {
     collaborations: typeCollaborations,
@@ -72,16 +84,16 @@ export function CollaborationsSection({
     isSubmitting: false,
   };
 
-  // Filter collaborations for user type
+  // Filter collaborations for users type
   const collaborations = useMemo(() => {
-    if (type === "user") {
+    if (pageType === "users") {
       return allCollabs.filter((collab) => collab.responsible === userName);
     }
     return typeCollaborations;
-  }, [type, allCollabs, userName, typeCollaborations]);
+  }, [pageType, allCollabs, userName, typeCollaborations]);
 
   const isLoadingCollaborations =
-    type === "user" ? isLoadingAllCollabs : isLoadingType;
+    pageType === "users" ? isLoadingAllCollabs : isLoadingType;
 
   // For user type, we need separate state and handlers
   const [userDialogOpen, setUserDialogOpen] = useState(false);
@@ -119,28 +131,37 @@ export function CollaborationsSection({
   const userIsSubmitting =
     updateCollabMutation.isPending || deleteCollabMutation.isPending;
 
-  // Use user-specific handlers for user type
+  // Use user-specific handlers for users type
   const finalEditHandler =
-    type === "user" ? handleUserEditCollaboration : handleEditCollaboration;
+    pageType === "users"
+      ? handleUserEditCollaboration
+      : handleEditCollaboration;
   const finalDeleteHandler =
-    type === "user" ? handleUserDeleteCollaboration : handleDeleteCollaboration;
+    pageType === "users"
+      ? handleUserDeleteCollaboration
+      : handleDeleteCollaboration;
   const finalDialogOpen =
-    type === "user" ? userDialogOpen : collaborationDialogOpen;
+    pageType === "users" ? userDialogOpen : collaborationDialogOpen;
   const finalSetDialogOpen =
-    type === "user" ? setUserDialogOpen : setCollaborationDialogOpen;
+    pageType === "users" ? setUserDialogOpen : setCollaborationDialogOpen;
   const finalEditingCollab =
-    type === "user" ? userEditingCollab : editingCollaboration;
+    pageType === "users" ? userEditingCollab : editingCollaboration;
   const finalSubmitHandler =
-    type === "user" ? handleUserSubmitCollaboration : handleSubmitCollaboration;
-  const finalIsSubmitting = type === "user" ? userIsSubmitting : isSubmitting;
+    pageType === "users"
+      ? handleUserSubmitCollaboration
+      : handleSubmitCollaboration;
+  const finalIsSubmitting =
+    pageType === "users" ? userIsSubmitting : isSubmitting;
 
   const storageKey = (
-    type === "company" ? "collaborations-companies" : "collaborations-projects"
+    pageType === "companies"
+      ? "collaborations-companies"
+      : "collaborations-projects"
   ) as "collaborations-companies" | "collaborations-projects";
   const hiddenColumns =
-    type === "company"
+    pageType === "companies"
       ? ["companyName"]
-      : type === "project"
+      : pageType === "projects"
       ? ["projectName"]
       : [];
 
@@ -190,17 +211,17 @@ export function CollaborationsSection({
               </CardTitle>
 
               <CardDescription>
-                {type === "company"
+                {pageType === "companies"
                   ? "Collaboration history with this company"
-                  : type === "project"
+                  : pageType === "projects"
                   ? "Companies to contact regarding this project"
                   : `Collaborations where ${userName} is responsible`}
               </CardDescription>
             </div>
 
-            {type !== "user" && (
+            {pageType !== "users" && (
               <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-                {type === "project" && (
+                {pageType === "projects" && (
                   <Button
                     onClick={handleAddCollaboration}
                     size={isMobile ? "icon" : "default"}
@@ -252,7 +273,7 @@ export function CollaborationsSection({
               onDelete={finalDeleteHandler}
               onSortColumn={handleSortColumn}
               hiddenColumns={hiddenColumns}
-              currentUserName={type === "user" ? userName : undefined}
+              currentUserName={pageType === "users" ? userName : undefined}
             />
           )}
         </CardContent>
@@ -269,8 +290,8 @@ export function CollaborationsSection({
         {(formProps) => (
           <CollaborationForm
             initialData={formProps.initialData}
-            companyId={type === "company" ? (id as number) : undefined}
-            projectId={type === "project" ? (id as number) : undefined}
+            companyId={pageType === "companies" ? (id as number) : undefined}
+            projectId={pageType === "projects" ? (id as number) : undefined}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
           />
