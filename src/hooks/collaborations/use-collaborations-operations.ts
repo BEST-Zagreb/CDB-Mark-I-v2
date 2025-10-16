@@ -19,17 +19,11 @@ export function useCollaborationsOperations(
     Collaboration | undefined
   >();
 
-  // React Query hooks - always call both but use based on type
-  const companyCollaborations = useCollaborationsByCompany(
-    type === "company" ? id : 0
-  );
-  const projectCollaborations = useCollaborationsByProject(
-    type === "project" ? id : 0
-  );
-
   // Use the appropriate data based on type
   const { data: collaborations = [], isLoading: isLoadingCollaborations } =
-    type === "company" ? companyCollaborations : projectCollaborations;
+    type === "company"
+      ? useCollaborationsByCompany(id)
+      : useCollaborationsByProject(id);
 
   // Mutation hooks
   const createCollaborationMutation = useCreateCollaboration();

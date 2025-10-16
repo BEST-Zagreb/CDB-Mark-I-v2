@@ -196,6 +196,19 @@
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+    background-image: radial-gradient(
+      circle,
+      oklch(0.7 0.05 290) 2px,
+      transparent 1.5px
+    );
+    background-size: 3rem 3rem;
+  }
+  .dark body {
+    background-image: radial-gradient(
+      circle,
+      oklch(0.6 0.05 290) 2px,
+      transparent 1.5px
+    );
   }
 }
 

@@ -53,6 +53,18 @@ export function CollaborationsTable({
 
       // Handle different field types
       switch (sortField) {
+        case "status":
+          // Calculate status priority: successful (4) > meeting (3) > contacted (2) > letter (1) > not contacted (0)
+          const getStatusPriority = (collab: Collaboration) => {
+            if (collab.successful) return 4;
+            if (collab.meeting) return 3;
+            if (collab.contacted) return 2;
+            if (collab.letter) return 1;
+            return 0; // Not contacted yet
+          };
+          aValue = getStatusPriority(a);
+          bValue = getStatusPriority(b);
+          break;
         case "priority":
           const priorityOrder = { High: 3, Medium: 2, Low: 1 };
           aValue = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;

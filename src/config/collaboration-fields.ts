@@ -93,7 +93,7 @@ export const COLLABORATION_FIELDS: Array<{
     id: "status",
     label: "Status",
     required: false,
-    sortable: false, // Status column won't be sortable since it combines multiple fields
+    sortable: true, // Sort by status priority: successful > meeting > contacted > letter > not contacted
     center: false,
     icon: Pickaxe,
   },
