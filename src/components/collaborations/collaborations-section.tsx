@@ -18,14 +18,9 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
-import {
-  useCollaborationsByResponsible,
-  useUpdateCollaboration,
-  useDeleteCollaboration,
-} from "@/hooks/collaborations/use-collaborations";
-import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import { CollaborationFormData } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/app/users/hooks/use-users";
 
@@ -33,35 +28,20 @@ export function CollaborationsSection() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // Extract type and id from pathname
-  // Format: /companies/:id, /projects/:id, /users/:id
+  // Extract type and id from pathname for UI logic
   const pathSegments = pathname.split("/").filter(Boolean);
   const pageType = pathSegments[0] as "companies" | "projects" | "users";
   const pageId = pathSegments[1] as string;
-
-  // Parse id as number for companies/projects
   const id = pageType !== "users" ? parseInt(pageId) : pageId;
 
-  // Fetch user data if on users page
+  // Fetch user data if on users page (for display purposes)
   const { data: user } = useUser(pageType === "users" ? pageId : "");
   const userName = user?.fullName;
 
-  // For users type, fetch collaborations filtered by responsible on server-side
-  const { data: userCollaborations = [], isLoading: isLoadingUserCollabs } =
-    useCollaborationsByResponsible(userName || "");
-
-  // Only use the operations hook for companies/projects types
-  const operationsResult =
-    pageType !== "users"
-      ? useCollaborationsOperations(
-          pageType === "companies" ? "company" : "project",
-          id as number
-        )
-      : null;
-
+  // Use the unified operations hook - it handles everything internally
   const {
-    collaborations: typeCollaborations,
-    isLoadingCollaborations: isLoadingType,
+    collaborations,
+    isLoadingCollaborations,
     collaborationDialogOpen,
     setCollaborationDialogOpen,
     editingCollaboration,
@@ -70,87 +50,7 @@ export function CollaborationsSection() {
     handleDeleteCollaboration,
     handleSubmitCollaboration,
     isSubmitting,
-  } = operationsResult || {
-    collaborations: [],
-    isLoadingCollaborations: false,
-    collaborationDialogOpen: false,
-    setCollaborationDialogOpen: () => {},
-    editingCollaboration: undefined,
-    handleAddCollaboration: () => {},
-    handleEditCollaboration: () => {},
-    handleDeleteCollaboration: async () => {},
-    handleSubmitCollaboration: async () => {},
-    isSubmitting: false,
-  };
-
-  // Select collaborations based on page type (server-side filtering for all types)
-  const collaborations = useMemo(() => {
-    if (pageType === "users") {
-      return userCollaborations;
-    }
-    return typeCollaborations;
-  }, [pageType, userCollaborations, typeCollaborations]);
-
-  const isLoadingCollaborations =
-    pageType === "users" ? isLoadingUserCollabs : isLoadingType;
-
-  // For user type, we need separate state and handlers
-  const [userDialogOpen, setUserDialogOpen] = useState(false);
-  const [userEditingCollab, setUserEditingCollab] = useState<
-    Collaboration | undefined
-  >();
-  const updateCollabMutation = useUpdateCollaboration();
-  const deleteCollabMutation = useDeleteCollaboration();
-
-  // User-specific handlers that don't modify companyId/projectId
-  const handleUserEditCollaboration = (collaboration: Collaboration) => {
-    setUserEditingCollab(collaboration);
-    setUserDialogOpen(true);
-  };
-
-  const handleUserDeleteCollaboration = async (collaborationId: number) => {
-    await deleteCollabMutation.mutateAsync(collaborationId);
-  };
-
-  const handleUserSubmitCollaboration = async (data: CollaborationFormData) => {
-    if (userEditingCollab) {
-      // For user view, preserve the original companyId and projectId
-      await updateCollabMutation.mutateAsync({
-        id: userEditingCollab.id,
-        data: {
-          ...data,
-          companyId: data.companyId,
-          projectId: data.projectId,
-        },
-      });
-    }
-    setUserDialogOpen(false);
-  };
-
-  const userIsSubmitting =
-    updateCollabMutation.isPending || deleteCollabMutation.isPending;
-
-  // Use user-specific handlers for users type
-  const finalEditHandler =
-    pageType === "users"
-      ? handleUserEditCollaboration
-      : handleEditCollaboration;
-  const finalDeleteHandler =
-    pageType === "users"
-      ? handleUserDeleteCollaboration
-      : handleDeleteCollaboration;
-  const finalDialogOpen =
-    pageType === "users" ? userDialogOpen : collaborationDialogOpen;
-  const finalSetDialogOpen =
-    pageType === "users" ? setUserDialogOpen : setCollaborationDialogOpen;
-  const finalEditingCollab =
-    pageType === "users" ? userEditingCollab : editingCollaboration;
-  const finalSubmitHandler =
-    pageType === "users"
-      ? handleUserSubmitCollaboration
-      : handleSubmitCollaboration;
-  const finalIsSubmitting =
-    pageType === "users" ? userIsSubmitting : isSubmitting;
+  } = useCollaborationsOperations();
 
   const storageKey = (
     pageType === "companies"
@@ -186,27 +86,28 @@ export function CollaborationsSection() {
   } = useCollaborationsTable(storageKey, hiddenColumns, requiredColumns);
 
   // Transform editingCollaboration to CollaborationFormData for FormDialog
-  const initialFormData: CollaborationFormData | undefined = finalEditingCollab
-    ? {
-        companyId: finalEditingCollab.companyId,
-        projectId: finalEditingCollab.projectId,
-        contactId: finalEditingCollab.contactId || undefined,
-        responsible: finalEditingCollab.responsible || "",
-        comment: finalEditingCollab.comment || "",
-        contacted: finalEditingCollab.contacted,
-        successful: finalEditingCollab.successful || undefined,
-        letter: finalEditingCollab.letter,
-        meeting: finalEditingCollab.meeting || undefined,
-        priority: finalEditingCollab.priority,
-        amount: finalEditingCollab.amount || undefined,
-        contactInFuture: finalEditingCollab.contactInFuture || undefined,
-        type: finalEditingCollab.type as
-          | "Financial"
-          | "Material"
-          | "Educational"
-          | null,
-      }
-    : undefined;
+  const initialFormData: CollaborationFormData | undefined =
+    editingCollaboration
+      ? {
+          companyId: editingCollaboration.companyId,
+          projectId: editingCollaboration.projectId,
+          contactId: editingCollaboration.contactId || undefined,
+          responsible: editingCollaboration.responsible || "",
+          comment: editingCollaboration.comment || "",
+          contacted: editingCollaboration.contacted,
+          successful: editingCollaboration.successful || undefined,
+          letter: editingCollaboration.letter,
+          meeting: editingCollaboration.meeting || undefined,
+          priority: editingCollaboration.priority,
+          amount: editingCollaboration.amount || undefined,
+          contactInFuture: editingCollaboration.contactInFuture || undefined,
+          type: editingCollaboration.type as
+            | "Financial"
+            | "Material"
+            | "Educational"
+            | null,
+        }
+      : undefined;
 
   return (
     <>
@@ -279,8 +180,8 @@ export function CollaborationsSection() {
               collaborations={collaborations}
               searchQuery={searchQuery}
               tablePreferences={tablePreferences}
-              onEdit={finalEditHandler}
-              onDelete={finalDeleteHandler}
+              onEdit={handleEditCollaboration}
+              onDelete={handleDeleteCollaboration}
               onSortColumn={handleSortColumn}
               hiddenColumns={hiddenColumns}
               currentUserName={pageType === "users" ? userName : undefined}
@@ -290,12 +191,12 @@ export function CollaborationsSection() {
       </Card>
 
       <FormDialog<CollaborationFormData>
-        open={finalDialogOpen}
-        onOpenChange={finalSetDialogOpen}
+        open={collaborationDialogOpen}
+        onOpenChange={setCollaborationDialogOpen}
         entity="Collaboration"
         initialData={initialFormData}
-        onSubmit={finalSubmitHandler}
-        isLoading={finalIsSubmitting}
+        onSubmit={handleSubmitCollaboration}
+        isLoading={isSubmitting}
       >
         {(formProps) => (
           <CollaborationForm
