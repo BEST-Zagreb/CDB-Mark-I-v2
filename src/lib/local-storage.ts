@@ -10,7 +10,8 @@ export type TableType =
   | "contacts"
   | "users"
   | "collaborations-companies"
-  | "collaborations-projects";
+  | "collaborations-projects"
+  | "collaborations-users";
 
 // Structure for all table preferences
 interface AppTablePreferences {
@@ -20,6 +21,7 @@ interface AppTablePreferences {
   users?: TablePreferences;
   "collaborations-companies"?: TablePreferences;
   "collaborations-projects"?: TablePreferences;
+  "collaborations-users"?: TablePreferences;
 }
 
 /**

@@ -164,6 +164,17 @@ export function CollaborationsSection() {
       ? ["projectName"]
       : [];
 
+  // requiredColumns: columns that must always be visible (can't be deselected)
+  // - company page: projectName is required
+  // - project page: companyName is required
+  // - user page: both are required
+  const requiredColumns =
+    pageType === "companies"
+      ? ["projectName"]
+      : pageType === "projects"
+      ? ["companyName"]
+      : ["projectName", "companyName"];
+
   const {
     tablePreferences,
     searchQuery,
@@ -172,7 +183,7 @@ export function CollaborationsSection() {
     handleSearchChange,
     collaborationFields,
     visibleColumnsString,
-  } = useCollaborationsTable(storageKey, hiddenColumns);
+  } = useCollaborationsTable(storageKey, hiddenColumns, requiredColumns);
 
   // Transform editingCollaboration to CollaborationFormData for FormDialog
   const initialFormData: CollaborationFormData | undefined = finalEditingCollab
