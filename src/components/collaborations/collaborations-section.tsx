@@ -57,6 +57,7 @@ export function CollaborationsSection() {
       ? "collaborations-companies"
       : "collaborations-projects"
   ) as "collaborations-companies" | "collaborations-projects";
+
   const hiddenColumns =
     pageType === "companies"
       ? ["companyName"]
@@ -64,10 +65,6 @@ export function CollaborationsSection() {
       ? ["projectName"]
       : [];
 
-  // requiredColumns: columns that must always be visible (can't be deselected)
-  // - company page: projectName is required
-  // - project page: companyName is required
-  // - user page: both are required
   const requiredColumns =
     pageType === "companies"
       ? ["projectName"]
