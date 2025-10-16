@@ -27,14 +27,9 @@ import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Suspense, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/app/users/hooks/use-users";
 
-interface CollaborationsSectionProps {
-  userName?: string; // Required when on user page
-}
-
-export function CollaborationsSection({
-  userName,
-}: CollaborationsSectionProps) {
+export function CollaborationsSection() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
@@ -46,6 +41,10 @@ export function CollaborationsSection({
 
   // Parse id as number for companies/projects
   const id = pageType !== "users" ? parseInt(pageId) : pageId;
+
+  // Fetch user data if on users page
+  const { data: user } = useUser(pageType === "users" ? pageId : "");
+  const userName = user?.fullName;
 
   // For users type, fetch all collaborations and filter client-side
   const { data: allCollabs = [], isLoading: isLoadingAllCollabs } =

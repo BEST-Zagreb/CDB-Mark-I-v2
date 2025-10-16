@@ -139,7 +139,7 @@ export default function UserDetailPage() {
         <UserDetailsSection user={user} />
 
         {/* Collaborations Section - showing all collaborations for this user */}
-        <CollaborationsSection userName={user.fullName} />
+        <CollaborationsSection />
       </div>
 
       <FormDialog<UserFormData>
