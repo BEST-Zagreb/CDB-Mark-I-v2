@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { collaborations } from "@/db/schema";
-import { sql, isNotNull, ne, asc } from "drizzle-orm";
+import { collaborations, appUsers } from "@/db/schema";
+import { sql, asc } from "drizzle-orm";
 
 // GET /api/collaborations/responsible - Get all unique responsible persons
 export async function GET(request: NextRequest) {
   try {
     // Get all unique responsible persons from collaborations
-    const result = await db
+    const collabResponsible = await db
       .selectDistinct({ responsible: collaborations.responsible })
       .from(collaborations)
       .where(
@@ -15,12 +15,28 @@ export async function GET(request: NextRequest) {
       )
       .orderBy(asc(collaborations.responsible));
 
-    // Extract just the responsible person names
-    const responsiblePersons = result
-      .map((row) => row.responsible)
-      .filter(Boolean);
+    // Get all users from database
+    const users = await db
+      .select({ fullName: appUsers.fullName })
+      .from(appUsers)
+      .orderBy(asc(appUsers.fullName));
 
-    return NextResponse.json(responsiblePersons);
+    // Extract responsible person names from collaborations
+    const collabResponsibleNames = collabResponsible
+      .map((row) => row.responsible)
+      .filter(Boolean) as string[];
+
+    // Extract user full names
+    const userFullNames = users
+      .map((row) => row.fullName)
+      .filter(Boolean) as string[];
+
+    // Combine and get unique values (users take priority)
+    const allResponsiblePersons = Array.from(
+      new Set([...userFullNames, ...collabResponsibleNames])
+    ).sort();
+
+    return NextResponse.json(allResponsiblePersons);
   } catch (error) {
     console.error("Error fetching responsible persons:", error);
     return NextResponse.json(
