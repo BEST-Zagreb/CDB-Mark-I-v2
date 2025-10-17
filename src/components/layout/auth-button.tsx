@@ -15,12 +15,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUser } from "@/app/users/hooks/use-users";
 
 export function AuthButton() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  // Fetch user data from database to get fullName
+  const { data: userData } = useUser(session?.user?.id || "");
+
+  // Use fullName from database, fallback to session name (Gmail username)
+  const displayName = userData?.fullName || session?.user?.name || "User";
 
   if (isPending) {
     return <div className="h-10 w-32 rounded-full bg-muted animate-pulse" />;
@@ -60,12 +67,10 @@ export function AuthButton() {
               <Avatar className="h-9 w-9">
                 <AvatarImage
                   src={session.user.image}
-                  alt={session.user.name || "User"}
+                  alt={displayName}
                   referrerPolicy="no-referrer"
                 />
-                <AvatarFallback>
-                  {getInitials(session.user.name)}
-                </AvatarFallback>
+                <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
               </Avatar>
             )}
           </button>
@@ -74,7 +79,7 @@ export function AuthButton() {
         <DropdownMenuContent align="end" className="w-56">
           {/* User info in dropdown for mobile */}
           <div className="flex flex-col gap-1 px-2 py-2">
-            <span className="text-sm font-medium">{session.user.name}</span>
+            <span className="text-sm font-medium">{displayName}</span>
             <span className="text-xs text-muted-foreground">
               {session.user.email}
             </span>
@@ -90,7 +95,7 @@ export function AuthButton() {
             className="cursor-pointer"
           >
             <User className="size-4" />
-            <span>Account Details</span>
+            <span>Profile</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem
@@ -120,15 +125,15 @@ export function AuthButton() {
           <Avatar className="h-9 w-9">
             <AvatarImage
               src={session.user.image}
-              alt={session.user.name || "User"}
+              alt={displayName}
               referrerPolicy="no-referrer"
             />
-            <AvatarFallback>{getInitials(session.user.name)}</AvatarFallback>
+            <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
           </Avatar>
         )}
         <div className="flex flex-col">
           <span className="text-sm font-medium leading-tight">
-            {session.user.name}
+            {displayName}
           </span>
           <span className="text-xs text-muted-foreground leading-tight">
             {session.user.email}
