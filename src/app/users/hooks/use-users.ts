@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
 import { CreateUserData, UpdateUserData } from "@/types/user";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 // Query keys
 export const userKeys = {
@@ -44,8 +45,7 @@ export function useCreateUser() {
       toast.success("User created successfully");
     },
     onError: (error: unknown) => {
-      const message =
-        error instanceof Error ? error.message : "Failed to create user";
+      const message = getErrorMessage(error);
       toast.error(message);
     },
   });
@@ -65,8 +65,7 @@ export function useUpdateUser() {
       toast.success("User updated successfully");
     },
     onError: (error: unknown) => {
-      const message =
-        error instanceof Error ? error.message : "Failed to update user";
+      const message = getErrorMessage(error);
       toast.error(message);
     },
   });
@@ -84,8 +83,7 @@ export function useDeleteUser() {
       toast.success("User deleted successfully");
     },
     onError: (error: unknown) => {
-      const message =
-        error instanceof Error ? error.message : "Failed to delete user";
+      const message = getErrorMessage(error);
       toast.error(message);
     },
   });
