@@ -201,18 +201,6 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   column.center && "justify-center"
                 } gap-1`}
               >
-                {collaboration.contacted && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Phone className="size-4 text-green-600" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Contacted</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
                 {collaboration.letter && (
                   <TooltipProvider>
                     <Tooltip>
@@ -225,6 +213,20 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                     </Tooltip>
                   </TooltipProvider>
                 )}
+
+                {collaboration.contacted && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Phone className="size-4 text-green-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Contacted</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
                 {collaboration.meeting && (
                   <TooltipProvider>
                     <Tooltip>
@@ -237,6 +239,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                     </Tooltip>
                   </TooltipProvider>
                 )}
+
                 {collaboration.successful && (
                   <TooltipProvider>
                     <Tooltip>
@@ -249,6 +252,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                     </Tooltip>
                   </TooltipProvider>
                 )}
+
                 {!collaboration.contacted &&
                   !collaboration.letter &&
                   !collaboration.meeting &&
