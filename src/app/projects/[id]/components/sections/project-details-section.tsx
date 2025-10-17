@@ -99,7 +99,10 @@ export function ProjectDetailsSection({
                   )}
                 </span>
               </div>
-              <Progress value={progressPercentage} className="h-3" />
+              <Progress
+                value={Math.min(progressPercentage, 100)}
+                className="h-3"
+              />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {progressPercentage.toFixed(1)}% Complete
