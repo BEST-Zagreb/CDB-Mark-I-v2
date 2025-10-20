@@ -160,7 +160,7 @@ export async function PUT(
     // Check the error itself and its cause chain
     if (error instanceof Error) {
       const errorMessage = error.message.toLowerCase();
-      const errorCause = (error as any).cause;
+      const errorCause = (error as Error & { cause?: { code?: string } }).cause;
 
       // Check if it's a SQLITE_CONSTRAINT error
       if (
