@@ -77,7 +77,8 @@ export function ProjectDetailsSection({
         </div>
 
         {/* Row 2: Fundraising Progress */}
-        {project.frGoal && (
+        {!project.frGoal ? null : (
+          // null neccessary bcs it shows 0 on null
           <div className="space-y-3">
             <label className="text-sm font-bold">Fundraising Progress</label>
             <div className="space-y-2">
