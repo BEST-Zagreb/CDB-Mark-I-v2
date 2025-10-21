@@ -17,17 +17,17 @@ Deployed and available on [https://new.cdb.best.hr](https://new.cdb.best.hr)
 ## Visuals
 
 <p align="center">
-  <img width="90%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Home page"/>
+  <img width="90%" src="https://github.com/user-attachments/assets/56afa2df-c77f-454a-93c7-34331ebc2a7d" alt="Company Database - Home page"/>
   
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Projects"/>
+  <img width="45%" src="https://github.com/user-attachments/assets/3ee9717a-4140-4c49-8fd4-765ba9dd7491" alt="Company Database - Projects"/>
 
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details"/>
+  <img width="45%" src="https://github.com/user-attachments/assets/6ca24d56-63de-4167-bf97-24ebbbe8e0c9" alt="Company Database - Projects details"/>
 
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Projects details"/>
+  <img width="45%" src="https://github.com/user-attachments/assets/5d6ee205-2a60-4660-8530-36602c22dcf6" alt="Company Database - Companies"/>
+  
+  <img width="45%" src="https://github.com/user-attachments/assets/f670ec65-b195-42d4-9315-aa0417e46db8" alt="Company Database - Company details"/>
 
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details"/>
-
-  <img width="45%" src="https://pic.pnnet.dev/960x540" alt="Company Database - Company details 2 (collaborations)"/>
+  <img width="45%" src="https://github.com/user-attachments/assets/5f767958-e859-45ed-a1af-65856fd3d21c" alt="Company Database - User details"/>
 </p>
 
 ## Attribution
