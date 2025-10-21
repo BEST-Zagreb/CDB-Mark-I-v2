@@ -12,7 +12,7 @@ The app is built with Next.js (App Router), TypeScript, React Query for data fet
 
 ## Link
 
-Deployed and available on: _[coming soon](#)_
+Deployed and available on [https://new.cdb.best.hr](https://new.cdb.best.hr)
 
 ## Visuals
 
@@ -64,7 +64,7 @@ This work is licensed under a
 
 1. **Log in** to your Turso account at [https://app.turso.tech](https://app.turso.tech)
 2. **Click "Create database"** in the dashboard
-3. **Enter a database name** (e.g., `company-database`) and select your preferred location
+3. **Enter a database name** (e.g., `company-database`) and select your preferred location (EU)
 4. **Click "Create"** to create the database
 5. **Copy the Database URL** from the database details page (it will look like `libsql://your-database-name.turso.io`)
 
@@ -73,7 +73,6 @@ This work is licensed under a
 1. In your database details page, go to the **"Tokens"** tab
 2. **Click "Generate token"**
 3. **Copy the generated token** (save this securely - you'll need it for your environment variables)
-4. **Note:** Keep this token private and never commit it to version control
 
 ### 2. Environment Setup
 
@@ -104,19 +103,27 @@ npm install better-sqlite3 --build-from-source
 
 ### 4. Database Schema Setup
 
-The application will automatically create the required database schema when it first runs. The schema includes:
+The application uses Drizzle ORM with a Turso (LibSQL) database. The schema includes:
 
 - **companies** - Organization information
 - **projects** - Project tracking
 - **people** - Contact persons (linked to companies)
 - **collaborations** - Partnership tracking between companies (contacts) and projects
+- **app_users** - Application user profiles with roles
+- **user, session, account, verification** - Better Auth authentication tables
 
-If you have existing data from a local SQLite database, you can migrate it using the provided script (db.sqlite3 file should be located in folder (root)/db):
+#### Option A: Fresh Database (No Migration)
+
+If you're starting fresh, simply run:
 
 ```bash
-# Make sure your .env.local is configured first
-node db/scripts/migrate_to_turso.js
+# Push Drizzle schema to Turso (creates all tables)
+./db/scripts/run-migration.sh push
 ```
+
+#### Option B: Migrate from Existing SQLite Database
+
+If you have existing data from a local SQLite database or remote server, follow the **Database Migration Guide** below.
 
 ### 5. Run the Application
 
@@ -127,21 +134,130 @@ pnpm run dev
 
 The app will be available at: **http://localhost:3000**
 
-### 6. Build for Production
+## Database Migration Guide
+
+### Prerequisites for Migration
+
+- Existing SQLite database file (`.sqlite3`)
+- Turso account with database and token
+- Node.js with `better-sqlite3` package installed
+
+### Step-by-Step Migration Process
+
+#### Step 1: Copy Database from Remote Server (if applicable)
+
+If your database is on a remote server, copy it to your local machine:
 
 ```bash
-# Build the application
-pnpm run build
+# Copy database from server to local Desktop
+scp user@vps_ip:/var/www/html/companydb/db/development.sqlite3 ~/Desktop/db.sqlite3
+
+# Copy to project db folder
+cp ~/Desktop/db.sqlite3 ./db/db.sqlite3
 ```
+
+#### Step 2: Prepare Local Database
+
+Run preparation scripts on your local SQLite database:
+
+```bash
+# 1. Normalize the database (clean up data)
+node db/scripts/normalize_db.js
+
+# 2. Enable cascading deletes (for referential integrity)
+node db/scripts/enable_cascading_deletes.js
+
+# 3. Optional: Analyze database structure
+node db/scripts/analyze_db_cardinality.js
+```
+
+#### Step 3: Configure Environment Variables
+
+Ensure your `.env.local` file has the correct Turso credentials (copy from .env.local.example):
+
+#### Step 4: Migrate Business Data to Turso
+
+Run the migration script to copy your companies, projects, contacts, and collaborations:
+
+```bash
+# Set environment variables and run migration
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/migrate_to_turso.js
+```
+
+This will migrate:
+
+- ✅ Companies
+- ✅ Projects
+- ✅ Contacts (people)
+- ✅ Collaborations
+- ✅ All indexes
+
+#### Step 5: Create Authentication Tables
+
+Add Better Auth tables for user authentication:
+
+```bash
+# Create auth tables (user, session, account, verification, app_users)
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/add-auth-tables.js
+```
+
+#### Step 6: Verify Migration
+
+Check that all tables exist:
+
+```bash
+# Verify all tables were created
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/verify-tables.js
+```
+
+You should see:
+
+- ✅ companies
+- ✅ projects
+- ✅ people
+- ✅ collaborations
+- ✅ app_users
+- ✅ user, session, account, verification (Better Auth)
+
+#### Step 7: Deploy to Production
+
+1. **Update Netlify environment variables** with production Turso credentials
+2. **Update `BETTER_AUTH_URL`** to your deployment URL:
+   ```
+   BETTER_AUTH_URL=https://cdb.best.hr
+   ```
+3. **Deploy** your application
 
 ## Database Scripts
 
 Available utility scripts in `db/scripts/`:
 
-- `migrate_to_turso.js` - Migrate data from local SQLite to Turso
-- `normalize_db.js` - Database normalization utilities
-- `enable_cascading_deletes.js` - Enable cascading deletes
-- `analyze_db_cardinality.js` - Analyze database relationships
+### Migration Scripts
+
+- **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
+- **`add-auth-tables.js`** - Create Better Auth tables in Turso
+- **`verify-tables.js`** - Verify all tables exist in Turso
+
+### Preparation Scripts
+
+- **`normalize_db.js`** - Database normalization utilities
+- **`enable_cascading_deletes.js`** - Enable cascading deletes
+- **`analyze_db_cardinality.js`** - Analyze database relationships
+
+### Utility Scripts
+
+- **`run-migration.sh`** - Helper script to run Drizzle commands with environment variables
+  ```bash
+  ./db/scripts/run-migration.sh push    # Apply schema changes
+  ./db/scripts/run-migration.sh studio  # Open Drizzle Studio
+  ./db/scripts/run-migration.sh generate # Generate migrations
+  ```
 
 ## How to contribute
 

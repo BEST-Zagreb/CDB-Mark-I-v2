@@ -148,9 +148,9 @@ async function createTablesIfNotExist(tursoDb) {
     // Essential indexes for ORDER BY clauses
     `CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name)`,
     `CREATE INDEX IF NOT EXISTS idx_people_name ON people(name)`,
-    `CREATE INDEX IF NOT EXISTS idx_collaborations_updated_at ON collaborations(updated_at DESC)`,
-    `CREATE INDEX IF NOT EXISTS idx_collaborations_created_at ON collaborations(created_at DESC)`,
-    `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at DESC)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_updated_at ON collaborations(updated_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_created_at ON collaborations(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at)`,
 
     // Essential indexes for subqueries and EXISTS checks
     `CREATE INDEX IF NOT EXISTS idx_collaborations_company_contact_future ON collaborations(company_id, contact_in_future)`,
