@@ -32,8 +32,8 @@ export const ContactsTableRow = memo(function ContactsTableRow({
     if (!onDelete) return;
 
     showDeleteAlert({
-      entity: "contact",
-      entityName: contact.name || "Unknown",
+      entityType: "contact",
+      entityDescription: contact.name || "Unknown",
       onConfirm: () => onDelete(contact.id),
     });
   }, [showDeleteAlert, onDelete, contact.id, contact.name]);

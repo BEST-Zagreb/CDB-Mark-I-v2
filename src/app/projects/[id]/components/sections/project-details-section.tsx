@@ -77,7 +77,8 @@ export function ProjectDetailsSection({
         </div>
 
         {/* Row 2: Fundraising Progress */}
-        {project.frGoal && (
+        {!project.frGoal ? null : (
+          // null neccessary bcs it shows 0 on null
           <div className="space-y-3">
             <label className="text-sm font-bold">Fundraising Progress</label>
             <div className="space-y-2">
@@ -99,7 +100,10 @@ export function ProjectDetailsSection({
                   )}
                 </span>
               </div>
-              <Progress value={progressPercentage} className="h-3" />
+              <Progress
+                value={Math.min(progressPercentage, 100)}
+                className="h-3"
+              />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {progressPercentage.toFixed(1)}% Complete

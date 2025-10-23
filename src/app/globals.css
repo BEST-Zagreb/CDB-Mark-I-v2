@@ -196,19 +196,26 @@
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
-    background-image: radial-gradient(
-      circle,
-      oklch(0.7 0.05 290) 2px,
-      transparent 1.5px
-    );
-    background-size: 3rem 3rem;
+    background-image: linear-gradient(
+        to right,
+        transparent 0%,
+        oklch(0.9689 0.009 314.7819) 35%,
+        oklch(0.9689 0.009 314.7819) 65%,
+        transparent 100%
+      ),
+      radial-gradient(circle, oklch(0.7 0.05 290) 2px, transparent 1.5px);
+    background-size: 100% 100%, 3rem 3rem;
   }
   .dark body {
-    background-image: radial-gradient(
-      circle,
-      oklch(0.6 0.05 290) 2px,
-      transparent 1.5px
-    );
+    background-image: linear-gradient(
+        to right,
+        transparent 0%,
+        oklch(0.2161 0.0061 56.0434) 30%,
+        oklch(0.2161 0.0061 56.0434) 70%,
+        transparent 100%
+      ),
+      radial-gradient(circle, oklch(0.6 0.05 290) 2px, transparent 1.5px);
+    background-size: 100% 100%, 3rem 3rem;
   }
 }
 

@@ -101,6 +101,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for unique constraint violation (duplicate email)
+    // Check the error itself and its cause chain
+    if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase();
+      const errorCause = (error as Error & { cause?: { code?: string } }).cause;
+
+      // Check if it's a SQLITE_CONSTRAINT error
+      if (
+        errorMessage.includes("unique constraint failed") ||
+        errorMessage.includes("sqlite_constraint") ||
+        (errorCause &&
+          (errorCause.code === "SQLITE_CONSTRAINT" ||
+            String(errorCause).toLowerCase().includes("unique constraint")))
+      ) {
+        return NextResponse.json(
+          { error: "A user with this email already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: "Failed to create user" },
       { status: 500 }

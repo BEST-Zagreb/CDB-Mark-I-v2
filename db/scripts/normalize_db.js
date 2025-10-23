@@ -2,8 +2,8 @@
 
 /**
  * Database migration script with multiple migration functions
- * Run specific migrations using: node migrate_db.js <migration-name>
- * Run all migrations using: node migrate_db.js all
+ * Run specific migrations using: node normalize_db.js <migration-name>
+ * Run all migrations using: node normalize_db.js all
  *
  * Available migrations:
  * - prio: Standardize collaboration priority values
@@ -821,7 +821,7 @@ async function main() {
 
   if (args.length === 0) {
     console.log(`
-Usage: node migrate_db.js <migration-name> | all
+Usage: node normalize_db.js <migration-name> | all
 
 Available migrations:
 ${Object.keys(migrations)
@@ -829,8 +829,8 @@ ${Object.keys(migrations)
   .join("\n")}
 
 Examples:
-  node migrate_db.js prio
-  node migrate_db.js all
+  node normalize_db.js prio
+  node normalize_db.js all
     `);
     process.exit(0);
   }

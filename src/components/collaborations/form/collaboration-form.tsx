@@ -225,9 +225,6 @@ export function CollaborationForm({
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>
-                Contact person from the selected company (optional)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

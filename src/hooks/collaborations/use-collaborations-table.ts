@@ -11,13 +11,27 @@ import {
   handleSort,
 } from "@/lib/table-utils";
 
-const collaborationsDefaultPreferences: TablePreferences = {
+const collaborationsCompaniesDefaultPreferences: TablePreferences = {
   visibleColumns: [
     "projectName",
-    "responsible",
     "priority",
     "contactName",
+    "status",
     "comment",
+    "contactInFuture",
+  ],
+  sortField: "priority",
+  sortDirection: "desc",
+};
+
+const collaborationsProjectsDefaultPreferences: TablePreferences = {
+  visibleColumns: [
+    "companyName",
+    "priority",
+    "contactName",
+    "status",
+    "comment",
+    "amount",
   ],
   sortField: "priority",
   sortDirection: "desc",
@@ -29,6 +43,7 @@ const collaborationsUsersDefaultPreferences: TablePreferences = {
     "companyName",
     "priority",
     "contactName",
+    "status",
     "comment",
   ],
   sortField: "priority",
@@ -39,7 +54,7 @@ export function useCollaborationsTable(
   storageKey:
     | "collaborations-companies"
     | "collaborations-projects"
-    | "collaborations-users" = "collaborations-companies",
+    | "collaborations-users",
   hiddenColumns: string[] = [],
   requiredColumns: string[] = []
 ) {
@@ -49,7 +64,9 @@ export function useCollaborationsTable(
   const defaultPreferences =
     storageKey === "collaborations-users"
       ? collaborationsUsersDefaultPreferences
-      : collaborationsDefaultPreferences;
+      : storageKey === "collaborations-projects"
+      ? collaborationsProjectsDefaultPreferences
+      : collaborationsCompaniesDefaultPreferences;
 
   // Table preferences state for collaborations
   const [tablePreferences, setTablePreferences] = useState(() => {

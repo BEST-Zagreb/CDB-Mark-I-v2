@@ -55,8 +55,13 @@ export function CollaborationsSection() {
   const storageKey = (
     pageType === "companies"
       ? "collaborations-companies"
-      : "collaborations-projects"
-  ) as "collaborations-companies" | "collaborations-projects";
+      : pageType === "projects"
+      ? "collaborations-projects"
+      : "collaborations-users"
+  ) as
+    | "collaborations-companies"
+    | "collaborations-projects"
+    | "collaborations-users";
 
   const hiddenColumns =
     pageType === "companies"
