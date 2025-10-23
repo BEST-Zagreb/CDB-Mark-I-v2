@@ -269,15 +269,50 @@ Create .env.local from .env.local.example
 
 ### Better auth
 
-Set better auth url to url of your app (http://localhost:3000 for local development)
+1. Set better auth url to url of your app (http://localhost:3000 for local development)
 
-Go to https://www.better-auth.com/docs/installation and generate better auth secret
+2. Go to https://www.better-auth.com/docs/installation and generate better auth secret
 
 ### Google OAuth
 
-...
+1. Open Google Cloud Console (https://console.cloud.google.com/)
+
+2. Create a new project (name for example `Company Database` and id for example `company-database`) and open it
+
+3. Create a new OAuth client ID credential under `Open APIs & Services > Credentials`
+
+3.1. Configure consent screen (Branding)
+
+- Input app name (for example `Company Database`) and user support email (your account email)
+- Set Audience to External so users outside your organisation can login
+- Add contact email (your account email)
+
+  3.2. Create OAuth client ID (Clients)
+
+- Set application type to Web application
+- Change name or leave as is
+- Add Authorized JavaScript origins (your app domain): `http://localhost:3000`, `https://cdb.best.hr`, `https://cdb.netlify.app`
+- Add Authorized redirect URIs (your app domain): `http://localhost:3000/api/auth/callback/google`, `https://cdb.best.hr/api/auth/callback/google`, `https://cdb.netlify.app/api/auth/callback/google`
+
+3. Copy-paste Client ID and Client Secret to your .env file
+
+4. Publish your app to Production under `Audience > Publishing status > Publish app`
 
 ## Database setup
+
+Available utility scripts in `db/scripts/`:
+
+### Preparation Scripts
+
+- **`normalize_db.js`** - Database normalization utilities
+- **`enable_cascading_deletes.js`** - Enable cascading deletes
+- **`analyze_db_cardinality.js`** - Analyze database relationships
+
+### Migration Scripts
+
+- **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
+- **`add-auth-tables.js`** - Create Better Auth tables in Turso
+- **`verify-tables.js`** - Verify all tables exist in Turso
 
 ### Option 1. - Copying an already existing db (migrating old CDB data to new CDB)
 
@@ -286,32 +321,29 @@ scp from vps
 cp db to db/db.sqlite3
 
 run scripts for normalizing the data...
-Available utility scripts in `db/scripts/`:
-
-### Migration Scripts
-
-- **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
-- **`add-auth-tables.js`** - Create Better Auth tables in Turso
-- **`verify-tables.js`** - Verify all tables exist in Turso
-
-### Preparation Scripts
 
 - **`normalize_db.js`** - Database normalization utilities
 - **`enable_cascading_deletes.js`** - Enable cascading deletes
-- **`analyze_db_cardinality.js`** - Analyze database relationships
 
-### Utility Scripts
+Migrate Data to Turso to copy your companies, projects, contacts, and collaborations:
 
-- **`run-migration.sh`** - Helper script to run Drizzle commands with environment variables
-  ```bash
-  ./db/scripts/run-migration.sh push    # Apply schema changes
-  ./db/scripts/run-migration.sh studio  # Open Drizzle Studio
-  ./db/scripts/run-migration.sh generate # Generate migrations
-  ```
+```bash
+# Set environment variables and run migration
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/migrate_to_turso.js
+```
 
-migrate the data to turso
+Create Users and Authentication Tables:
 
-create missing tables for users and better-auth
+```bash
+# Create auth tables (user, session, account, verification, app_users)
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/add-auth-tables.js
+```
+
+- **`add-auth-tables.js`** - Create Better Auth tables in Turso
 
 ### Option 2. - Creating a new db schema from scratch
 
