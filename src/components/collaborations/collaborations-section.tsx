@@ -134,7 +134,7 @@ export function CollaborationsSection() {
 
             {pageType !== "users" && (
               <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-                {pageType === "projects" && (
+                {/* TODO (implement copy collabs): {pageType === "projects" && (
                   <Button
                     onClick={handleAddCollaboration}
                     size={isMobile ? "icon" : "default"}
@@ -142,7 +142,17 @@ export function CollaborationsSection() {
                     <ClipboardPaste className="size-5" />
                     {!isMobile && "Copy Collaborations"}
                   </Button>
-                )}
+                )} */}
+
+                {/* TODO (implement bulk add collabs): {pageType === "projects" && (
+                  <Button
+                    onClick={handleAddCollaboration}
+                    size={isMobile ? "icon" : "default"}
+                  >
+                    <ClipboardPaste className="size-5" />
+                    {!isMobile && "Copy Collaborations"}
+                  </Button>
+                )} */}
 
                 <Button
                   onClick={handleAddCollaboration}
