@@ -66,14 +66,12 @@ This work is licensed under a
 2. **Click "Create database"** in the dashboard
 3. **Enter a database name** (e.g., `company-database`) and select your preferred location
 4. **Click "Create"** to create the database
-5. **Copy the Database URL** from the database details page (it will look like `libsql://your-database-name.turso.io`)
+5. **Copy the Database URL** (it will look like `libsql://your-database-name.turso.io`)
 
 #### Create an Authentication Token
 
-1. In your database details page, go to the **"Tokens"** tab
-2. **Click "Generate token"**
-3. **Copy the generated token** (save this securely - you'll need it for your environment variables)
-4. **Note:** Keep this token private and never commit it to version control
+1. In your database overview page **Click "Generate token"**
+2. **Copy the generated token**
 
 ### 2. Environment Setup
 
@@ -134,14 +132,113 @@ The app will be available at: **http://localhost:3000**
 pnpm run build
 ```
 
-## Database Scripts
+# How to run
 
+## Prerequisites
+
+- **Node.js 22.19.0+** (or latest LTS)
+- **pnpm** (recommended) or npm/yarn
+  ```bash
+  npm install -g pnpm
+  ```
+
+## Enviroment variables
+
+Create .env.local from .env.local.example
+
+### 1. Turso DB
+
+#### Create a Turso Account
+
+1. Go to [Turso](https://turso.tech/) and sign up for an account
+2. Verify your email address
+
+#### Create a Database via Web Interface
+
+1. **Log in** to your Turso account at [https://app.turso.tech](https://app.turso.tech)
+2. **Click "Create database"** in the dashboard
+3. **Enter a database name** (e.g., `company-database`) and select your preferred location
+4. **Click "Create"** to create the database
+5. **Copy the Database URL** from the database details page (it should look like `libsql://your-database-name.turso.io`)
+
+#### Create an Authentication Token
+
+1. In your database overview page **Click "Generate token"**
+2. **Copy the generated token**
+
+### Better auth
+
+Set better auth url to url of your app (http://localhost:3000 for local development)
+
+Go to https://www.better-auth.com/docs/installation and generate better auth secret
+
+### Google OAuth
+
+...
+
+## Database setup
+
+### Option 1. - Copying an already existing db (migrating old CDB data to new CDB)
+
+scp from vps
+
+cp db to db/db.sqlite3
+
+run scripts for normalizing the data...
 Available utility scripts in `db/scripts/`:
 
 - `migrate_to_turso.js` - Migrate data from local SQLite to Turso
 - `normalize_db.js` - Database normalization utilities
 - `enable_cascading_deletes.js` - Enable cascading deletes
 - `analyze_db_cardinality.js` - Analyze database relationships
+
+migrate the data to turso
+
+create missing tables for users and better-auth
+
+### Option 2. - Creating a new db schema from scratch
+
+## Run the application
+
+```bash
+# Start development server
+pnpm run dev
+```
+
+The app will be available at: **http://localhost:3000**
+
+# How to deploy (on Netlify)
+
+Test build locally (optional)
+
+```bash
+# Build the application
+pnpm run build
+```
+
+Create an account on netlify
+
+Connect account to github
+
+Import a project from github (for continuos deployment after every push to main)
+
+Update env variables
+
+1. Copy from .env.local as contains secret values:
+
+   - TURSO_DB_URL
+   - TURSO_DB_TOKEN
+   - BETTER_AUTH_SECRET
+   - GOOGLE_CLIENT_ID
+   - GOOGLE_CLIENT_SECRET
+
+2. Add an env variable with key BETTER_AUTH_URL and value of your app url (for example `https://cdb.best.hr` or `https://cdb.netlify.app`)
+
+Setup DNS (optional)
+If you have a valid domain, setup Cloudflare DNS with a NS records (there should be 4) that points from your domain (for example `cdb(.best.hr)`) to your account netlify namespace servers (it should look like `dns1.p07.nsone.net`)
+
+In netlify project dashboard under Domain management add domain alias for example `cdb.best.hr` and add SSL/TLS certificate so your app can be accessed through HTTPS.
+NOTE: Don't forget to update the values for BETTER_AUTH_URL and in Google OAuth when changing domains.
 
 ## How to contribute
 
