@@ -65,11 +65,12 @@ npm install better-sqlite3 --build-from-source
   npm install -g pnpm
   ```
 
-## Enviroment variables
+## Environment Setup
 
-Create .env.local from .env.local.example in project root
+1. Create a `.env.local` file in the project root by copying `.env.local.example`
+2. Configure the following services:
 
-### 1. Turso DB
+### 1. Turso Database
 
 #### Create a Turso Account
 
@@ -89,13 +90,16 @@ Create .env.local from .env.local.example in project root
 1. In your database overview page **Click "Generate token"**
 2. **Copy-paste the generated token to .env file**
 
-### Better auth
+### 2. Better Auth Configuration
 
-1. Set better auth url to url of your app (http://localhost:3000 for local development)
+1. Set `BETTER_AUTH_URL` to your application URL:
 
-2. Go to [Better-Auth](https://www.better-auth.com/docs/installation) docs and generate better auth secret
+   - Use `http://localhost:3000` for local development
+   - Use your production URL for deployment (e.g., `https://cdb.best.hr`)
 
-### Google OAuth
+2. Generate a Better Auth secret from the [Better-Auth documentation](https://www.better-auth.com/docs/installation)
+
+### 3. Google OAuth Setup
 
 1. Open Google Cloud Console (https://console.cloud.google.com/)
 
@@ -116,9 +120,9 @@ Create .env.local from .env.local.example in project root
 - Add Authorized JavaScript origins (your app domain): `http://localhost:3000`, `https://cdb.best.hr`, `https://cdb.netlify.app`
 - Add Authorized redirect URIs (your app domain): `http://localhost:3000/api/auth/callback/google`, `https://cdb.best.hr/api/auth/callback/google`, `https://cdb.netlify.app/api/auth/callback/google`
 
-3. Copy-paste Client ID and Client Secret to your .env file
+4. Copy-paste Client ID and Client Secret to your .env file
 
-4. Publish your app to Production under `Audience > Publishing status > Publish app`
+5. Publish your app to Production under `Audience > Publishing status > Publish app`
 
 ## Database setup
 
@@ -145,9 +149,11 @@ Available utility scripts in `db/scripts/`:
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 - **`verify-tables.js`** - Verify all tables exist in Turso
 
-### Option 1. - Copying an already existing db (migrating old CDB data to new CDB)
+### Option 1: Migrate Existing Database
 
-If your database is on a remote server, copy it to your local machine:
+To migrate data from an existing CDB instance, follow these steps:
+
+First, if your database is on a remote server, copy it to your local machine:
 
 ```bash
 # Copy database from server to local Desktop
@@ -190,58 +196,67 @@ node db/scripts/add-auth-tables.js
 
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 
-### Option 2. - Creating a new db schema from scratch
+### Option 2: Fresh Database Setup
 
-Fresh Database (No Migration)
-
-If you're starting fresh, simply run:
+For a new installation without existing data:
 
 ```bash
-# Push Drizzle schema to Turso (creates all tables)
-drizzle-kit push
+# Push the Drizzle schema to Turso (creates all tables)
+drizzle-kit push:sqlite
 ```
 
-## Run the application
+## Running the Application
+
+1. Start the development server:
+
+   ```bash
+   pnpm run dev
+   ```
+
+2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
+
+# Deployment Guide (Netlify)
+
+## 1. Local Build Verification (Optional)
 
 ```bash
-# Start development server
-pnpm run dev
-```
-
-The app will be available at: **http://localhost:3000**
-
-# How to deploy (on Netlify)
-
-Test build locally (optional)
-
-```bash
-# Build the application
+# Build the application locally to verify everything works
 pnpm run build
 ```
 
-Create an account on netlify
+## 2. Netlify Setup
 
-Connect account to github
+1. Create a Netlify account and connect it to GitHub
+2. Import your GitHub repository for continuous deployment
+3. Configure environment variables in Netlify:
 
-Import a project from github (for continuos deployment after every push to main)
+   Copy these values as secrets from your `.env.local`:
 
-Update env variables
+   - `TURSO_DB_URL`
+   - `TURSO_DB_TOKEN`
+   - `BETTER_AUTH_SECRET`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
 
-1. Copy from .env.local as contains secret values:
+   Add a new variable:
 
-   - TURSO_DB_URL
-   - TURSO_DB_TOKEN
-   - BETTER_AUTH_SECRET
-   - GOOGLE_CLIENT_ID
-   - GOOGLE_CLIENT_SECRET
+   - `BETTER_AUTH_URL` - Your app's URL (e.g., `https://cdb.best.hr` or `https://cdb.netlify.app`)
 
-2. Add an env variable with key BETTER_AUTH_URL and value of your app url (for example `https://cdb.best.hr` or `https://cdb.netlify.app`)
+## 3. Domain Setup (Optional)
 
-Setup DNS (optional)
-If you have a valid domain, setup Cloudflare DNS with a NS records (there should be 4) that points from your domain (for example `cdb(.best.hr)`) to your account netlify namespace servers (it should look like `dns1.p07.nsone.net`)
+### Cloudflare DNS Configuration
 
-In netlify project dashboard under Domain management add domain alias for example `cdb.best.hr` and add SSL/TLS certificate so your app can be accessed through HTTPS.
-NOTE: Don't forget to update the values for BETTER_AUTH_URL and in Google OAuth when changing domains.
+1. Add NS records (4 total) in Cloudflare that point from your domain (e.g., `cdb.best.hr`) to Netlify's nameservers (e.g., `dns1.p07.nsone.net`)
+
+### Netlify Domain Management
+
+1. Add your domain alias (e.g., `cdb.best.hr`) in the Netlify project dashboard
+2. Enable SSL/TLS certificate for HTTPS access
+
+**Important:** After changing domains, update the following:
+
+- `BETTER_AUTH_URL` environment variable
+- Google OAuth authorized domains and redirect URIs
 
 ## How to contribute
 
