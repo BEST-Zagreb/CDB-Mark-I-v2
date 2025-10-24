@@ -83,12 +83,12 @@ npm install better-sqlite3 --build-from-source
 2. **Click "Create database"** in the dashboard
 3. **Enter a database name** (e.g., `company-database`) and select your preferred location
 4. **Click "Create"** to create the database
-5. **Copy-paste the Database URL to .env file** from the database details page (it should look like `libsql://your-database-name.turso.io`)
+5. **Copy-paste the Database URL to your .env file** from the database details page (it should look like `libsql://your-database-name.turso.io`)
 
 ##### Create an Authentication Token
 
 1. In your database overview page **Click "Generate token"**
-2. **Copy-paste the generated token to .env file**
+2. **Copy-paste the generated token to your .env file**
 
 #### 2. Better Auth Configuration
 
@@ -97,7 +97,7 @@ npm install better-sqlite3 --build-from-source
    - Use `http://localhost:3000` for local development
    - Use your production URL for deployment (e.g., `https://cdb.best.hr`)
 
-2. Generate a Better Auth secret from the [Better-Auth documentation](https://www.better-auth.com/docs/installation)
+2. Generate and copy-paste the `BETTER_AUTH_SECRET` from the [Better-Auth documentation](https://www.better-auth.com/docs/installation)
 
 #### 3. Google OAuth Setup
 
@@ -107,18 +107,18 @@ npm install better-sqlite3 --build-from-source
 
 3. Create a new OAuth client ID credential under `Open APIs & Services > Credentials`
 
-3.1. Configure consent screen (Branding)
+- Configure consent screen (`Branding`)
 
-- Input app name (for example `Company Database`) and user support email (your account email)
-- Set Audience to External so users outside your organisation can login
-- Add contact email (your account email)
+  - Input app name (for example `Company Database`) and user support email (your account email)
+  - Set Audience to External so users outside your organisation can login
+  - Add contact email (your account email)
 
-  3.2. Create OAuth client ID (Clients)
+- Create OAuth client ID (`Clients`)
 
-- Set application type to Web application
-- Change name or leave as is
-- Add Authorized JavaScript origins (your app domain): `http://localhost:3000`, `https://cdb.best.hr`, `https://cdb.netlify.app`
-- Add Authorized redirect URIs (your app domain): `http://localhost:3000/api/auth/callback/google`, `https://cdb.best.hr/api/auth/callback/google`, `https://cdb.netlify.app/api/auth/callback/google`
+  - Set application type to Web application
+  - Change name or leave as is
+  - Add Authorized JavaScript origins (your app domain): `http://localhost:3000`, `https://cdb.best.hr`, `https://cdb.netlify.app`
+  - Add Authorized redirect URIs (your app domain): `http://localhost:3000/api/auth/callback/google`, `https://cdb.best.hr/api/auth/callback/google`, `https://cdb.netlify.app/api/auth/callback/google`
 
 4. Copy-paste Client ID and Client Secret to your .env file
 
