@@ -83,21 +83,21 @@ npm install better-sqlite3 --build-from-source
 2. **Click "Create database"** in the dashboard
 3. **Enter a database name** (e.g., `company-database`) and select your preferred location
 4. **Click "Create"** to create the database
-5. **Copy-paste the Database URL to your .env file** from the database details page (it should look like `libsql://your-database-name.turso.io`)
+5. **Copy-paste the Database URL to your `.env.local` file** from the database details page (it should look like `libsql://your-database-name.turso.io`)
 
 ##### Create an Authentication Token
 
 1. In your database overview page **Click "Generate token"**
-2. **Copy-paste the generated token to your .env file**
+2. **Copy-paste the generated token to your `.env.local` file**
 
 #### 2. Better Auth Configuration
 
-1. Set `BETTER_AUTH_URL` to your application URL:
+1. Set `BETTER_AUTH_URL` in your `.env.local` file to your application URL:
 
    - Use `http://localhost:3000` for local development
    - Use your production URL for deployment (e.g., `https://cdb.best.hr`)
 
-2. Generate and copy-paste the `BETTER_AUTH_SECRET` from the [Better-Auth documentation](https://www.better-auth.com/docs/installation)
+2. Generate and copy-paste the `BETTER_AUTH_SECRET` from the [Better-Auth documentation](https://www.better-auth.com/docs/installation) to your `.env.local` file
 
 #### 3. Google OAuth Setup
 
@@ -120,7 +120,7 @@ npm install better-sqlite3 --build-from-source
   - Add Authorized JavaScript origins (your app domain): `http://localhost:3000`, `https://cdb.best.hr`, `https://cdb.netlify.app`
   - Add Authorized redirect URIs (your app domain): `http://localhost:3000/api/auth/callback/google`, `https://cdb.best.hr/api/auth/callback/google`, `https://cdb.netlify.app/api/auth/callback/google`
 
-4. Copy-paste Client ID and Client Secret to your .env file
+4. Copy-paste Client ID and Client Secret to your `.env.local` file
 
 5. Publish your app to Production under `Audience > Publishing status > Publish app`
 
