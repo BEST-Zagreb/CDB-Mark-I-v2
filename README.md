@@ -67,7 +67,10 @@ npm install better-sqlite3 --build-from-source
 
 ### Environment Setup
 
-1. Create a `.env.local` file in the project root by copying `.env.local.example`
+1. Create a `.env.local` file in the project root:
+   ```bash
+   cp .env.local.example .env.local
+   ```
 2. Configure the following services:
 
 #### 1. Turso Database
@@ -124,26 +127,30 @@ npm install better-sqlite3 --build-from-source
 
 5. Publish your app to Production under `Audience > Publishing status > Publish app`
 
-### Database setup
+### Database Setup
 
-The application uses Drizzle ORM with a Turso (LibSQL) database. The schema includes:
+The application uses **Drizzle ORM** with a **Turso** (LibSQL) database. The schema includes:
 
-- **companies** - Organization information
-- **projects** - Project tracking
-- **people** - Contact persons (linked to companies)
-- **collaborations** - Partnership tracking between companies (contacts) and projects
-- **app_users** - Application user profiles with roles
-- **user, session, account, verification** - Better Auth authentication tables
+| Table                                        | Description                                                    |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `companies`                                  | Organization information                                       |
+| `projects`                                   | Project tracking                                               |
+| `people`                                     | Contact persons (linked to companies)                          |
+| `collaborations`                             | Partnership tracking between companies (contacts) and projects |
+| `app_users`                                  | Application user profiles with roles                           |
+| `user`, `session`, `account`, `verification` | Better Auth authentication tables                              |
 
-Available utility scripts in `db/scripts/`:
+#### Database Utility Scripts
 
-#### Preparation Scripts
+Location: `db/scripts/`
+
+##### DB Preparation Scripts
 
 - **`normalize_db.js`** - Database normalization utilities
 - **`enable_cascading_deletes.js`** - Enable cascading deletes
 - **`analyze_db_cardinality.js`** - Analyze database relationships
 
-#### Migration Scripts
+#### DB Migration Scripts
 
 - **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
@@ -224,11 +231,15 @@ drizzle-kit push:sqlite
 pnpm run build
 ```
 
-### 2. Netlify Setup
+### 2. Netlify Configuration
 
-1. Create a Netlify account and connect it to GitHub
-2. Import your GitHub repository for continuous deployment
-3. Configure environment variables in Netlify:
+1. **Initial Setup**
+
+   - Create a Netlify account
+   - Connect your GitHub account
+   - Import your repository for continuous deployment
+
+2. **Environment Variables**
 
    Copy these values as secrets from your `.env.local`:
 
@@ -242,21 +253,26 @@ pnpm run build
 
    - `BETTER_AUTH_URL` - Your app's URL (e.g., `https://cdb.best.hr` or `https://cdb.netlify.app`)
 
-### 3. Domain Setup (Optional)
+### 3. Custom Domain Setup (Optional)
 
-#### Cloudflare DNS Configuration
+#### A. Cloudflare DNS Configuration
 
-1. Add NS records (4 total) in Cloudflare that point from your domain (e.g., `cdb.best.hr`) to Netlify's nameservers (e.g., `dns1.p07.nsone.net`)
+1. In your Cloudflare DNS dashboard, add **4 NS records** that point from your domain (e.g., `cdb.best.hr`) to Netlify's nameservers (format: `dnsX.p07.nsone.net`)
 
-#### Netlify Domain Management
+#### B. Netlify Domain Configuration
 
-1. Add your domain alias (e.g., `cdb.best.hr`) in the Netlify project dashboard
-2. Enable SSL/TLS certificate for HTTPS access
+1. In the **Netlify project dashboard** → **Domain Management**:
+   - Add your custom domain (e.g., `cdb.best.hr`)
+   - Enable SSL/TLS certificate
 
-**Important:** After changing domains, update the following:
+#### C. Update Application Settings
 
-- `BETTER_AUTH_URL` environment variable
-- Google OAuth authorized domains and redirect URIs
+After domain changes, update:
+
+- Environment variable: `BETTER_AUTH_URL`
+- Google OAuth settings:
+  - Authorized domains
+  - Redirect URIs
 
 ## How to contribute
 
