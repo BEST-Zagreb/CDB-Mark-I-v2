@@ -55,9 +55,9 @@ npm install better-sqlite3 --build-from-source
 
 **Note:** The second command installs `better-sqlite3` with native bindings required for the database utility scripts. This package needs to be compiled for your specific platform and Node.js version.
 
-# How to run
+## How to run
 
-## Prerequisites
+### Prerequisites
 
 - **Node.js 22.19.0+** (or latest LTS)
 - **pnpm** (recommended) or npm/yarn
@@ -65,19 +65,19 @@ npm install better-sqlite3 --build-from-source
   npm install -g pnpm
   ```
 
-## Environment Setup
+### Environment Setup
 
 1. Create a `.env.local` file in the project root by copying `.env.local.example`
 2. Configure the following services:
 
-### 1. Turso Database
+#### 1. Turso Database
 
-#### Create a Turso Account
+##### Create a Turso Account
 
 1. Go to [Turso](https://turso.tech/) and sign up for an account
 2. Verify your email address
 
-#### Create a Database via Web Interface
+##### Create a Database via Web Interface
 
 1. **Log in** to your Turso account at [https://app.turso.tech](https://app.turso.tech)
 2. **Click "Create database"** in the dashboard
@@ -85,12 +85,12 @@ npm install better-sqlite3 --build-from-source
 4. **Click "Create"** to create the database
 5. **Copy-paste the Database URL to .env file** from the database details page (it should look like `libsql://your-database-name.turso.io`)
 
-#### Create an Authentication Token
+##### Create an Authentication Token
 
 1. In your database overview page **Click "Generate token"**
 2. **Copy-paste the generated token to .env file**
 
-### 2. Better Auth Configuration
+#### 2. Better Auth Configuration
 
 1. Set `BETTER_AUTH_URL` to your application URL:
 
@@ -99,7 +99,7 @@ npm install better-sqlite3 --build-from-source
 
 2. Generate a Better Auth secret from the [Better-Auth documentation](https://www.better-auth.com/docs/installation)
 
-### 3. Google OAuth Setup
+#### 3. Google OAuth Setup
 
 1. Open Google Cloud Console (https://console.cloud.google.com/)
 
@@ -124,7 +124,7 @@ npm install better-sqlite3 --build-from-source
 
 5. Publish your app to Production under `Audience > Publishing status > Publish app`
 
-## Database setup
+### Database setup
 
 The application uses Drizzle ORM with a Turso (LibSQL) database. The schema includes:
 
@@ -137,19 +137,19 @@ The application uses Drizzle ORM with a Turso (LibSQL) database. The schema incl
 
 Available utility scripts in `db/scripts/`:
 
-### Preparation Scripts
+#### Preparation Scripts
 
 - **`normalize_db.js`** - Database normalization utilities
 - **`enable_cascading_deletes.js`** - Enable cascading deletes
 - **`analyze_db_cardinality.js`** - Analyze database relationships
 
-### Migration Scripts
+#### Migration Scripts
 
 - **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 - **`verify-tables.js`** - Verify all tables exist in Turso
 
-### Option 1: Migrate Existing Database
+#### Option 1: Migrate Existing Database
 
 To migrate data from an existing CDB instance, follow these steps:
 
@@ -196,7 +196,7 @@ node db/scripts/add-auth-tables.js
 
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 
-### Option 2: Fresh Database Setup
+#### Option 2: Fresh Database Setup
 
 For a new installation without existing data:
 
@@ -205,7 +205,7 @@ For a new installation without existing data:
 drizzle-kit push:sqlite
 ```
 
-## Running the Application
+### Running the Application
 
 1. Start the development server:
 
@@ -215,16 +215,16 @@ drizzle-kit push:sqlite
 
 2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
 
-# Deployment Guide (Netlify)
+## Deployment Guide (Netlify)
 
-## 1. Local Build Verification (Optional)
+### 1. Local Build Verification (Optional)
 
 ```bash
 # Build the application locally to verify everything works
 pnpm run build
 ```
 
-## 2. Netlify Setup
+### 2. Netlify Setup
 
 1. Create a Netlify account and connect it to GitHub
 2. Import your GitHub repository for continuous deployment
@@ -242,13 +242,13 @@ pnpm run build
 
    - `BETTER_AUTH_URL` - Your app's URL (e.g., `https://cdb.best.hr` or `https://cdb.netlify.app`)
 
-## 3. Domain Setup (Optional)
+### 3. Domain Setup (Optional)
 
-### Cloudflare DNS Configuration
+#### Cloudflare DNS Configuration
 
 1. Add NS records (4 total) in Cloudflare that point from your domain (e.g., `cdb.best.hr`) to Netlify's nameservers (e.g., `dns1.p07.nsone.net`)
 
-### Netlify Domain Management
+#### Netlify Domain Management
 
 1. Add your domain alias (e.g., `cdb.best.hr`) in the Netlify project dashboard
 2. Enable SSL/TLS certificate for HTTPS access
