@@ -104,7 +104,7 @@ npm install better-sqlite3 --build-from-source
 
 #### 3. Google OAuth Setup
 
-1. Open Google Cloud Console (https://console.cloud.google.com/)
+1. Open [Google Cloud Console](https://console.cloud.google.com/)
 
 2. Create a new project (name for example `Company Database` and id for example `company-database`) and open it
 
