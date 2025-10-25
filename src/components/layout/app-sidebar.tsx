@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect } from "react";
+import { memo, use, useEffect } from "react";
 import { FolderOpen, Building, Home, Users } from "lucide-react";
 
 import Link from "next/link";
@@ -18,17 +18,25 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useSession } from "@/lib/auth-client";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+const navigationLinks = [
+  { href: "/", label: "Home", icon: Home },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
+  { href: "/companies", label: "Companies", icon: Building },
+  { href: "/users", label: "Users", icon: Users },
+];
 
 export const AppSidebar = memo(function AppSidebar() {
-  const { setOpen } = useSidebar();
+  const { setOpenMobile, setOpen } = useSidebar();
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const isMobile = useIsMobile();
 
   // Close sidebar when route changes
   useEffect(() => {
+    setOpenMobile(false);
     setOpen(false);
-  }, [pathname]);
+  }, [pathname, setOpenMobile]);
 
   return (
     <Sidebar variant="floating" className="mt-24 h-fit">
@@ -53,72 +61,23 @@ export const AppSidebar = memo(function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Home */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href="/"
-                    className={`flex items-center gap-2 ${
-                      pathname === "/" ? "text-primary bg-accent font-bold" : ""
-                    }`}
-                  >
-                    <Home className="size-5" />
-                    <span>Home</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Projects */}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href="/projects"
-                    className={`flex items-center gap-2 ${
-                      pathname.startsWith("/projects")
-                        ? "text-primary bg-accent font-bold"
-                        : ""
-                    }`}
-                  >
-                    <FolderOpen className="size-5" />
-                    <span>Projects</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Companies */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href="/companies"
-                    className={`flex items-center gap-2 ${
-                      pathname.startsWith("/companies")
-                        ? "text-primary bg-accent font-bold"
-                        : ""
-                    }`}
-                  >
-                    <Building className="size-5" />
-                    <span>Companies</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Users */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href="/users"
-                    className={`flex items-center gap-2 ${
-                      pathname.startsWith("/users")
-                        ? "text-primary bg-accent font-bold"
-                        : ""
-                    }`}
-                  >
-                    <Users className="size-5" />
-                    <span>Users</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {navigationLinks.map((link) => (
+                <SidebarMenuItem key={link.href}>
+                  <SidebarMenuButton asChild>
+                    <Link
+                      href={link.href}
+                      className={`flex items-center gap-2 ${
+                        pathname === link.href
+                          ? "text-primary bg-accent font-bold"
+                          : ""
+                      }`}
+                    >
+                      <link.icon className="size-5" />
+                      <span>{link.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
