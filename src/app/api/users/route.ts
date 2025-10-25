@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { appUsers } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { appUsers, collaborations } from "@/db/schema";
+import { desc, sql } from "drizzle-orm";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
 
@@ -9,22 +9,43 @@ import { checkIsAdmin } from "@/lib/server-auth";
 export async function GET() {
   try {
     const results = await db
-      .select()
+      .select({
+        user: appUsers,
+        hasCollaborations: sql<number>`EXISTS (
+          SELECT 1 FROM ${collaborations}
+          WHERE ${collaborations.responsible} = ${appUsers.fullName}
+        )`,
+      })
       .from(appUsers)
       .orderBy(desc(appUsers.createdAt));
 
-    const formattedUsers: User[] = results.map((u) => ({
-      id: u.id,
-      fullName: u.fullName,
-      email: u.email,
-      role: u.role as UserRoleType,
-      description: u.description,
-      createdAt: u.createdAt,
-      updatedAt: u.updatedAt,
-      addedBy: u.addedBy,
-      lastLogin: u.lastLogin,
-      isLocked: u.isLocked,
-    }));
+    const formattedUsers: User[] = results.map(
+      ({ user: u, hasCollaborations }) => {
+        // If user's role is not Administrator or Project responsible, and they have collaborations,
+        // display them as Project team member
+        let role = u.role as UserRoleType;
+        if (
+          role !== "Administrator" &&
+          role !== "Project responsible" &&
+          hasCollaborations
+        ) {
+          role = "Project team member";
+        }
+
+        return {
+          id: u.id,
+          fullName: u.fullName,
+          email: u.email,
+          role: role,
+          description: u.description,
+          createdAt: u.createdAt,
+          updatedAt: u.updatedAt,
+          addedBy: u.addedBy,
+          lastLogin: u.lastLogin,
+          isLocked: u.isLocked,
+        };
+      }
+    );
 
     return NextResponse.json(formattedUsers);
   } catch (error) {

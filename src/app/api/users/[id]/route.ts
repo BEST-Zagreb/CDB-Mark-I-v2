@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { appUsers } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { appUsers, collaborations } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
 
@@ -13,8 +13,15 @@ export async function GET(
   try {
     const { id: userId } = await params;
 
+    // Get user and check if they have any collaborations
     const results = await db
-      .select()
+      .select({
+        user: appUsers,
+        hasCollaborations: sql<number>`EXISTS (
+          SELECT 1 FROM ${collaborations} 
+          WHERE ${collaborations.responsible} = ${appUsers.fullName}
+        )`,
+      })
       .from(appUsers)
       .where(eq(appUsers.id, userId));
 
@@ -22,12 +29,25 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const u = results[0];
+    const result = results[0];
+    const u = result.user;
+
+    // If user's role is not Administrator or Project responsible, and they have collaborations,
+    // display them as Project team member
+    let role = u.role as UserRoleType;
+    if (
+      role !== "Administrator" &&
+      role !== "Project responsible" &&
+      result.hasCollaborations
+    ) {
+      role = "Project team member";
+    }
+
     const formattedUser: User = {
       id: u.id,
       fullName: u.fullName,
       email: u.email,
-      role: u.role as UserRoleType,
+      role: role,
       description: u.description,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
