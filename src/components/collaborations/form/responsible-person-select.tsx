@@ -17,45 +17,55 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useEffect, useState } from "react";
+import { useResponsiblePersons } from "@/hooks/collaborations/use-collaborations";
+import { is } from "drizzle-orm";
 
 interface ResponsiblePersonSelectProps {
   value?: string;
   onValueChange: (value: string) => void;
-  options: string[];
+
   placeholder?: string;
   disabled?: boolean;
-  className?: string;
 }
 
 export function ResponsiblePersonSelect({
   value,
   onValueChange,
-  options,
+
   placeholder = "Search or enter responsible person...",
-  disabled = false,
-  className,
 }: ResponsiblePersonSelectProps) {
-  const [open, setOpen] = React.useState(false);
-  const [inputValue, setInputValue] = React.useState(value || "");
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value || "");
+
+  // Fetch all existing responsible persons for autocomplete
+  const { data: responsiblePersons = [], isLoading: isLoadingResponsible } =
+    useResponsiblePersons();
 
   // Update input value when value prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setInputValue(value || "");
   }, [value]);
 
   const handleSelect = (selectedValue: string) => {
-    setInputValue(selectedValue);
-    onValueChange(selectedValue);
+    const trimmedValue = selectedValue.trim();
+    setInputValue(trimmedValue);
+    onValueChange(trimmedValue);
     setOpen(false);
   };
 
   const handleInputChange = (newValue: string) => {
-    setInputValue(newValue);
-    onValueChange(newValue);
+    const trimmedValue = newValue.trim();
+    setInputValue(trimmedValue);
+    onValueChange(trimmedValue);
   };
 
-  const filteredOptions = options.filter((option) =>
-    option.toLowerCase().includes(inputValue.toLowerCase())
+  const filteredOptions = responsiblePersons.filter(
+    (responsiblePerson) =>
+      responsiblePerson.fullName
+        .toLowerCase()
+        .includes(inputValue.toLowerCase()) ||
+      responsiblePerson.email?.toLowerCase().includes(inputValue.toLowerCase())
   );
 
   return (
@@ -65,13 +75,14 @@ export function ResponsiblePersonSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("justify-between w-full truncate", className)}
-          disabled={disabled}
+          className="justify-between w-full truncate"
+          disabled={isLoadingResponsible}
         >
           {inputValue || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
+
       <PopoverContent className="w-[70dvw] sm:max-w-115 p-0">
         <Command>
           <CommandInput
@@ -101,14 +112,25 @@ export function ResponsiblePersonSelect({
                 {filteredOptions.length === 0 && (
                   <CommandEmpty>No results found.</CommandEmpty>
                 )}
+
                 <CommandGroup>
-                  {filteredOptions.map((option) => (
+                  {filteredOptions.map((responsiblePerson) => (
                     <CommandItem
-                      key={option}
-                      value={option}
-                      onSelect={() => handleSelect(option)}
+                      key={
+                        responsiblePerson.id ||
+                        responsiblePerson.email ||
+                        responsiblePerson.fullName
+                      }
+                      value={responsiblePerson.fullName}
+                      onSelect={() => handleSelect(responsiblePerson.fullName)}
+                      className="cursor-pointer mb-1"
                     >
-                      {option}
+                      {responsiblePerson.fullName}{" "}
+                      {responsiblePerson.email && (
+                        <span className="text-muted-foreground ml-auto text-xs">
+                          {responsiblePerson.email}
+                        </span>
+                      )}
                     </CommandItem>
                   ))}
                 </CommandGroup>

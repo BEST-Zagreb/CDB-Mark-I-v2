@@ -26,7 +26,6 @@ import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
 import { ResponsiblePersonSelect } from "@/components/collaborations/form/responsible-person-select";
 import { useContactsByCompany } from "@/app/companies/[id]/hooks/use-contacts";
-import { useResponsiblePersons } from "@/hooks/collaborations/use-collaborations";
 import {
   Collaboration,
   CollaborationFormData,
@@ -70,16 +69,11 @@ export function CollaborationForm({
   const { data: contacts = [], isLoading: isLoadingContacts } =
     useContactsByCompany(selectedCompanyId);
 
-  // Fetch all existing responsible persons for autocomplete
-  const { data: responsiblePersons = [], isLoading: isLoadingResponsible } =
-    useResponsiblePersons();
-
   // Track if form has been properly initialized with data
   const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   // Determine if we should show loading state
-  const isFormLoading =
-    isLoading || isLoadingResponsible || (initialData && !isFormInitialized);
+  const isFormLoading = isLoading || (initialData && !isFormInitialized);
 
   // Reset form when collaboration changes
   useEffect(() => {
@@ -299,9 +293,7 @@ export function CollaborationForm({
                 <ResponsiblePersonSelect
                   value={field.value}
                   onValueChange={field.onChange}
-                  options={responsiblePersons}
                   placeholder="Search or enter responsible person name"
-                  disabled={isLoading}
                 />
               </FormControl>
               <FormMessage />
