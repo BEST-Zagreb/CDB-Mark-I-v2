@@ -66,8 +66,12 @@ export async function checkAndCreateUser(userInfo: {
     return { authorized: true };
   }
 
-  // Check if user has @best.hr domain
-  if (email.endsWith("@best.hr")) {
+  // Check if user's email domain is in the allowed list
+  const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(",") || [];
+  if (
+    allowedDomains.length > 0 &&
+    allowedDomains.some((domain) => email.endsWith(`@${domain}`))
+  ) {
     await db.insert(appUsers).values({
       id,
       fullName: name,
