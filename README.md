@@ -73,6 +73,8 @@ npm install better-sqlite3 --build-from-source
    ```
 2. Configure the following services:
 
+TODO: if you want to allow all account from a specific email domain to login, set the `ALLOWED_EMAIL_DOMAINS` variable in your `.env.local` file to a comma-separated list of domains (e.g., `best.hr,example.com`). Leave it empty to disable.
+
 #### 1. Turso Database
 
 ##### Create a Turso Account
