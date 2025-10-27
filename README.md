@@ -278,7 +278,7 @@ After domain changes, update:
 
 ## How to contribute
 
-Contributions are welcome — whether it's a bug report, feature idea, documentation improvement or code change. Below are guidelines to make the process smooth for everyone.
+Contributions are welcome - whether it's a bug report, feature idea, documentation improvement or code change. Below are guidelines to make the process smooth for everyone.
 
 ### Reporting bugs & suggesting ideas
 

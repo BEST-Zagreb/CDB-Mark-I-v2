@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarClock,
   Hash,
+  UserPlus,
 } from "lucide-react";
 
 export const USER_FIELDS = [
@@ -52,6 +53,14 @@ export const USER_FIELDS = [
     icon: FileText,
   },
   {
+    id: "addedBy",
+    label: "Added By",
+    required: false,
+    sortable: true,
+    center: false,
+    icon: UserPlus,
+  },
+  {
     id: "isLocked",
     label: "Locked",
     required: false,
@@ -90,5 +99,6 @@ export const DEFAULT_USER_COLUMNS = [
   "fullName",
   "email",
   "role",
+  "addedBy",
   "lastLogin",
 ] as const;

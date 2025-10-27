@@ -36,6 +36,12 @@ export const UsersTableRow = memo(function UsersTableRow({
   const isMobile = useIsMobile();
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
+  const addedById = user.addedByUser?.id ?? user.addedBy ?? null;
+  const addedByName =
+    user.addedByUser?.fullName?.trim() ||
+    user.addedByUser?.email?.trim() ||
+    user.addedBy ||
+    null;
 
   // Memoize the view handler to prevent recreation
   const handleView = useCallback(
@@ -70,20 +76,20 @@ export const UsersTableRow = memo(function UsersTableRow({
             href={`/users/${user.id}`}
             className="text-primary hover:underline text-pretty"
           >
-            {user.fullName || "—"}
+            {user.fullName || "-"}
           </Link>
         </TableCell>
       )}
 
       {isColumnVisible("email", tablePreferences) && (
         <TableCell className="max-w-50">
-          <div className="text-pretty">{user.email || "—"}</div>
+          <div className="text-pretty">{user.email || "-"}</div>
         </TableCell>
       )}
 
       {isColumnVisible("role", tablePreferences) && (
         <TableCell className="max-w-50">
-          <div className="text-pretty">{user.role || "—"}</div>
+          <div className="text-pretty">{user.role || "-"}</div>
         </TableCell>
       )}
 
@@ -103,7 +109,22 @@ export const UsersTableRow = memo(function UsersTableRow({
               </Tooltip>
             </TooltipProvider>
           ) : (
-            "—"
+            "-"
+          )}
+        </TableCell>
+      )}
+
+      {isColumnVisible("addedBy", tablePreferences) && (
+        <TableCell className="max-w-50">
+          {addedById ? (
+            <Link
+              href={`/users/${addedById}`}
+              className="text-primary hover:underline text-pretty"
+            >
+              {addedByName || "-"}
+            </Link>
+          ) : (
+            <div className="text-pretty">{addedByName || "-"}</div>
           )}
         </TableCell>
       )}

@@ -6,19 +6,19 @@
  * Format a date string or Date object to Croatian locale format
  */
 export function formatDate(date: Date | string | null): string {
-  if (!date) return "—";
+  if (!date) return "-";
 
   // Convert to Date object if it's a string
   let dateObj: Date;
   if (typeof date === "string") {
-    if (date === "null" || date === "") return "—";
+    if (date === "null" || date === "") return "-";
     dateObj = new Date(date);
   } else {
     dateObj = date;
   }
 
   // Check if the date is valid
-  if (isNaN(dateObj.getTime())) return "—";
+  if (isNaN(dateObj.getTime())) return "-";
 
   return new Intl.DateTimeFormat("hr-HR", {
     year: "numeric",
@@ -31,7 +31,7 @@ export function formatDate(date: Date | string | null): string {
  * Format currency amount based on project creation/update date
  * Projects created/updated before 2023-01-01 are displayed in HRK, otherwise in EUR
  * Rounds to whole numbers with no decimals and adds comma separators for thousands
- * Returns empty string for null/undefined/empty values, "—" for 0
+ * Returns empty string for null/undefined/empty values, "-" for 0
  */
 export function formatCurrency(
   amount: number,

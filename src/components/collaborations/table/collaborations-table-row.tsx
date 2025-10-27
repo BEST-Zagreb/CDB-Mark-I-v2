@@ -109,7 +109,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   </Link>
                 ) : (
                   <div className="text-pretty">
-                    {collaboration.companyName || "—"}
+                    {collaboration.companyName || "-"}
                   </div>
                 )}
               </div>
@@ -132,7 +132,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                 </Link>
               ) : (
                 <div className="text-pretty">
-                  {collaboration.projectName || "—"}
+                  {collaboration.projectName || "-"}
                 </div>
               )}
             </TableCell>
@@ -340,7 +340,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               {String(
                 (collaboration as unknown as Record<string, unknown>)[
                   column.id
-                ] || "—"
+                ] || "-"
               )}
             </div>
           </TableCell>

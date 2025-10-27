@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers, collaborations } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
+import { resolveAddedByUser } from "@/lib/user-utils";
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
@@ -14,6 +16,8 @@ export async function GET(
     const { id: userId } = await params;
 
     // Get user and check if they have any collaborations
+    const addedByUser = alias(appUsers, "addedByUser");
+
     const results = await db
       .select({
         user: appUsers,
@@ -21,8 +25,11 @@ export async function GET(
           SELECT 1 FROM ${collaborations} 
           WHERE ${collaborations.responsible} = ${appUsers.fullName}
         )`,
+        addedByFullName: addedByUser.fullName,
+        addedByEmail: addedByUser.email,
       })
       .from(appUsers)
+      .leftJoin(addedByUser, eq(addedByUser.id, appUsers.addedBy))
       .where(eq(appUsers.id, userId));
 
     if (results.length === 0) {
@@ -52,6 +59,7 @@ export async function GET(
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
       addedBy: u.addedBy,
+      addedByUser: await resolveAddedByUser(u.addedBy),
       lastLogin: u.lastLogin,
       isLocked: u.isLocked,
     };
@@ -152,6 +160,7 @@ export async function PUT(
     }
 
     const updatedUser = result[0];
+    const addedByInfo = await resolveAddedByUser(updatedUser.addedBy);
     const formattedUser: User = {
       id: updatedUser.id,
       fullName: updatedUser.fullName,
@@ -161,6 +170,7 @@ export async function PUT(
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
       addedBy: updatedUser.addedBy,
+      addedByUser: addedByInfo,
       lastLogin: updatedUser.lastLogin,
       isLocked: updatedUser.isLocked,
     };

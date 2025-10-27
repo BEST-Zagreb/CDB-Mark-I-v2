@@ -16,17 +16,17 @@ export function ProjectDetailsSection({
   collaborations = [],
 }: ProjectDetailsSectionProps) {
   const formatDate = (date: Date | string | null) => {
-    if (!date) return "—";
+    if (!date) return "-";
 
     let dateObj: Date;
     if (typeof date === "string") {
-      if (date === "null" || date === "") return "—";
+      if (date === "null" || date === "") return "-";
       dateObj = new Date(date);
     } else {
       dateObj = date;
     }
 
-    if (isNaN(dateObj.getTime())) return "—";
+    if (isNaN(dateObj.getTime())) return "-";
 
     return new Intl.DateTimeFormat("hr-HR", {
       year: "numeric",

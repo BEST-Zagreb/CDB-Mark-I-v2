@@ -26,9 +26,9 @@ export function useCountries() {
 
       return countryOptions;
     },
-    // Keep countries fresh for a long time — they rarely change
+    // Keep countries fresh for a long time - they rarely change
     staleTime: 1000 * 60 * 60 * 24 * 30, // 30 days
-    // Don't refetch on window focus/mount/reconnect — explicit refetch isn't needed
+    // Don't refetch on window focus/mount/reconnect - explicit refetch isn't needed
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,

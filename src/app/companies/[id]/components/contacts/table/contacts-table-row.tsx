@@ -62,7 +62,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
                   column.center ? "text-center" : "font-medium"
                 }`}
               >
-                <div className="text-pretty">{contact.name || "—"}</div>
+                <div className="text-pretty">{contact.name || "-"}</div>
               </TableCell>
             );
           } else if (column.id === "email") {
@@ -71,7 +71,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
                 key={column.id}
                 className={`max-w-50 ${column.center ? "text-center" : ""}`}
               >
-                <div className="text-pretty">{contact.email || "—"}</div>
+                <div className="text-pretty">{contact.email || "-"}</div>
               </TableCell>
             );
           } else if (column.id === "phone") {
@@ -80,7 +80,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
                 key={column.id}
                 className={`max-w-50 ${column.center ? "text-center" : ""}`}
               >
-                <div className="text-pretty">{contact.phone || "—"}</div>
+                <div className="text-pretty">{contact.phone || "-"}</div>
               </TableCell>
             );
           } else if (column.id === "function") {
@@ -94,7 +94,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
                     {contact.function}
                   </Badge>
                 ) : (
-                  "—"
+                  "-"
                 )}
               </TableCell>
             );
@@ -119,7 +119,7 @@ export const ContactsTableRow = memo(function ContactsTableRow({
               }`}
             >
               <div className="text-pretty">
-                {String(contact[column.id as keyof Contact] || "—")}
+                {String(contact[column.id as keyof Contact] || "-")}
               </div>
             </TableCell>
           );

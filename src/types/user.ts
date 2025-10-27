@@ -20,6 +20,11 @@ export interface User {
   createdAt: Date | string;
   updatedAt: Date | string;
   addedBy: string | null;
+  addedByUser: {
+    id: string;
+    fullName: string | null;
+    email: string | null;
+  } | null;
   lastLogin: Date | string | null;
   isLocked: boolean;
 }

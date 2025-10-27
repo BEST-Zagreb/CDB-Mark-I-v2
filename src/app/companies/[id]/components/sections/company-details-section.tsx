@@ -29,11 +29,11 @@ export function CompanyDetailsSection({ company }: CompanyDetailsSectionProps) {
                       rel="noopener noreferrer"
                       className="text-primary hover:underline text-pretty"
                     >
-                      {formatUrl(company.url)?.label || "—"}
+                      {formatUrl(company.url)?.label || "-"}
                     </a>
                   </div>
                 ) : (
-                  <div className="truncate">—</div>
+                  <div className="truncate">-</div>
                 )}
               </div>
             </div>

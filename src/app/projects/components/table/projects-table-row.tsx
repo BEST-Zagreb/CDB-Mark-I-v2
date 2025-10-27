@@ -68,7 +68,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
                 href={`/projects/${project.id}`}
                 className="text-primary hover:underline text-pretty"
               >
-                {project.name || "—"}
+                {project.name || "-"}
               </Link>
             </TableCell>
           );
@@ -106,7 +106,7 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
               column.center ? "text-center" : "font-medium"
             }`}
           >
-            <div className="text-pretty">{project[column.id] || "—"}</div>
+            <div className="text-pretty">{project[column.id] || "-"}</div>
           </TableCell>
         );
       })}

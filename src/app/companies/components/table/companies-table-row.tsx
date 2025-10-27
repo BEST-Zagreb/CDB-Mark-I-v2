@@ -82,7 +82,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
                   href={`/companies/${company.id}`}
                   className="text-primary hover:underline text-pretty"
                 >
-                  {company.name || "—"}
+                  {company.name || "-"}
                 </Link>
               </div>
             </TableCell>
@@ -101,11 +101,11 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
                     rel="noopener noreferrer"
                     className="text-primary hover:underline text-pretty"
                   >
-                    {formatUrl(company.url)?.label || "—"}
+                    {formatUrl(company.url)?.label || "-"}
                   </a>
                 </div>
               ) : (
-                <div className="truncate">—</div>
+                <div className="truncate">-</div>
               )}
             </TableCell>
           );
@@ -139,7 +139,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
               column.center ? "text-center" : "font-medium"
             }`}
           >
-            <div className="text-pretty">{company[column.id] || "—"}</div>
+            <div className="text-pretty">{company[column.id] || "-"}</div>
           </TableCell>
         );
       })}

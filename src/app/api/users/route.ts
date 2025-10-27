@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers, collaborations } from "@/db/schema";
-import { desc, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
+import { resolveAddedByUser } from "@/lib/user-utils";
 
 // GET /api/users - Get all users
 export async function GET() {
   try {
+    const addedByUser = alias(appUsers, "addedByUser");
+
     const results = await db
       .select({
         user: appUsers,
@@ -15,12 +19,15 @@ export async function GET() {
           SELECT 1 FROM ${collaborations}
           WHERE ${collaborations.responsible} = ${appUsers.fullName}
         )`,
+        addedByFullName: addedByUser.fullName,
+        addedByEmail: addedByUser.email,
       })
       .from(appUsers)
+      .leftJoin(addedByUser, eq(addedByUser.id, appUsers.addedBy))
       .orderBy(desc(appUsers.createdAt));
 
     const formattedUsers: User[] = results.map(
-      ({ user: u, hasCollaborations }) => {
+      ({ user: u, hasCollaborations, addedByFullName, addedByEmail }) => {
         // If user's role is not Administrator or Project responsible, and they have collaborations,
         // display them as Project team member
         let role = u.role as UserRoleType;
@@ -41,6 +48,9 @@ export async function GET() {
           createdAt: u.createdAt,
           updatedAt: u.updatedAt,
           addedBy: u.addedBy,
+          addedByUser: u.addedBy
+            ? { id: u.addedBy, fullName: addedByFullName, email: addedByEmail }
+            : null,
           lastLogin: u.lastLogin,
           isLocked: u.isLocked,
         };
@@ -94,6 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (result && result.length > 0) {
       const newUser = result[0];
+      const addedByInfo = await resolveAddedByUser(newUser.addedBy);
 
       const formattedUser: User = {
         id: newUser.id,
@@ -104,6 +115,7 @@ export async function POST(request: NextRequest) {
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,
         addedBy: newUser.addedBy,
+        addedByUser: addedByInfo,
         lastLogin: newUser.lastLogin,
         isLocked: newUser.isLocked,
       };
