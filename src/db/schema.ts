@@ -91,8 +91,8 @@ export const collaborations = sqliteTable(
     index("idx_collaborations_project_id").on(table.projectId),
     index("idx_collaborations_person_id").on(table.personId),
     // Indexes for ORDER BY clauses
-      index("idx_collaborations_updated_at").on(table.updatedAt),
-      index("idx_collaborations_created_at").on(table.createdAt),
+    index("idx_collaborations_updated_at").on(table.updatedAt),
+    index("idx_collaborations_created_at").on(table.createdAt),
     // Composite index for filtered queries
     index("idx_collaborations_company_contact_future").on(
       table.companyId,
