@@ -73,7 +73,7 @@ npm install better-sqlite3 --build-from-source
    ```
 2. Configure the following services and environment variables:
 
-   - **Optional: restrict login domains.** Set `ALLOWED_EMAIL_DOMAINS` in `.env.local` to a comma-separated list of domains (for example `best.hr,example.com`). Only users whose email ends with one of the listed domains will be able to sign in without needing to make an account prior. Leave the value empty to disable auto-create user.
+   - **Optional: ** Set `ALLOWED_EMAIL_DOMAINS` in `.env.local` to a comma-separated list of domains (for example `best.hr,example.com`). Only users whose email ends with one of the listed domains will be able to sign in without needing to make an account prior. Leave the value empty to disable auto-create user.
 
 #### 1. Turso Database
 
