@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { companies, collaborations } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { updateCompanySchema, type Company } from "@/types/company";
+
+async function companyHasDoNotContact(companyId: number) {
+  const result = await db
+    .select({ companyId: collaborations.companyId })
+    .from(collaborations)
+    .where(
+      and(
+        eq(collaborations.companyId, companyId),
+        eq(collaborations.contactInFuture, 0)
+      )
+    )
+    .limit(1);
+
+  return result.length > 0;
+}
 
 // GET /api/companies/[id] - Get a specific company
 export async function GET(
@@ -32,11 +47,6 @@ export async function GET(
         phone: companies.phone,
         budgetingMonth: companies.budgetingMonth,
         comment: companies.comment,
-        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
-          SELECT 1 FROM ${collaborations} 
-          WHERE ${collaborations.companyId} = ${companies.id} 
-          AND ${collaborations.contactInFuture} = 0
-        ) THEN 1 ELSE 0 END`,
       })
       .from(companies)
       .where(eq(companies.id, companyId));
@@ -46,6 +56,7 @@ export async function GET(
     }
 
     const company = results[0];
+    const hasDoNotContact = await companyHasDoNotContact(company.id!);
     const formattedCompany: Company = {
       id: company.id!,
       name: company.name || "",
@@ -57,7 +68,7 @@ export async function GET(
       phone: company.phone || "",
       budgeting_month: company.budgetingMonth || "",
       comment: company.comment || "",
-      hasDoNotContact: company.hasDoNotContact === 1,
+      hasDoNotContact,
     };
 
     return NextResponse.json(formattedCompany);
@@ -158,16 +169,12 @@ export async function PUT(
         phone: companies.phone,
         budgetingMonth: companies.budgetingMonth,
         comment: companies.comment,
-        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
-          SELECT 1 FROM ${collaborations} 
-          WHERE ${collaborations.companyId} = ${companies.id} 
-          AND ${collaborations.contactInFuture} = 0
-        ) THEN 1 ELSE 0 END`,
       })
       .from(companies)
       .where(eq(companies.id, companyId));
 
     const company = results[0];
+    const hasDoNotContact = await companyHasDoNotContact(company.id!);
     const formattedCompany: Company = {
       id: company.id!,
       name: company.name || "",
@@ -179,7 +186,7 @@ export async function PUT(
       phone: company.phone || "",
       budgeting_month: company.budgetingMonth || "",
       comment: company.comment || "",
-      hasDoNotContact: company.hasDoNotContact === 1,
+      hasDoNotContact,
     };
 
     return NextResponse.json(formattedCompany);

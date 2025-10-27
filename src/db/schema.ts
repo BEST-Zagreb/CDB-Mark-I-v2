@@ -35,7 +35,7 @@ export const projects = sqliteTable(
     createdAt: text("created_at"),
     updatedAt: text("updated_at"),
   },
-  (table) => [index("idx_projects_created_at").on(sql`${table.createdAt} DESC`)]
+  (table) => [index("idx_projects_created_at").on(table.createdAt)]
 );
 
 // People (Contacts) table
@@ -91,13 +91,14 @@ export const collaborations = sqliteTable(
     index("idx_collaborations_project_id").on(table.projectId),
     index("idx_collaborations_person_id").on(table.personId),
     // Indexes for ORDER BY clauses
-    index("idx_collaborations_updated_at").on(sql`${table.updatedAt} DESC`),
-    index("idx_collaborations_created_at").on(sql`${table.createdAt} DESC`),
+      index("idx_collaborations_updated_at").on(table.updatedAt),
+      index("idx_collaborations_created_at").on(table.createdAt),
     // Composite index for filtered queries
     index("idx_collaborations_company_contact_future").on(
       table.companyId,
       table.contactInFuture
     ),
+    index("idx_collaborations_contact_future").on(table.contactInFuture),
     // Partial index for filtered queries
     index("idx_collaborations_responsible_filtered")
       .on(table.responsible)

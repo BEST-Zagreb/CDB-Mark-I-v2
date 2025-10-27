@@ -1,33 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { companies, collaborations } from "@/db/schema";
-import { eq, asc, sql } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { companySchema, type Company } from "@/types/company";
+
+async function companyHasDoNotContact(companyId: number) {
+  const result = await db
+    .select({ companyId: collaborations.companyId })
+    .from(collaborations)
+    .where(
+      and(
+        eq(collaborations.companyId, companyId),
+        eq(collaborations.contactInFuture, 0)
+      )
+    )
+    .limit(1);
+
+  return result.length > 0;
+}
+
+async function fetchDoNotContactCompanyIds() {
+  const rows = await db
+    .select({ companyId: collaborations.companyId })
+    .from(collaborations)
+    .where(eq(collaborations.contactInFuture, 0));
+
+  return new Set(
+    rows
+      .filter((row) => row.companyId != null)
+      .map((row) => row.companyId as number)
+  );
+}
 
 // GET /api/companies - Get all companies
 export async function GET(request: NextRequest) {
   try {
     // Get all companies with do not contact status
-    const results = await db
-      .select({
-        id: companies.id,
-        name: companies.name,
-        url: companies.url,
-        address: companies.address,
-        city: companies.city,
-        zip: companies.zip,
-        country: companies.country,
-        phone: companies.phone,
-        budgetingMonth: companies.budgetingMonth,
-        comment: companies.comment,
-        hasDoNotContact: sql<number>`CASE WHEN EXISTS(
-          SELECT 1 FROM ${collaborations} 
-          WHERE ${collaborations.companyId} = ${companies.id} 
-          AND ${collaborations.contactInFuture} = 0
-        ) THEN 1 ELSE 0 END`,
-      })
-      .from(companies)
-      .orderBy(asc(companies.name));
+    const [results, doNotContactIds] = await Promise.all([
+      db
+        .select({
+          id: companies.id,
+          name: companies.name,
+          url: companies.url,
+          address: companies.address,
+          city: companies.city,
+          zip: companies.zip,
+          country: companies.country,
+          phone: companies.phone,
+          budgetingMonth: companies.budgetingMonth,
+          comment: companies.comment,
+        })
+        .from(companies)
+        .orderBy(asc(companies.name)),
+      fetchDoNotContactCompanyIds(),
+    ]);
 
     const formattedCompanies: Company[] = results.map((company) => ({
       id: company.id!,
@@ -40,7 +66,7 @@ export async function GET(request: NextRequest) {
       phone: company.phone || "",
       budgeting_month: company.budgetingMonth || "",
       comment: company.comment || "",
-      hasDoNotContact: company.hasDoNotContact === 1,
+      hasDoNotContact: company.id ? doNotContactIds.has(company.id) : false,
     }));
 
     return NextResponse.json(formattedCompanies);
@@ -93,16 +119,14 @@ export async function POST(request: NextRequest) {
           phone: companies.phone,
           budgetingMonth: companies.budgetingMonth,
           comment: companies.comment,
-          hasDoNotContact: sql<number>`CASE WHEN EXISTS(
-            SELECT 1 FROM ${collaborations} 
-            WHERE ${collaborations.companyId} = ${companies.id} 
-            AND ${collaborations.contactInFuture} = 0
-          ) THEN 1 ELSE 0 END`,
         })
         .from(companies)
         .where(eq(companies.id, newCompanyId!));
 
       const company = newCompanyData[0];
+      const hasDoNotContact = company?.id
+        ? await companyHasDoNotContact(company.id)
+        : false;
 
       const formattedCompany: Company = {
         id: company.id!,
@@ -115,7 +139,7 @@ export async function POST(request: NextRequest) {
         phone: company.phone || "",
         budgeting_month: company.budgetingMonth || "",
         comment: company.comment || "",
-        hasDoNotContact: company.hasDoNotContact === 1,
+        hasDoNotContact,
       };
 
       return NextResponse.json(formattedCompany, { status: 201 });
