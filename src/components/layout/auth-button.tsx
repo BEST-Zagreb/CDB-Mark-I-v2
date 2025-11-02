@@ -33,16 +33,17 @@ export function AuthButton() {
 
   const handleSignIn = async () => {
     try {
-      await signIn.social({ 
-        provider: "google", 
+      await signIn.social({
+        provider: "google",
         callbackURL: "/",
       });
     } catch (error) {
       // Handle sign-in errors (e.g., authorization failures)
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Failed to sign in. Please try again.";
-      
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to sign in. Please try again.";
+
       toast.error(errorMessage, {
         duration: 6000,
       });
