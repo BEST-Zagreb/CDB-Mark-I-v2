@@ -33,12 +33,28 @@ export async function checkAndCreateUser(userInfo: {
       };
     }
 
-    // Update last login
     const now = new Date().toISOString();
-    await db
-      .update(appUsers)
-      .set({ lastLogin: now })
-      .where(eq(appUsers.email, email));
+    const existingId = existingUser[0].id;
+
+    await db.transaction(async (tx) => {
+      if (existingId !== id) {
+        // Align the manually created user with the Better Auth user id
+        await tx
+          .update(appUsers)
+          .set({ addedBy: id })
+          .where(eq(appUsers.addedBy, existingId));
+
+        await tx
+          .update(appUsers)
+          .set({ id, updatedAt: now })
+          .where(eq(appUsers.id, existingId));
+      }
+
+      await tx
+        .update(appUsers)
+        .set({ lastLogin: now })
+        .where(eq(appUsers.id, id));
+    });
 
     return { authorized: true };
   }
