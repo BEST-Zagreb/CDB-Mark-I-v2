@@ -158,6 +158,10 @@ Location: `db/scripts/`
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 - **`verify-tables.js`** - Verify all tables exist in Turso
 
+#### DB Backup & Export Scripts
+
+- **`export_turso_db.js`** - Export the full Turso database into a local SQLite file
+
 #### Option 1: Migrate Existing Database
 
 To migrate data from an existing CDB instance, follow these steps:
@@ -204,6 +208,19 @@ node db/scripts/add-auth-tables.js
 ```
 
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
+
+#### Export Turso Database to SQLite
+
+Create a full snapshot of your Turso data without installing the Turso CLI:
+
+```bash
+# Exports to db/turso-export.sqlite3 by default. Provide a path argument to control the output location.
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
+TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
+node db/scripts/export_turso_db.js [optional-output-path]
+```
+
+Log in first with the same API token you use for migrations. The script reads the live schema from Turso, recreates the tables locally, and copies all rows as a ready-to-use SQLite database file.
 
 #### Option 2: Fresh Database Setup
 
