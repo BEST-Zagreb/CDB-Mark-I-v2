@@ -4,13 +4,24 @@ import { collaborations, companies, people, projects } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
-// GET /api/collaborations - Get all collaborations with optional project, company, or responsible filter
+// GET /api/collaborations - Get collaborations with required project, company, or responsible filter
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
     const responsible = searchParams.get("responsible");
+
+    // Require at least one filter to prevent fetching all collaborations
+    if (!projectId && !companyId && !responsible) {
+      return NextResponse.json(
+        {
+          error:
+            "Filter required: Please provide project_id, company_id, or responsible parameter",
+        },
+        { status: 400 }
+      );
+    }
 
     const baseQuery = db
       .select({
@@ -54,18 +65,14 @@ export async function GET(request: NextRequest) {
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)
         );
-    } else if (responsible) {
+    } else {
+      // responsible filter (guaranteed to be non-null due to check above)
       result = await baseQuery
-        .where(eq(collaborations.responsible, responsible))
+        .where(eq(collaborations.responsible, responsible!))
         .orderBy(
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)
         );
-    } else {
-      result = await baseQuery.orderBy(
-        desc(collaborations.updatedAt),
-        desc(collaborations.createdAt)
-      );
     }
 
     const formattedCollaborations: Collaboration[] = result.map((row) => ({

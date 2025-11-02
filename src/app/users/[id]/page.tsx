@@ -8,7 +8,7 @@ import { FormDialog } from "@/components/common/form-dialog";
 import { UserForm } from "@/app/users/components/user-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { useUserDetailOperations } from "@/app/users/[id]/hooks/use-user-detail-operations";
-import { useCollaborations } from "@/hooks/collaborations/use-collaborations";
+import { useCollaborationsByResponsible } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useSession } from "@/lib/auth-client";
@@ -30,9 +30,6 @@ export default function UserDetailPage() {
   // Custom hooks for operations
   const userOps = useUserDetailOperations(userId);
 
-  // Fetch all collaborations
-  const { data: allCollaborations = [] } = useCollaborations();
-
   const {
     user,
     isLoadingUser,
@@ -45,13 +42,10 @@ export default function UserDetailPage() {
     isSubmitting: isSubmittingUser,
   } = userOps;
 
-  // Filter collaborations where responsible matches user's name
-  const userCollaborations = useMemo(() => {
-    if (!user) return [];
-    return allCollaborations.filter(
-      (collab) => collab.responsible === user.fullName
-    );
-  }, [allCollaborations, user]);
+  // Fetch collaborations where responsible matches user's name (optimized query)
+  const { data: userCollaborations = [] } = useCollaborationsByResponsible(
+    user?.fullName || ""
+  );
 
   useEffect(() => {
     if (!userId) {
