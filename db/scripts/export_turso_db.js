@@ -1,20 +1,31 @@
 #!/usr/bin/env node
 
 /**
- * Export the entire Turso database to a local SQLite file.
+ * Export the entire Turso database using the /dump endpoint.
+ * Creates both a SQL dump file and a proper SQLite database file.
+ *
+ * Requirements:
+ *   - sqlite3 command-line tool (for creating .sqlite3 database file)
+ *   - Install: https://www.sqlite.org/download.html
  *
  * Usage:
  *   TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
  *   TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
- *   node db/scripts/export_turso_db.js [output-path]
+ *   node db/scripts/export_turso_db.js [optional-output-path]
  *
- * The optional [output-path] argument overrides the default output file at db/turso-export.sqlite3.
+ * Output:
+ *   - cdb_dump-tursodb-YYYY_MM_DD-HH_MM_SS.sql (SQL script)
+ *   - cdb_dump-tursodb-YYYY_MM_DD-HH_MM_SS.sqlite3 (SQLite database)
+ *
+ * Example:
+ *   node db/scripts/export_turso_db.js
+ *   node db/scripts/export_turso_db.js ./backups/mybackup.sqlite3
  */
 
 const fs = require("fs");
 const path = require("path");
-const Database = require("better-sqlite3");
-const { createClient } = require("@libsql/client");
+const https = require("https");
+const { execSync } = require("child_process");
 
 const tursoUrl = process.env.TURSO_DB_URL;
 const tursoToken = process.env.TURSO_DB_TOKEN;
@@ -26,51 +37,95 @@ if (!tursoUrl || !tursoToken) {
   process.exit(1);
 }
 
+/**
+ * Generate timestamp for filename: yyyy_mm_dd-hh_mm_ss
+ */
+function getTimestamp() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${yyyy}_${mm}_${dd}-${hh}_${min}_${ss}`;
+}
+
 const outputArg = process.argv[2];
-const defaultOutput = path.join(process.cwd(), "db", "turso-export.sqlite3");
+const timestamp = getTimestamp();
+const defaultOutput = path.join(
+  process.cwd(),
+  "db",
+  `cdb_dump-tursodb-${timestamp}.sqlite3`
+);
 const outputPath = outputArg
   ? path.resolve(process.cwd(), outputArg)
   : defaultOutput;
 
-function quoteIdentifier(identifier) {
-  return `"${identifier.replace(/"/g, '""')}"`;
+/**
+ * Convert Turso libsql:// URL to https:// URL for the dump endpoint
+ */
+function getTursoDumpUrl(libsqlUrl) {
+  // libsql://your-database.turso.io -> https://your-database.turso.io/dump
+  const httpsUrl = libsqlUrl.replace("libsql://", "https://");
+  return `${httpsUrl}/dump`;
 }
 
-async function fetchTables(client) {
-  const tablesResult = await client.execute(
-    "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
-  );
-  return tablesResult.rows.map((row) => ({
-    name: row.name,
-    sql: row.sql,
-  }));
-}
+/**
+ * Download the database dump from Turso using the /dump endpoint
+ */
+function downloadDump(url, token) {
+  return new Promise((resolve, reject) => {
+    const parsedUrl = new URL(url);
 
-async function fetchSchemaObjects(client) {
-  const objectsResult = await client.execute(
-    "SELECT name, sql, type FROM sqlite_master WHERE type IN ('index', 'trigger', 'view') AND sql IS NOT NULL AND name NOT LIKE 'sqlite_%' ORDER BY type, name"
-  );
-  return objectsResult.rows.map((row) => ({
-    name: row.name,
-    sql: row.sql,
-    type: row.type,
-  }));
-}
+    const options = {
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.pathname,
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
 
-async function fetchColumns(client, tableName) {
-  const pragma = `PRAGMA table_info(${quoteIdentifier(tableName)})`;
-  const result = await client.execute(pragma);
-  return result.rows.map((row) => row.name);
-}
+    console.log(`Requesting dump from: ${url}`);
 
-async function fetchRows(client, tableName) {
-  const selectSql = `SELECT * FROM ${quoteIdentifier(tableName)}`;
-  const result = await client.execute(selectSql);
-  return result.rows;
+    const req = https.request(options, (res) => {
+      if (res.statusCode !== 200) {
+        reject(
+          new Error(
+            `Failed to download dump: HTTP ${res.statusCode} ${res.statusMessage}`
+          )
+        );
+        return;
+      }
+
+      const chunks = [];
+      let totalBytes = 0;
+
+      res.on("data", (chunk) => {
+        chunks.push(chunk);
+        totalBytes += chunk.length;
+        process.stdout.write(
+          `\rDownloading: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`
+        );
+      });
+
+      res.on("end", () => {
+        console.log("\nDownload complete.");
+        resolve(Buffer.concat(chunks));
+      });
+    });
+
+    req.on("error", (error) => {
+      reject(error);
+    });
+
+    req.end();
+  });
 }
 
 async function exportTursoDatabase() {
-  console.log("Starting Turso database export...");
+  console.log("Starting Turso database export using /dump endpoint...");
   console.log(`Turso URL: ${tursoUrl}`);
   console.log(`Output file: ${outputPath}`);
 
@@ -79,80 +134,51 @@ async function exportTursoDatabase() {
     fs.mkdirSync(dirName, { recursive: true });
   }
 
-  if (fs.existsSync(outputPath)) {
-    fs.rmSync(outputPath);
-  }
-
-  const tursoDb = createClient({
-    url: tursoUrl,
-    authToken: tursoToken,
-  });
-
-  const localDb = new Database(outputPath);
-  localDb.pragma("journal_mode = WAL");
-  localDb.pragma("foreign_keys = OFF");
-
   try {
-    console.log("Fetching schema definitions...");
-    const tables = await fetchTables(tursoDb);
+    const dumpUrl = getTursoDumpUrl(tursoUrl);
+    const dumpData = await downloadDump(dumpUrl, tursoToken);
 
-    tables.forEach((table) => {
-      if (!table.sql) {
-        return;
-      }
-      console.log(`  Creating table ${table.name}`);
-      localDb.exec(table.sql);
-    });
+    // Write SQL dump file
+    const sqlDumpPath = outputPath.replace(/\.sqlite3?$/, ".sql");
+    console.log(`\nWriting SQL dump to: ${sqlDumpPath}`);
+    fs.writeFileSync(sqlDumpPath, dumpData);
+    console.log(
+      `SQL dump saved: ${(dumpData.length / 1024 / 1024).toFixed(2)} MB`
+    );
 
-    for (const table of tables) {
-      console.log(`\nExporting data from ${table.name}`);
-      const columns = await fetchColumns(tursoDb, table.name);
+    // Create SQLite database file from the dump
+    console.log(`\nCreating SQLite database: ${outputPath}`);
 
-      if (columns.length === 0) {
-        console.log("  No columns found, skipping table");
-        continue;
-      }
-
-      const rows = await fetchRows(tursoDb, table.name);
-      console.log(`  Rows fetched: ${rows.length}`);
-
-      if (rows.length === 0) {
-        continue;
-      }
-
-      const columnList = columns.map(quoteIdentifier).join(", ");
-      const placeholders = columns.map(() => "?").join(", ");
-      const insertSql = `INSERT INTO ${quoteIdentifier(
-        table.name
-      )} (${columnList}) VALUES (${placeholders})`;
-      const insertStmt = localDb.prepare(insertSql);
-
-      const insertMany = localDb.transaction((data) => {
-        for (const row of data) {
-          const values = columns.map((column) => row[column]);
-          insertStmt.run(values);
-        }
-      });
-
-      insertMany(rows);
-      console.log(`  Inserted ${rows.length} rows into ${table.name}`);
+    // Remove existing database if it exists
+    if (fs.existsSync(outputPath)) {
+      fs.unlinkSync(outputPath);
     }
 
-    console.log("\nRecreating indexes, triggers, and views...");
-    const schemaObjects = await fetchSchemaObjects(tursoDb);
-    schemaObjects.forEach((object) => {
-      console.log(`  Creating ${object.type}: ${object.name}`);
-      localDb.exec(object.sql);
-    });
+    // Import SQL dump into new SQLite database
+    try {
+      execSync(`sqlite3 "${outputPath}" < "${sqlDumpPath}"`, {
+        stdio: "pipe",
+        shell: true,
+      });
 
-    localDb.pragma("foreign_keys = ON");
-    console.log("\nExport complete.");
+      const dbStats = fs.statSync(outputPath);
+      console.log(
+        `SQLite database created: ${(dbStats.size / 1024 / 1024).toFixed(2)} MB`
+      );
+    } catch (sqliteError) {
+      console.error("\nWarning: Could not create SQLite database file.");
+      console.error("Make sure sqlite3 is installed on your system.");
+      console.error(
+        "You can manually create it using: sqlite3 database.db < dump.sql"
+      );
+    }
+
+    console.log("\n✓ Export complete.");
+    console.log(`  SQL dump: ${sqlDumpPath}`);
+    console.log(`  SQLite DB: ${outputPath}`);
   } catch (error) {
-    console.error("Export failed:", error);
+    console.error("Export failed:", error.message);
     process.exitCode = 1;
-  } finally {
-    await tursoDb.close();
-    localDb.close();
   }
 }
 
