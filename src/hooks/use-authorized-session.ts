@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 type AuthorizedSessionState = {
@@ -13,39 +13,37 @@ export function useAuthorizedSession(): AuthorizedSessionState {
   const { data: session, isPending } = useSession();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const authCheckRef = useRef<{
     checked: boolean;
     sessionId: string | null;
-    lastCheck: number;
+    lastPathname: string | null;
   }>({
     checked: false,
     sessionId: null,
-    lastCheck: 0,
+    lastPathname: null,
   });
 
   useEffect(() => {
     const checkAuthorization = async () => {
-      // If no session, mark as authorized (public access)
+      // If no session, user is on public page (middleware handles protected pages)
+      // Set as "authorized" to allow rendering of public UI (login button, etc)
       if (!session?.user?.id) {
         authCheckRef.current = {
           checked: false,
           sessionId: null,
-          lastCheck: 0,
+          lastPathname: null,
         };
-        setIsAuthorized(true);
+        setIsAuthorized(true); // Allow public access
         return;
       }
 
-      const now = Date.now();
-      const timeSinceLastCheck = now - authCheckRef.current.lastCheck;
-      const RECHECK_INTERVAL = 30000; // 30 seconds
+      // Check if pathname changed or this is a new session - force recheck
+      const pathnameChanged = authCheckRef.current.lastPathname !== pathname;
+      const sessionChanged = authCheckRef.current.sessionId !== session.user.id;
 
-      // Skip if we've already checked this session recently (within 30 seconds)
-      if (
-        authCheckRef.current.checked &&
-        authCheckRef.current.sessionId === session.user.id &&
-        timeSinceLastCheck < RECHECK_INTERVAL
-      ) {
+      // Skip if we've already checked this session on this pathname
+      if (authCheckRef.current.checked && !pathnameChanged && !sessionChanged) {
         return;
       }
 
@@ -54,7 +52,7 @@ export function useAuthorizedSession(): AuthorizedSessionState {
       authCheckRef.current = {
         checked: true,
         sessionId: session.user.id,
-        lastCheck: now,
+        lastPathname: pathname,
       };
 
       try {
@@ -95,12 +93,7 @@ export function useAuthorizedSession(): AuthorizedSessionState {
     };
 
     checkAuthorization();
-
-    // Set up periodic re-checking every 30 seconds
-    const intervalId = setInterval(checkAuthorization, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [session, router]);
+  }, [session, router, pathname]);
 
   // Return session only if authorized or no session exists
   // While checking (isAuthorized === null), treat as pending

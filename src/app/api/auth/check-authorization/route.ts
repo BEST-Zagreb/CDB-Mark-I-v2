@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAndCreateUser } from "@/lib/auth-utils";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { appUsers } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
