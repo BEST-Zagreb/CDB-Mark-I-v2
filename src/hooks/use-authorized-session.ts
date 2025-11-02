@@ -27,7 +27,11 @@ export function useAuthorizedSession(): AuthorizedSessionState {
     const checkAuthorization = async () => {
       // If no session, mark as authorized (public access)
       if (!session?.user?.id) {
-        authCheckRef.current = { checked: false, sessionId: null, lastCheck: 0 };
+        authCheckRef.current = {
+          checked: false,
+          sessionId: null,
+          lastCheck: 0,
+        };
         setIsAuthorized(true);
         return;
       }
@@ -47,8 +51,8 @@ export function useAuthorizedSession(): AuthorizedSessionState {
 
       // Mark as checking (null = in progress)
       setIsAuthorized(null);
-      authCheckRef.current = { 
-        checked: true, 
+      authCheckRef.current = {
+        checked: true,
         sessionId: session.user.id,
         lastCheck: now,
       };

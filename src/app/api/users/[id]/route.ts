@@ -253,9 +253,9 @@ export async function DELETE(
     // Delete from Better Auth user table (this will cascade delete sessions via FK)
     await db.delete(user).where(eq(user.id, userId));
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "User deleted successfully",
-      deletedSelf: isDeletingSelf 
+      deletedSelf: isDeletingSelf,
     });
   } catch (error) {
     console.error("Error deleting user:", error);

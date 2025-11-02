@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // First, verify the session actually exists in the database
     const session = await auth.api.getSession({ headers: request.headers });
-    
+
     if (!session?.user?.id || session.user.id !== id) {
       return NextResponse.json(
         { authorized: false, error: "Session not found or invalid" },
