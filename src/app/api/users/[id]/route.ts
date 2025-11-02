@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { appUsers, collaborations } from "@/db/schema";
+import { appUsers, collaborations, user, session } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
@@ -160,6 +160,12 @@ export async function PUT(
     }
 
     const updatedUser = result[0];
+
+    // If user was locked, invalidate all their sessions to force logout
+    if (validatedData.isLocked === true && updatedUser.isLocked) {
+      await db.delete(session).where(eq(session.userId, userId));
+    }
+
     const addedByInfo = await resolveAddedByUser(updatedUser.addedBy);
     const formattedUser: User = {
       id: updatedUser.id,
@@ -231,16 +237,26 @@ export async function DELETE(
 
     const { id: userId } = await params;
 
-    const result = await db
+    // Check if user is trying to delete themselves
+    const isDeletingSelf = authCheck.userId === userId;
+
+    // Delete from appUsers first
+    const appUserResult = await db
       .delete(appUsers)
       .where(eq(appUsers.id, userId))
       .returning();
 
-    if (result.length === 0) {
+    if (appUserResult.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "User deleted successfully" });
+    // Delete from Better Auth user table (this will cascade delete sessions via FK)
+    await db.delete(user).where(eq(user.id, userId));
+
+    return NextResponse.json({ 
+      message: "User deleted successfully",
+      deletedSelf: isDeletingSelf 
+    });
   } catch (error) {
     console.error("Error deleting user:", error);
     return NextResponse.json(

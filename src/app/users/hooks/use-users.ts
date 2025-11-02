@@ -78,9 +78,16 @@ export function useDeleteUser() {
     mutationFn: (id: string) => {
       return userService.delete(id);
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: userKeys.all });
       toast.success("User deleted successfully");
+      
+      // If user deleted themselves, sign them out
+      if (data.deletedSelf) {
+        const { signOut } = await import("@/lib/auth-client");
+        await signOut();
+        window.location.href = "/";
+      }
     },
     onError: (error: unknown) => {
       const message = getErrorMessage(error);
