@@ -405,7 +405,7 @@ export function CollaborationForm({
                 <Input
                   type="number"
                   placeholder="0"
-                  step={50}
+                  step={1}
                   min={0}
                   max={1000000}
                   {...field}
