@@ -36,11 +36,10 @@ export const UsersTableRow = memo(function UsersTableRow({
   const isMobile = useIsMobile();
   const router = useRouter();
   const { showDeleteAlert } = useDeleteAlert();
-  const addedById = user.addedByUser?.id ?? user.addedBy ?? null;
+  const addedById = user.addedByUser?.id ?? null;
   const addedByName =
     user.addedByUser?.fullName?.trim() ||
     user.addedByUser?.email?.trim() ||
-    user.addedBy ||
     null;
 
   // Memoize the view handler to prevent recreation
@@ -116,15 +115,19 @@ export const UsersTableRow = memo(function UsersTableRow({
 
       {isColumnVisible("addedBy", tablePreferences) && (
         <TableCell className="max-w-50">
-          {addedById ? (
+          {addedById && addedByName ? (
             <Link
               href={`/users/${addedById}`}
               className="text-primary hover:underline text-pretty"
             >
-              {addedByName || "-"}
+              {addedByName}
             </Link>
+          ) : addedById ? (
+            <div className="text-pretty italic text-muted-foreground">
+              User deleted
+            </div>
           ) : (
-            <div className="text-pretty">{addedByName || "-"}</div>
+            <div className="text-pretty">-</div>
           )}
         </TableCell>
       )}
