@@ -37,13 +37,22 @@ async function syncUserIdAndLogin(
 }
 
 // Helper function to check if error is a unique constraint violation
-function isUniqueConstraintError(error: any): boolean {
-  return (
-    (error?.code === "SQLITE_CONSTRAINT" ||
-      error?.cause?.code === "SQLITE_CONSTRAINT") &&
-    (error?.message?.includes("UNIQUE constraint") ||
-      error?.cause?.message?.includes("UNIQUE constraint"))
-  );
+function isUniqueConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+
+  const err = error as {
+    code?: string;
+    message?: string;
+    cause?: { code?: string; message?: string };
+  };
+
+  const hasConstraintCode =
+    err.code === "SQLITE_CONSTRAINT" || err.cause?.code === "SQLITE_CONSTRAINT";
+  const hasConstraintMessage =
+    (err.message?.includes("UNIQUE constraint") ?? false) ||
+    (err.cause?.message?.includes("UNIQUE constraint") ?? false);
+
+  return hasConstraintCode && hasConstraintMessage;
 }
 
 export async function checkAndCreateUser(userInfo: {
@@ -119,7 +128,7 @@ export async function checkAndCreateUser(userInfo: {
         lastLogin: now,
       });
       return { authorized: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle race condition: user was created by another process
       if (isUniqueConstraintError(error)) {
         const synced = await syncUserIdAndLogin(email, id, now);
