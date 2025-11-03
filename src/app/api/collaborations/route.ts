@@ -83,29 +83,57 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const formattedCollaborations: Collaboration[] = result.map((row) => ({
-      id: row.id,
-      companyId: row.companyId ?? 0,
-      projectId: row.projectId ?? 0,
-      contactId: row.contactId,
-      responsible: row.responsible,
-      comment: row.comment,
-      contacted: Boolean(row.contacted),
-      successful: row.successful === null ? null : Boolean(row.successful),
-      letter: Boolean(row.letter),
-      meeting: row.meeting === null ? null : Boolean(row.meeting),
-      priority: row.priority as "Low" | "Medium" | "High",
-      createdAt: row.createdAt ? new Date(row.createdAt) : null,
-      updatedAt: row.updatedAt ? new Date(row.updatedAt) : null,
-      amount: row.amount,
-      contactInFuture:
-        row.contactInFuture === null ? null : Boolean(row.contactInFuture),
-      type: row.type,
-      companyName: row.companyName ?? undefined,
-      contactName: row.contactName ?? undefined,
-      projectName: row.projectName ?? undefined,
-      responsibleUserId: row.responsibleUserId ?? undefined,
-    }));
+    // For project and user views, check if any company has "do not contact" status
+    let doNotContactCompanyIds: Set<number> = new Set();
+    if (projectId || responsible) {
+      const doNotContactCompanies = await db
+        .selectDistinct({
+          companyId: collaborations.companyId,
+        })
+        .from(collaborations)
+        .where(eq(collaborations.contactInFuture, 0))
+        .groupBy(collaborations.companyId);
+
+      doNotContactCompanyIds = new Set(
+        doNotContactCompanies
+          .map((row) => row.companyId)
+          .filter((id): id is number => id !== null)
+      );
+    }
+
+    const formattedCollaborations: Collaboration[] = result.map((row) => {
+      // Check if this company is marked as "do not contact" in ANY collaboration
+      const companyHasDoNotContact =
+        (projectId || responsible) &&
+        doNotContactCompanyIds.has(row.companyId ?? 0);
+
+      return {
+        id: row.id,
+        companyId: row.companyId ?? 0,
+        projectId: row.projectId ?? 0,
+        contactId: row.contactId,
+        responsible: row.responsible,
+        comment: row.comment,
+        contacted: Boolean(row.contacted),
+        successful: row.successful === null ? null : Boolean(row.successful),
+        letter: Boolean(row.letter),
+        meeting: row.meeting === null ? null : Boolean(row.meeting),
+        priority: row.priority as "Low" | "Medium" | "High",
+        createdAt: row.createdAt ? new Date(row.createdAt) : null,
+        updatedAt: row.updatedAt ? new Date(row.updatedAt) : null,
+        amount: row.amount,
+        // Keep the actual collaboration's contactInFuture value
+        contactInFuture:
+          row.contactInFuture === null ? null : Boolean(row.contactInFuture),
+        type: row.type,
+        companyName: row.companyName ?? undefined,
+        contactName: row.contactName ?? undefined,
+        projectName: row.projectName ?? undefined,
+        responsibleUserId: row.responsibleUserId ?? undefined,
+        // Add warning flag if company has "do not contact" status
+        companyHasDoNotContact: companyHasDoNotContact || undefined,
+      };
+    });
 
     return NextResponse.json(formattedCollaborations);
   } catch (error) {

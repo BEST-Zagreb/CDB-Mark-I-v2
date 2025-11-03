@@ -97,8 +97,20 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               }`}
             >
               <div className="flex items-center gap-2">
-                {collaboration.contactInFuture === false && (
-                  <ShieldAlert className="size-5 text-orange-900 flex-shrink-0" />
+                {collaboration.companyHasDoNotContact && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ShieldAlert className="size-5 text-orange-900 flex-shrink-0" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          Warning: This company has been marked as "Do Not
+                          Contact" in one or more collaborations
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 {collaboration.companyName && collaboration.companyId ? (
                   <Link

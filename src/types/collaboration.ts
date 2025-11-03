@@ -43,6 +43,8 @@ export interface Collaboration {
   contactName?: string;
   projectName?: string;
   responsibleUserId?: string | null;
+  // Warning flag: true if company has ANY "do not contact" collaboration
+  companyHasDoNotContact?: boolean;
 }
 
 // Validation schema for collaboration forms
