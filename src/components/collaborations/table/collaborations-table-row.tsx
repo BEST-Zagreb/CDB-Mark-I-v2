@@ -97,6 +97,9 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               }`}
             >
               <div className="flex items-center gap-2">
+                {collaboration.companyHasDoNotContact && (
+                  <ShieldAlert className="size-5 text-orange-900 flex-shrink-0" />
+                )}
                 {collaboration.companyName && collaboration.companyId ? (
                   <Link
                     href={`/companies/${collaboration.companyId}`}
