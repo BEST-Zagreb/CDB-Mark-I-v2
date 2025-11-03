@@ -9,6 +9,9 @@ type AuthorizedSessionState = {
   isAuthorized: boolean | null; // null = not checked yet, true = authorized, false = denied
 };
 
+// Global flag to prevent duplicate toasts across multiple hook instances
+let toastShownForSession: string | null = null;
+
 export function useAuthorizedSession(): AuthorizedSessionState {
   const { data: session, isPending } = useSession();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -34,6 +37,7 @@ export function useAuthorizedSession(): AuthorizedSessionState {
           sessionId: null,
           lastPathname: null,
         };
+        toastShownForSession = null; // Reset toast flag when no session
         setIsAuthorized(true); // Allow public access
         return;
       }
@@ -72,10 +76,13 @@ export function useAuthorizedSession(): AuthorizedSessionState {
           // Sign out unauthorized user
           await signOut();
 
-          // Show error toast after sign out
-          toast.error(data.error || "Access denied", {
-            duration: 6000,
-          });
+          // Show error toast only once per session (prevent duplicate toasts)
+          if (toastShownForSession !== session.user.id) {
+            toastShownForSession = session.user.id;
+            toast.error(data.error || "Access denied", {
+              duration: 6000,
+            });
+          }
 
           // Mark as not authorized
           setIsAuthorized(false);
