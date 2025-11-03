@@ -2,6 +2,50 @@ import { db } from "@/lib/db";
 import { appUsers } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
 
+// Helper function to sync user ID and update last login
+async function syncUserIdAndLogin(
+  email: string,
+  id: string,
+  now: string
+): Promise<boolean> {
+  const [user] = await db
+    .select()
+    .from(appUsers)
+    .where(eq(appUsers.email, email))
+    .limit(1);
+
+  if (!user || user.isLocked) return false;
+
+  await db.transaction(async (tx) => {
+    if (user.id !== id) {
+      await tx
+        .update(appUsers)
+        .set({ addedBy: id })
+        .where(eq(appUsers.addedBy, user.id));
+      await tx
+        .update(appUsers)
+        .set({ id, updatedAt: now })
+        .where(eq(appUsers.id, user.id));
+    }
+    await tx
+      .update(appUsers)
+      .set({ lastLogin: now })
+      .where(eq(appUsers.id, id));
+  });
+
+  return true;
+}
+
+// Helper function to check if error is a unique constraint violation
+function isUniqueConstraintError(error: any): boolean {
+  return (
+    (error?.code === "SQLITE_CONSTRAINT" ||
+      error?.cause?.code === "SQLITE_CONSTRAINT") &&
+    (error?.message?.includes("UNIQUE constraint") ||
+      error?.cause?.message?.includes("UNIQUE constraint"))
+  );
+}
+
 export async function checkAndCreateUser(userInfo: {
   id: string;
   email: string;
@@ -23,7 +67,7 @@ export async function checkAndCreateUser(userInfo: {
     .where(eq(appUsers.email, email))
     .limit(1);
 
-  // If user exists, check if they're locked
+  // If user exists, sync ID and update last login
   if (existingUser.length > 0) {
     if (existingUser[0].isLocked) {
       return {
@@ -34,73 +78,57 @@ export async function checkAndCreateUser(userInfo: {
     }
 
     const now = new Date().toISOString();
-    const existingId = existingUser[0].id;
-
-    await db.transaction(async (tx) => {
-      if (existingId !== id) {
-        // Align the manually created user with the Better Auth user id
-        await tx
-          .update(appUsers)
-          .set({ addedBy: id })
-          .where(eq(appUsers.addedBy, existingId));
-
-        await tx
-          .update(appUsers)
-          .set({ id, updatedAt: now })
-          .where(eq(appUsers.id, existingId));
-      }
-
-      await tx
-        .update(appUsers)
-        .set({ lastLogin: now })
-        .where(eq(appUsers.id, id));
-    });
-
+    await syncUserIdAndLogin(email, id, now);
     return { authorized: true };
   }
 
   // User doesn't exist - check if we should auto-create
   const userCount = await db.select({ count: count() }).from(appUsers);
   const totalUsers = userCount[0]?.count || 0;
-
   const now = new Date().toISOString();
 
-  // First user in the system - create as Administrator
+  // Determine user role based on conditions
+  let userRole: string | null = null;
+
   if (totalUsers === 0) {
-    await db.insert(appUsers).values({
-      id,
-      fullName: name,
-      email: email,
-      role: "Administrator",
-      description: null,
-      isLocked: false,
-      createdAt: now,
-      updatedAt: now,
-      addedBy: null,
-      lastLogin: now,
-    });
-    return { authorized: true };
+    userRole = "Administrator"; // First user becomes admin
+  } else {
+    // Check if user's email domain is in the allowed list
+    const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(",") || [];
+    if (
+      allowedDomains.length > 0 &&
+      allowedDomains.some((domain) => email.endsWith(`@${domain}`))
+    ) {
+      userRole = "Observer";
+    }
   }
 
-  // Check if user's email domain is in the allowed list
-  const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(",") || [];
-  if (
-    allowedDomains.length > 0 &&
-    allowedDomains.some((domain) => email.endsWith(`@${domain}`))
-  ) {
-    await db.insert(appUsers).values({
-      id,
-      fullName: name,
-      email: email,
-      role: "Observer",
-      description: null,
-      isLocked: false,
-      createdAt: now,
-      updatedAt: now,
-      addedBy: null,
-      lastLogin: now,
-    });
-    return { authorized: true };
+  // If user qualifies for auto-creation, create them
+  if (userRole) {
+    try {
+      await db.insert(appUsers).values({
+        id,
+        fullName: name,
+        email,
+        role: userRole,
+        description: null,
+        isLocked: false,
+        createdAt: now,
+        updatedAt: now,
+        addedBy: null,
+        lastLogin: now,
+      });
+      return { authorized: true };
+    } catch (error: any) {
+      // Handle race condition: user was created by another process
+      if (isUniqueConstraintError(error)) {
+        const synced = await syncUserIdAndLogin(email, id, now);
+        if (synced) {
+          return { authorized: true };
+        }
+      }
+      throw error;
+    }
   }
 
   // User not authorized
