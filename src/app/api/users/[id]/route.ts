@@ -15,16 +15,12 @@ export async function GET(
   try {
     const { id: userId } = await params;
 
-    // Get user and check if they have any collaborations
+    // Get user info
     const addedByUser = alias(appUsers, "addedByUser");
 
     const results = await db
       .select({
         user: appUsers,
-        hasCollaborations: sql<number>`EXISTS (
-          SELECT 1 FROM ${collaborations} 
-          WHERE ${collaborations.responsible} = ${appUsers.fullName}
-        )`,
         addedByFullName: addedByUser.fullName,
         addedByEmail: addedByUser.email,
       })
@@ -39,13 +35,21 @@ export async function GET(
     const result = results[0];
     const u = result.user;
 
+    // Check if user has any collaborations (for role determination)
+    const hasCollaborations = await db
+      .select({ id: collaborations.id })
+      .from(collaborations)
+      .where(eq(collaborations.responsible, u.fullName))
+      .limit(1)
+      .then((rows) => rows.length > 0);
+
     // If user's role is not Administrator or Project responsible, and they have collaborations,
     // display them as Project team member
     let role = u.role as UserRoleType;
     if (
       role !== "Administrator" &&
       role !== "Project responsible" &&
-      result.hasCollaborations
+      hasCollaborations
     ) {
       role = "Project team member";
     }

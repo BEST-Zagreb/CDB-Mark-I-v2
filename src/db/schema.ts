@@ -99,12 +99,8 @@ export const collaborations = sqliteTable(
       table.contactInFuture
     ),
     index("idx_collaborations_contact_future").on(table.contactInFuture),
-    // Partial index for filtered queries
-    index("idx_collaborations_responsible_filtered")
-      .on(table.responsible)
-      .where(
-        sql`${table.responsible} IS NOT NULL AND ${table.responsible} != ''`
-      ),
+    // Full index on responsible for user collaboration checks (includes NULL values)
+    index("idx_collaborations_responsible").on(table.responsible),
   ]
 );
 

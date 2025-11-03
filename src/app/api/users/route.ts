@@ -12,13 +12,10 @@ export async function GET() {
   try {
     const addedByUser = alias(appUsers, "addedByUser");
 
+    // Fetch all users
     const results = await db
       .select({
         user: appUsers,
-        hasCollaborations: sql<number>`EXISTS (
-          SELECT 1 FROM ${collaborations}
-          WHERE ${collaborations.responsible} = ${appUsers.fullName}
-        )`,
         addedByFullName: addedByUser.fullName,
         addedByEmail: addedByUser.email,
       })
@@ -26,8 +23,21 @@ export async function GET() {
       .leftJoin(addedByUser, eq(addedByUser.id, appUsers.addedBy))
       .orderBy(desc(appUsers.createdAt));
 
+    // Get distinct users who have collaborations (use index on responsible)
+    const usersWithCollaborations = await db
+      .selectDistinct({ responsible: collaborations.responsible })
+      .from(collaborations)
+      .where(sql`${collaborations.responsible} IS NOT NULL`);
+
+    const collaboratorsSet = new Set(
+      usersWithCollaborations.map((row) => row.responsible)
+    );
+
     const formattedUsers: User[] = results.map(
-      ({ user: u, hasCollaborations, addedByFullName, addedByEmail }) => {
+      ({ user: u, addedByFullName, addedByEmail }) => {
+        // Check if user has collaborations
+        const hasCollaborations = collaboratorsSet.has(u.fullName);
+
         // If user's role is not Administrator or Project responsible, and they have collaborations,
         // display them as Project team member
         let role = u.role as UserRoleType;
