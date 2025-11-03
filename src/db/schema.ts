@@ -159,8 +159,11 @@ export const appUsers = sqliteTable(
       .default(false),
   },
   (table) => [
+    index("idx_app_users_email").on(table.email),
+    index("idx_app_users_role").on(table.role),
     index("idx_app_users_full_name").on(table.fullName),
     index("idx_app_users_last_login").on(table.lastLogin),
+    index("idx_app_users_is_locked").on(table.isLocked),
   ]
 );
 

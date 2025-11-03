@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers, collaborations, user, session } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, count } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
@@ -243,6 +243,37 @@ export async function DELETE(
 
     // Check if user is trying to delete themselves
     const isDeletingSelf = authCheck.userId === userId;
+
+    // Get the user being deleted
+    const userToDelete = await db
+      .select()
+      .from(appUsers)
+      .where(eq(appUsers.id, userId))
+      .limit(1);
+
+    if (userToDelete.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // If deleting an Administrator, check if they're the last one
+    if (userToDelete[0].role === "Administrator") {
+      const adminCount = await db
+        .select({ count: count() })
+        .from(appUsers)
+        .where(eq(appUsers.role, "Administrator"));
+
+      const totalAdmins = adminCount[0]?.count || 0;
+
+      if (totalAdmins <= 1) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot delete the last administrator account. Please assign another user as administrator first.",
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     // Delete from appUsers first
     const appUserResult = await db

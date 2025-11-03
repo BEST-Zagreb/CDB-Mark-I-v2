@@ -193,18 +193,14 @@ Migrate Data to Turso to copy your companies, projects, contacts, and collaborat
 
 ```bash
 # Set environment variables and run migration
-TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
-TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
-node db/scripts/migrate_to_turso.js
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/migrate_to_turso.js
 ```
 
 Create Users and Authentication Tables:
 
 ```bash
 # Create auth tables (user, session, account, verification, app_users)
-TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
-TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
-node db/scripts/add-auth-tables.js
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/add-auth-tables.js
 ```
 
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso

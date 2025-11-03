@@ -46,10 +46,19 @@ async function addAuthTables() {
 
     // Create indexes for app_users
     await tursoDb.execute(
+      `CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email)`
+    );
+    await tursoDb.execute(
+      `CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users(role)`
+    );
+    await tursoDb.execute(
       `CREATE INDEX IF NOT EXISTS idx_app_users_full_name ON app_users(full_name)`
     );
     await tursoDb.execute(
       `CREATE INDEX IF NOT EXISTS idx_app_users_last_login ON app_users(last_login)`
+    );
+    await tursoDb.execute(
+      `CREATE INDEX IF NOT EXISTS idx_app_users_is_locked ON app_users(is_locked)`
     );
     console.log("✅ app_users indexes created");
 
