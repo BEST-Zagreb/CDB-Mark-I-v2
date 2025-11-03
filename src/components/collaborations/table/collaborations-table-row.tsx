@@ -105,8 +105,8 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
-                          Warning: This company has been marked as "Do Not
-                          Contact" in one or more collaborations
+                          Warning: This company has been marked as &quot;Do Not
+                          Contact&quot; in one or more collaborations
                         </p>
                       </TooltipContent>
                     </Tooltip>
