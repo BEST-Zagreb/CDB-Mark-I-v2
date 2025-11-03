@@ -43,7 +43,17 @@ Deployed and available on [new.cdb.best.hr](https://new.cdb.best.hr)
 This work is licensed under a
 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
 
-### Install Dependencies
+## How to run
+
+### Prerequisites
+
+- **Node.js 22.19.0+** (or latest LTS)
+- **pnpm** (recommended) or npm/yarn
+  ```bash
+  npm install -g pnpm
+  ```
+
+#### Install Dependencies
 
 ```bash
 # Install main dependencies
@@ -54,16 +64,6 @@ npm install better-sqlite3 --build-from-source
 ```
 
 **Note:** The second command installs `better-sqlite3` with native bindings required for the database utility scripts. This package needs to be compiled for your specific platform and Node.js version.
-
-## How to run
-
-### Prerequisites
-
-- **Node.js 22.19.0+** (or latest LTS)
-- **pnpm** (recommended) or npm/yarn
-  ```bash
-  npm install -g pnpm
-  ```
 
 ### Environment Setup
 
@@ -152,13 +152,13 @@ Location: `db/scripts/`
 - **`enable_cascading_deletes.js`** - Enable cascading deletes
 - **`analyze_db_cardinality.js`** - Analyze database relationships
 
-#### DB Migration Scripts
+##### DB Migration Scripts
 
 - **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 - **`verify-tables.js`** - Verify all tables exist in Turso
 
-#### DB Backup & Export Scripts
+##### DB Backup & Export Scripts
 
 - **`export_turso_db.js`** - Export the full Turso database into local files
 
@@ -215,7 +215,7 @@ For a new installation without existing data:
 
 ```bash
 # Push the Drizzle schema to Turso (creates all tables)
-drizzle-kit push:sqlite
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) pnpm drizzle-kit push
 ```
 
 ### Running the Application
@@ -276,6 +276,7 @@ pnpm run build
 After domain changes, update:
 
 - Environment variable: `BETTER_AUTH_URL`
+- `trustedOrigins` in `auth.ts` file
 - Google OAuth settings:
   - Authorized domains
   - Redirect URIs
