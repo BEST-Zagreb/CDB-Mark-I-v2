@@ -203,8 +203,6 @@ Create Users and Authentication Tables:
 TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/add-auth-tables.js
 ```
 
-- **`add-auth-tables.js`** - Create Better Auth tables in Turso
-
 #### Option 2: Fresh Database Setup
 
 For a new installation without existing data:
@@ -223,6 +221,8 @@ TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(gr
    ```
 
 2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
+
+3. Log in (first account upon creation will automatically be give the _Administrator_ role)
 
 ## Deployment Guide (Netlify)
 
