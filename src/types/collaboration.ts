@@ -42,6 +42,7 @@ export interface Collaboration {
   companyName?: string;
   contactName?: string;
   projectName?: string;
+  responsibleUserId?: string | null;
 }
 
 // Validation schema for collaboration forms

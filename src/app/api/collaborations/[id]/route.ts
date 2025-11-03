@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { collaborations, companies, people } from "@/db/schema";
+import { collaborations, companies, people, appUsers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
@@ -39,10 +39,12 @@ export async function GET(
         type: collaborations.type,
         companyName: companies.name,
         contactName: people.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName))
       .where(eq(collaborations.id, collaborationId));
 
     const row = result[0];
@@ -74,6 +76,7 @@ export async function GET(
       type: row.type,
       companyName: row.companyName ?? undefined,
       contactName: row.contactName ?? undefined,
+      responsibleUserId: row.responsibleUserId ?? undefined,
     };
 
     return NextResponse.json(collaboration);
@@ -159,10 +162,12 @@ export async function PUT(
         type: collaborations.type,
         companyName: companies.name,
         contactName: people.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName))
       .where(eq(collaborations.id, collaborationId));
 
     const row = fullResult[0];
@@ -187,6 +192,7 @@ export async function PUT(
       type: row.type,
       companyName: row.companyName ?? undefined,
       contactName: row.contactName ?? undefined,
+      responsibleUserId: row.responsibleUserId ?? undefined,
     };
 
     return NextResponse.json(collaboration);

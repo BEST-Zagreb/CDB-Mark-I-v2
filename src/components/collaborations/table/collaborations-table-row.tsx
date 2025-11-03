@@ -291,6 +291,26 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
               </TooltipProvider>
             </TableCell>
           );
+        } else if (column.id === "responsible") {
+          return (
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+            >
+              {collaboration.responsible && collaboration.responsibleUserId ? (
+                <Link
+                  href={`/users/${collaboration.responsibleUserId}`}
+                  className="text-primary hover:underline text-pretty"
+                >
+                  {collaboration.responsible}
+                </Link>
+              ) : (
+                <div className="text-pretty">
+                  {collaboration.responsible || "-"}
+                </div>
+              )}
+            </TableCell>
+          );
         } else if (column.id === "amount") {
           return (
             <TableCell

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { collaborations, companies, people, projects } from "@/db/schema";
+import {
+  collaborations,
+  companies,
+  people,
+  projects,
+  appUsers,
+} from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
@@ -44,11 +50,13 @@ export async function GET(request: NextRequest) {
         companyName: companies.name,
         contactName: people.name,
         projectName: projects.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
-      .leftJoin(projects, eq(collaborations.projectId, projects.id));
+      .leftJoin(projects, eq(collaborations.projectId, projects.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName));
 
     let result;
     if (projectId) {
@@ -96,6 +104,7 @@ export async function GET(request: NextRequest) {
       companyName: row.companyName ?? undefined,
       contactName: row.contactName ?? undefined,
       projectName: row.projectName ?? undefined,
+      responsibleUserId: row.responsibleUserId ?? undefined,
     }));
 
     return NextResponse.json(formattedCollaborations);
@@ -165,11 +174,13 @@ export async function POST(request: NextRequest) {
         companyName: companies.name,
         contactName: people.name,
         projectName: projects.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
       .leftJoin(projects, eq(collaborations.projectId, projects.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName))
       .where(eq(collaborations.id, insertedCollab.id));
 
     const row = fullResult[0];
@@ -195,6 +206,7 @@ export async function POST(request: NextRequest) {
       companyName: row.companyName ?? undefined,
       contactName: row.contactName ?? undefined,
       projectName: row.projectName ?? undefined,
+      responsibleUserId: row.responsibleUserId ?? undefined,
     };
 
     return NextResponse.json(collaboration, { status: 201 });
