@@ -72,7 +72,7 @@ export default function CompaniesPage() {
             size={isMobile ? "sm" : "default"}
           >
             <Plus className="size-4" />
-            New Company
+            Add company
           </Button>
         </div>
 

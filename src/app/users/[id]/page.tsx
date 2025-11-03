@@ -113,8 +113,7 @@ export default function UserDetailPage() {
                 size={isMobile ? "icon" : "default"}
               >
                 <Pencil className="size-4" />
-                {!isMobile &&
-                  (isOwnProfile && !isAdmin ? "Edit Profile" : "Edit User")}
+                {!isMobile && "Edit profile"}
               </Button>
 
               {isAdmin && (
@@ -123,7 +122,7 @@ export default function UserDetailPage() {
                   size={isMobile ? "icon" : "default"}
                 >
                   <Trash2 className="size-4" />
-                  {!isMobile && " Delete User"}
+                  {!isMobile && " Delete user"}
                 </Button>
               )}
             </div>

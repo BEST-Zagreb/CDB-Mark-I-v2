@@ -68,7 +68,7 @@ export default function ProjectsPage() {
               size={isMobile ? "sm" : "default"}
             >
               <Plus className="size-4" />
-              New Project
+              Create project
             </Button>
           )}
         </div>

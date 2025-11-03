@@ -71,7 +71,7 @@ export default function UsersPage() {
               size={isMobile ? "sm" : "default"}
             >
               <Plus className="size-4" />
-              Add User
+              Add user
             </Button>
           )}
         </div>

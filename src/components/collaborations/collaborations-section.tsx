@@ -159,7 +159,7 @@ export function CollaborationsSection() {
                   size={isMobile ? "icon" : "default"}
                 >
                   <Plus className="size-5" />
-                  {!isMobile && "New Collaboration"}
+                  {!isMobile && "Log collaboration"}
                 </Button>
               </div>
             )}
