@@ -161,11 +161,15 @@ Location: `db/scripts/`
 
 To migrate data from an existing CDB instance, follow these steps:
 
-##### Step 1: Install Dependencies for Database Scripts
+##### Step 1: Switch to npm for Database Scripts
 
 The database preparation scripts require npm (not pnpm) due to `better-sqlite3` native bindings:
 
 ```bash
+# Remove pnpm artifacts
+rm -rf node_modules pnpm-lock.yaml
+
+# Install with npm
 npm install
 ```
 
