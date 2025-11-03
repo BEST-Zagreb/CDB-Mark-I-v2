@@ -35,7 +35,10 @@ export const projects = sqliteTable(
     createdAt: text("created_at"),
     updatedAt: text("updated_at"),
   },
-  (table) => [index("idx_projects_created_at").on(table.createdAt)]
+  (table) => [
+    index("idx_projects_name").on(table.name),
+    index("idx_projects_created_at").on(table.createdAt),
+  ]
 );
 
 // People (Contacts) table
@@ -55,6 +58,7 @@ export const people = sqliteTable(
   (table) => [
     index("idx_people_company_id").on(table.companyId),
     index("idx_people_name").on(table.name),
+    index("idx_people_email").on(table.email),
   ]
 );
 
