@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { userService } from "@/services/user.service";
 import { CreateUserData, UpdateUserData } from "@/types/user";
 import { toast } from "sonner";
@@ -73,20 +74,29 @@ export function useUpdateUser() {
 
 export function useDeleteUser() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: (id: string) => {
       return userService.delete(id);
     },
     onSuccess: async (data) => {
-      queryClient.invalidateQueries({ queryKey: userKeys.all });
-      toast.success("User deleted successfully");
-
-      // If user deleted themselves, sign them out
+      // If user deleted themselves, sign them out immediately
       if (data.deletedSelf) {
+        // Clear all client-side cache first
+        queryClient.clear();
+
+        // Sign out (clears session and cookies on server)
         const { signOut } = await import("@/lib/auth-client");
         await signOut();
-        window.location.href = "/";
+
+        toast.success("Account deleted successfully");
+
+        // Navigate to home page without full page reload
+        router.push("/");
+      } else {
+        queryClient.invalidateQueries({ queryKey: userKeys.all });
+        toast.success("User deleted successfully");
       }
     },
     onError: (error: unknown) => {
