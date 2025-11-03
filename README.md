@@ -167,10 +167,10 @@ The database preparation scripts require npm (not pnpm) due to `better-sqlite3` 
 
 ```bash
 # Remove pnpm artifacts
-rm -rf node_modules pnpm-lock.yaml
+rm -rf node_modules
 
 # Install with npm
-npm install
+npm install .
 ```
 
 ##### Step 2: Copy Database from Remote Server
@@ -225,7 +225,7 @@ Remove npm artifacts and reinstall dependencies with pnpm:
 rm -rf node_modules package-lock.json
 
 # Reinstall with pnpm
-pnpm install
+pnpm install .
 ```
 
 #### Option 2: Fresh Database Setup
