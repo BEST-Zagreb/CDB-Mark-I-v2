@@ -57,13 +57,8 @@ This work is licensed under a
 
 ```bash
 # Install main dependencies
-pnpm install
-
-# Install better-sqlite3 for database scripts (requires native compilation)
-npm install better-sqlite3 --build-from-source
+pnpm install .
 ```
-
-**Note:** The second command installs `better-sqlite3` with native bindings required for the database utility scripts. This package needs to be compiled for your specific platform and Node.js version.
 
 ### Environment Setup
 
@@ -166,41 +161,67 @@ Location: `db/scripts/`
 
 To migrate data from an existing CDB instance, follow these steps:
 
-First, if your database is on a remote server, copy it to your local machine:
+##### Step 1: Install Dependencies for Database Scripts
+
+The database preparation scripts require npm (not pnpm) due to `better-sqlite3` native bindings:
 
 ```bash
-# Copy database from server to local Desktop
+npm install
+```
+
+##### Step 2: Copy Database from Remote Server
+
+If your database is on a remote server, copy it to your local machine:
+
+```bash
+# Copy database from remote server to local Desktop
 scp user@vps_ip:/var/www/html/companydb/db/development.sqlite3 ~/Desktop/db.sqlite3
 
 # Copy to project db folder
 cp ~/Desktop/db.sqlite3 ./db/db.sqlite3
 ```
 
-Run preparation and normalization scripts on your local SQLite database:
+##### Step 3: Prepare Local SQLite Database
+
+Run preparation and normalization scripts:
 
 ```bash
-# 1. Normalize the database (clean up data)
+# Normalize the database (clean up data inconsistencies)
 node db/scripts/normalize_db.js all
 
-# 2. Enable cascading deletes
+# Enable cascading deletes for referential integrity
 node db/scripts/enable_cascading_deletes.js
 
-# 3. Optional: Analyze database structure
+# Optional: Analyze database structure
 node db/scripts/analyze_db_cardinality.js
 ```
 
-Migrate Data to Turso to copy your companies, projects, contacts, and collaborations:
+##### Step 4: Migrate Business Data to Turso
+
+Migrate your companies, projects, contacts, and collaborations:
 
 ```bash
-# Set environment variables and run migration
 TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/migrate_to_turso.js
 ```
 
-Create Users and Authentication Tables:
+##### Step 5: Create Authentication Tables
+
+Create Better Auth tables (user, session, account, verification, app_users):
 
 ```bash
-# Create auth tables (user, session, account, verification, app_users)
 TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/add-auth-tables.js
+```
+
+##### Step 6: Switch to pnpm
+
+Remove npm artifacts and reinstall dependencies with pnpm:
+
+```bash
+# Remove npm artifacts
+rm -rf node_modules package-lock.json
+
+# Reinstall with pnpm
+pnpm install
 ```
 
 #### Option 2: Fresh Database Setup

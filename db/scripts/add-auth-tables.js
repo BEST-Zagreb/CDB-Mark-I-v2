@@ -142,9 +142,6 @@ async function addAuthTables() {
     console.log("    • verification (Better Auth)");
 
     console.log("\n✅ Ready for user authentication!");
-    console.log(
-      "   Sign in with Google to create your first user, then set role to Administrator."
-    );
 
     await tursoDb.close();
   } catch (error) {

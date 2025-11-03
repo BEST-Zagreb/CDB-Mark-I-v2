@@ -166,13 +166,6 @@ async function createTablesIfNotExist(tursoDb) {
     // Projects table indexes - search and sorting
     `CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)`,
     `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at)`,
-
-    // App users table indexes - authentication and user queries
-    `CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email)`,
-    `CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users(role)`,
-    `CREATE INDEX IF NOT EXISTS idx_app_users_full_name ON app_users(full_name)`,
-    `CREATE INDEX IF NOT EXISTS idx_app_users_last_login ON app_users(last_login)`,
-    `CREATE INDEX IF NOT EXISTS idx_app_users_is_locked ON app_users(is_locked)`,
   ];
 
   for (const sql of createTableStatements) {
