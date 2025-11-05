@@ -161,19 +161,7 @@ Location: `db/scripts/`
 
 To migrate data from an existing CDB instance, follow these steps:
 
-##### Step 1: Switch to npm for Database Scripts
-
-The database preparation scripts require npm (not pnpm) due to `better-sqlite3` native bindings:
-
-```bash
-# Remove pnpm artifacts
-rm -rf node_modules
-
-# Install with npm
-npm install .
-```
-
-##### Step 2: Copy Database from Remote Server
+##### Step 1: Copy Database from Remote Server
 
 If your database is on a remote server, copy it to your local machine:
 
@@ -183,6 +171,18 @@ scp user@vps_ip:/var/www/html/companydb/db/development.sqlite3 ~/Desktop/db.sqli
 
 # Copy to project db folder
 cp ~/Desktop/db.sqlite3 ./db/db.sqlite3
+```
+
+##### Step 2: Switch to npm for Database Scripts
+
+The database preparation scripts require npm (not pnpm) due to `better-sqlite3` native bindings:
+
+```bash
+# Remove pnpm artifacts
+rm -rf node_modules
+
+# Install with npm
+npm install .
 ```
 
 ##### Step 3: Prepare Local SQLite Database
