@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Database migration script with multiple migration functions
- * Run specific migrations using: node normalize_db.js <migration-name>
- * Run all migrations using: node normalize_db.js all
+ * Database normalization script with multiple normalization functions
+ * Run specific normalizations using: node normalize_db.js <normalization-name>
+ * Run all normalizations using: node normalize_db.js all
  *
- * Available migrations:
+ * Available normalizations:
  * - prio: Standardize collaboration priority values
  * - country: Normalize country names in companies table
  * - goal: Round fr_goal values in projects table to full numbers
@@ -21,8 +21,8 @@ const path = require("path");
 
 const dbPath = path.join(process.cwd(), "db", "db.sqlite3");
 
-// Migration functions
-const migrations = {
+// Normalization functions
+const normalizations = {
   /**
    * Standardize collaboration priority values
    * Converts numeric and inconsistent string values to standardized strings
@@ -88,10 +88,10 @@ const migrations = {
       return totalUpdated;
     });
 
-    console.log("\n🚀 Executing priority migration...");
+    console.log("\n🚀 Executing priority normalization...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newPriorities = db
       .prepare(
         `
@@ -108,7 +108,7 @@ const migrations = {
       console.log(`  Priority "${row.priority}": ${row.count} records`);
     });
 
-    console.log(`\n✅ Priority migration completed successfully!`);
+    console.log(`\n✅ Priority normalization completed successfully!`);
     console.log(`📈 Total records updated: ${updatedCount}`);
 
     return updatedCount;
@@ -200,7 +200,7 @@ const migrations = {
     console.log("\n🚀 Executing country normalization...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newCountries = db
       .prepare(
         `
@@ -295,7 +295,7 @@ const migrations = {
     console.log("\n🚀 Executing fr_goal rounding...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newGoals = db
       .prepare(
         `
@@ -406,7 +406,7 @@ const migrations = {
     console.log("\n🚀 Executing budgeting_month standardization...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newMonths = db
       .prepare(
         `
@@ -506,7 +506,7 @@ const migrations = {
     console.log("\n🚀 Executing boolean standardization...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     console.log("\n📊 Updated boolean column values:");
     booleanColumns.forEach((column) => {
       const newValues = db
@@ -607,7 +607,7 @@ const migrations = {
     console.log("\n🚀 Executing amount rounding...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newAmounts = db
       .prepare(
         `
@@ -697,7 +697,7 @@ const migrations = {
     console.log("\n🚀 Executing collaboration type standardization...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newTypes = db
       .prepare(
         `
@@ -790,7 +790,7 @@ const migrations = {
     console.log("\n🚀 Executing contact_in_future inversion...");
     const updatedCount = migrateTransaction();
 
-    // Verify the migration
+    // Verify the normalization
     const newValues = db
       .prepare(
         `
@@ -821,10 +821,10 @@ async function main() {
 
   if (args.length === 0) {
     console.log(`
-Usage: node normalize_db.js <migration-name> | all
+Usage: node normalize_db.js <normalization-name> | all
 
-Available migrations:
-${Object.keys(migrations)
+Available normalizations:
+${Object.keys(normalizations)
   .map((name) => `  - ${name}`)
   .join("\n")}
 
@@ -835,81 +835,85 @@ Examples:
     process.exit(0);
   }
 
-  const migrationName = args[0];
+  const normalizationName = args[0];
 
-  if (migrationName === "all") {
-    console.log(`🔄 Starting all database migrations`);
+  if (normalizationName === "all") {
+    console.log(`🔄 Starting all database normalizations`);
     console.log(`📁 Database: ${dbPath}`);
 
     try {
       const db = new Database(dbPath);
-      const migrationNames = Object.keys(migrations);
-      let totalMigrations = migrationNames.length;
-      let completedMigrations = 0;
+      const normalizationNames = Object.keys(normalizations);
+      let totalNormalizations = normalizationNames.length;
+      let completedNormalizations = 0;
       let totalRecordsUpdated = 0;
 
       console.log(
-        `\n🚀 Running ${totalMigrations} migrations in sequence...\n`
+        `\n🚀 Running ${totalNormalizations} normalizations in sequence...\n`
       );
 
-      for (const name of migrationNames) {
+      for (const name of normalizationNames) {
         console.log(`\n${"=".repeat(60)}`);
         console.log(
-          `🔄 Migration ${completedMigrations + 1}/${totalMigrations}: ${name}`
+          `🔄 Normalization ${
+            completedNormalizations + 1
+          }/${totalNormalizations}: ${name}`
         );
         console.log(`${"=".repeat(60)}`);
 
         try {
-          const recordsUpdated = await migrations[name](db);
+          const recordsUpdated = await normalizations[name](db);
           totalRecordsUpdated += recordsUpdated || 0;
-          completedMigrations++;
-          console.log(`✅ Migration '${name}' completed successfully!`);
+          completedNormalizations++;
+          console.log(`✅ Normalization '${name}' completed successfully!`);
         } catch (error) {
-          console.error(`❌ Migration '${name}' failed:`, error);
+          console.error(`❌ Normalization '${name}' failed:`, error);
           db.close();
           process.exit(1);
         }
       }
 
       console.log(`\n${"=".repeat(60)}`);
-      console.log(`🎉 All migrations completed successfully!`);
+      console.log(`🎉 All normalizations completed successfully!`);
       console.log(`📊 Summary:`);
       console.log(
-        `   - Total migrations run: ${completedMigrations}/${totalMigrations}`
+        `   - Total normalizations run: ${completedNormalizations}/${totalNormalizations}`
       );
       console.log(`   - Total records updated: ${totalRecordsUpdated}`);
       console.log(`${"=".repeat(60)}`);
 
       db.close();
     } catch (error) {
-      console.error(`❌ Migration process failed:`, error);
+      console.error(`❌ Normalization process failed:`, error);
       process.exit(1);
     }
     return;
   }
 
-  if (!migrations[migrationName]) {
-    console.error(`❌ Unknown migration: ${migrationName}`);
+  if (!normalizations[normalizationName]) {
+    console.error(`❌ Unknown normalization: ${normalizationName}`);
     console.log(
-      `\nAvailable migrations: ${Object.keys(migrations).join(", ")}`
+      `\nAvailable normalizations: ${Object.keys(normalizations).join(", ")}`
     );
     process.exit(1);
   }
 
-  console.log(`🔄 Starting database migration: ${migrationName}`);
+  console.log(`🔄 Starting database normalization: ${normalizationName}`);
   console.log(`📁 Database: ${dbPath}`);
 
   try {
     const db = new Database(dbPath);
 
-    // Run the migration
-    const result = await migrations[migrationName](db);
+    // Run the normalization
+    const result = await normalizations[normalizationName](db);
 
-    console.log(`\n✅ Migration '${migrationName}' completed successfully!`);
+    console.log(
+      `\n✅ Normalization '${normalizationName}' completed successfully!`
+    );
 
     db.close();
   } catch (error) {
-    console.error(`❌ Migration failed:`, error);
+    console.error(`❌ Normalization failed:`, error);
     process.exit(1);
   }
 }
