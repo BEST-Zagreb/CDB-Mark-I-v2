@@ -9,9 +9,7 @@
  *   - Install: https://www.sqlite.org/download.html
  *
  * Usage:
- *   TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
- *   TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
- *   node db/scripts/export_turso_db.js [optional-output-path]
+ *   TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/export_turso_db.js [optional-output-path]
  *
  * Output:
  *   - cdb_dump-tursodb-YYYY_MM_DD-HH_MM_SS.sql (SQL script)
