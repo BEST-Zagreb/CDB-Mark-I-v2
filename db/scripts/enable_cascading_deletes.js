@@ -29,6 +29,134 @@ async function enableCascadingDeletes() {
     const fkStatus = db.pragma("foreign_keys");
     console.log(`  ✅ Foreign keys enabled: ${fkStatus}`);
 
+    // Count initial records
+    console.log("\n📊 Initial record counts:");
+    const initialCounts = {};
+    const tables = ["companies", "projects", "people", "collaborations"];
+    tables.forEach((table) => {
+      const count = db
+        .prepare(`SELECT COUNT(*) as count FROM ${table}`)
+        .get().count;
+      initialCounts[table] = count;
+      console.log(`  ${table}: ${count} records`);
+    });
+
+    // Analyze data integrity issues BEFORE migration
+    console.log("\n🔍 Analyzing data integrity issues:");
+
+    // Check for orphaned people
+    const orphanedPeopleBefore = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM people 
+         WHERE company_id NOT IN (SELECT id FROM companies)`
+      )
+      .get().count;
+    if (orphanedPeopleBefore > 0) {
+      console.log(
+        `  ⚠️  ${orphanedPeopleBefore} people with invalid company_id (will be excluded)`
+      );
+      // Show some examples
+      const examples = db
+        .prepare(
+          `SELECT id, name, company_id FROM people 
+           WHERE company_id NOT IN (SELECT id FROM companies) LIMIT 3`
+        )
+        .all();
+      examples.forEach((p) =>
+        console.log(
+          `      - Person ${p.id} "${p.name}" → company_id ${p.company_id} (doesn't exist)`
+        )
+      );
+      if (orphanedPeopleBefore > 3)
+        console.log(`      ... and ${orphanedPeopleBefore - 3} more`);
+    }
+
+    // Check for collaborations with invalid company_id
+    const collabsInvalidCompany = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM collaborations 
+         WHERE company_id NOT IN (SELECT id FROM companies)`
+      )
+      .get().count;
+    if (collabsInvalidCompany > 0) {
+      console.log(
+        `  ⚠️  ${collabsInvalidCompany} collaborations with invalid company_id (will be excluded)`
+      );
+    }
+
+    // Check for collaborations with invalid project_id
+    const collabsInvalidProject = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM collaborations 
+         WHERE project_id NOT IN (SELECT id FROM projects)`
+      )
+      .get().count;
+    if (collabsInvalidProject > 0) {
+      console.log(
+        `  ⚠️  ${collabsInvalidProject} collaborations with invalid project_id (will be excluded)`
+      );
+      const examples = db
+        .prepare(
+          `SELECT id, project_id FROM collaborations 
+           WHERE project_id NOT IN (SELECT id FROM projects) LIMIT 3`
+        )
+        .all();
+      examples.forEach((c) =>
+        console.log(
+          `      - Collaboration ${c.id} → project_id ${c.project_id} (doesn't exist)`
+        )
+      );
+      if (collabsInvalidProject > 3)
+        console.log(`      ... and ${collabsInvalidProject - 3} more`);
+    }
+
+    // Check for collaborations with invalid person_id (excluding NULL)
+    const collabsInvalidPerson = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM collaborations 
+         WHERE person_id IS NOT NULL AND person_id NOT IN (SELECT id FROM people)`
+      )
+      .get().count;
+    if (collabsInvalidPerson > 0) {
+      console.log(
+        `  ⚠️  ${collabsInvalidPerson} collaborations with invalid person_id (will set to NULL)`
+      );
+      const examples = db
+        .prepare(
+          `SELECT id, person_id FROM collaborations 
+           WHERE person_id IS NOT NULL AND person_id NOT IN (SELECT id FROM people) LIMIT 3`
+        )
+        .all();
+      examples.forEach((c) =>
+        console.log(
+          `      - Collaboration ${c.id} → person_id ${c.person_id} (doesn't exist)`
+        )
+      );
+      if (collabsInvalidPerson > 3)
+        console.log(`      ... and ${collabsInvalidPerson - 3} more`);
+    }
+
+    // Check for collaborations with NULL person_id
+    const collabsNullPerson = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM collaborations WHERE person_id IS NULL`
+      )
+      .get().count;
+    if (collabsNullPerson > 0) {
+      console.log(
+        `  ℹ️  ${collabsNullPerson} collaborations with NULL person_id (will be preserved)`
+      );
+    }
+
+    if (
+      orphanedPeopleBefore === 0 &&
+      collabsInvalidCompany === 0 &&
+      collabsInvalidProject === 0 &&
+      collabsInvalidPerson === 0
+    ) {
+      console.log("  ✅ No data integrity issues found!");
+    }
+
     // Create temporary tables with proper constraints
     console.log("\n🔨 Creating temporary tables with cascading deletes...");
 
@@ -131,18 +259,39 @@ async function enableCascadingDeletes() {
       .run().changes;
     console.log(`    ✅ ${peopleCount} people copied`);
 
-    console.log("  📊 Copying collaborations (with valid references)...");
+    console.log("  📊 Copying collaborations (cleaning invalid references)...");
     const collaborationsCount = db
       .prepare(
         `INSERT INTO collaborations_temp (id, company_id, project_id, person_id, responsible, comment, contacted, successful, letter, meeting, priority, created_at, updated_at, amount, contact_in_future, type)
-         SELECT c.id, c.company_id, c.project_id, c.person_id, c.responsible, c.comment, c.contacted, c.successful, c.letter, c.meeting, c.priority, c.created_at, c.updated_at, c.amount, c.contact_in_future, c.type
+         SELECT 
+           c.id, 
+           c.company_id, 
+           c.project_id, 
+           CASE 
+             WHEN c.person_id IS NULL THEN NULL
+             WHEN c.person_id IN (SELECT id FROM people_temp) THEN c.person_id
+             ELSE NULL
+           END as person_id,
+           c.responsible, 
+           c.comment, 
+           c.contacted, 
+           c.successful, 
+           c.letter, 
+           c.meeting, 
+           c.priority, 
+           c.created_at, 
+           c.updated_at, 
+           c.amount, 
+           c.contact_in_future, 
+           c.type
          FROM collaborations c
          WHERE c.company_id IN (SELECT id FROM companies_temp)
-           AND c.project_id IN (SELECT id FROM projects_temp)
-           AND c.person_id IN (SELECT id FROM people_temp)`
+           AND c.project_id IN (SELECT id FROM projects_temp)`
       )
       .run().changes;
-    console.log(`    ✅ ${collaborationsCount} collaborations copied`);
+    console.log(
+      `    ✅ ${collaborationsCount} collaborations copied (invalid person_id set to NULL)`
+    );
 
     // Re-enable foreign keys
     db.pragma("foreign_keys = ON");
@@ -206,38 +355,26 @@ async function enableCascadingDeletes() {
     const finalFkStatus = db.pragma("foreign_keys");
     console.log(`\n🔗 Final foreign keys status: ${finalFkStatus}`);
 
-    // Show final record counts
-    console.log("\n📊 Final record counts:");
-    const tables = ["companies", "projects", "people", "collaborations"];
-    tables.forEach((table) => {
-      const count = db
+    // Show final record counts and comparison
+    console.log("\n📊 Migration Summary:");
+    console.log("┌─────────────────┬─────────┬─────────┬──────────┐");
+    console.log("│ Table           │ Before  │ After   │ Deleted  │");
+    console.log("├─────────────────┼─────────┼─────────┼──────────┤");
+
+    const tablesList = ["companies", "projects", "people", "collaborations"];
+    tablesList.forEach((table) => {
+      const finalCount = db
         .prepare(`SELECT COUNT(*) as count FROM ${table}`)
         .get().count;
-      console.log(`  ${table}: ${count} records`);
+      const deleted = initialCounts[table] - finalCount;
+      const deletedStr = deleted > 0 ? `❌ ${deleted}` : `✅ 0`;
+      console.log(
+        `│ ${table.padEnd(15)} │ ${String(initialCounts[table]).padStart(
+          7
+        )} │ ${String(finalCount).padStart(7)} │ ${deletedStr.padEnd(8)} │`
+      );
     });
-
-    // Show orphaned records that were excluded
-    console.log("\n⚠️  Orphaned records excluded during migration:");
-    const orphanedPeople = db
-      .prepare(
-        `SELECT COUNT(*) as count FROM (
-          SELECT * FROM people WHERE company_id NOT IN (SELECT id FROM companies)
-        )`
-      )
-      .get().count;
-    console.log(`  Orphaned people: ${orphanedPeople}`);
-
-    const orphanedCollaborations = db
-      .prepare(
-        `SELECT COUNT(*) as count FROM (
-          SELECT * FROM collaborations
-          WHERE company_id NOT IN (SELECT id FROM companies)
-             OR project_id NOT IN (SELECT id FROM projects)
-             OR person_id NOT IN (SELECT id FROM people)
-        )`
-      )
-      .get().count;
-    console.log(`  Orphaned collaborations: ${orphanedCollaborations}`);
+    console.log("└─────────────────┴─────────┴─────────┴──────────┘");
 
     console.log("\n🎉 Cascading deletes migration completed successfully!");
     console.log(
