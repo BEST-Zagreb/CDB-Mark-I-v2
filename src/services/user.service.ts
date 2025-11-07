@@ -31,7 +31,10 @@ export const userService = {
   },
 
   // Delete a user
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/users/${id}`);
+  delete: async (
+    id: string
+  ): Promise<{ message: string; deletedSelf: boolean }> => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
   },
 };

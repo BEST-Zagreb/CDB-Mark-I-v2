@@ -35,7 +35,10 @@ export const projects = sqliteTable(
     createdAt: text("created_at"),
     updatedAt: text("updated_at"),
   },
-  (table) => [index("idx_projects_created_at").on(table.createdAt)]
+  (table) => [
+    index("idx_projects_name").on(table.name),
+    index("idx_projects_created_at").on(table.createdAt),
+  ]
 );
 
 // People (Contacts) table
@@ -55,6 +58,7 @@ export const people = sqliteTable(
   (table) => [
     index("idx_people_company_id").on(table.companyId),
     index("idx_people_name").on(table.name),
+    index("idx_people_email").on(table.email),
   ]
 );
 
@@ -99,12 +103,8 @@ export const collaborations = sqliteTable(
       table.contactInFuture
     ),
     index("idx_collaborations_contact_future").on(table.contactInFuture),
-    // Partial index for filtered queries
-    index("idx_collaborations_responsible_filtered")
-      .on(table.responsible)
-      .where(
-        sql`${table.responsible} IS NOT NULL AND ${table.responsible} != ''`
-      ),
+    // Full index on responsible for user collaboration checks (includes NULL values)
+    index("idx_collaborations_responsible").on(table.responsible),
   ]
 );
 
@@ -159,8 +159,11 @@ export const appUsers = sqliteTable(
       .default(false),
   },
   (table) => [
+    index("idx_app_users_email").on(table.email),
+    index("idx_app_users_role").on(table.role),
     index("idx_app_users_full_name").on(table.fullName),
     index("idx_app_users_last_login").on(table.lastLogin),
+    index("idx_app_users_is_locked").on(table.isLocked),
   ]
 );
 

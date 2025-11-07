@@ -137,26 +137,35 @@ async function createTablesIfNotExist(tursoDb) {
     )`,
   ];
 
-  // Create indexes for better query performance
+  // Create indexes for better query performance (matching schema.ts)
   const createIndexStatements = [
-    // Essential indexes for WHERE clauses and JOINs
+    // Collaborations table indexes - WHERE clauses and JOINs
     `CREATE INDEX IF NOT EXISTS idx_collaborations_company_id ON collaborations(company_id)`,
     `CREATE INDEX IF NOT EXISTS idx_collaborations_project_id ON collaborations(project_id)`,
     `CREATE INDEX IF NOT EXISTS idx_collaborations_person_id ON collaborations(person_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_people_company_id ON people(company_id)`,
 
-    // Essential indexes for ORDER BY clauses
-    `CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name)`,
-    `CREATE INDEX IF NOT EXISTS idx_people_name ON people(name)`,
+    // Collaborations table indexes - ORDER BY clauses
     `CREATE INDEX IF NOT EXISTS idx_collaborations_updated_at ON collaborations(updated_at)`,
     `CREATE INDEX IF NOT EXISTS idx_collaborations_created_at ON collaborations(created_at)`,
-    `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at)`,
 
-    // Essential indexes for subqueries and EXISTS checks
+    // Collaborations table indexes - Composite and filtered queries
     `CREATE INDEX IF NOT EXISTS idx_collaborations_company_contact_future ON collaborations(company_id, contact_in_future)`,
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_contact_future ON collaborations(contact_in_future)`,
 
-    // Essential indexes for filtered queries
-    `CREATE INDEX IF NOT EXISTS idx_collaborations_responsible_filtered ON collaborations(responsible) WHERE responsible IS NOT NULL AND responsible != ''`,
+    // Full index on responsible for user collaboration checks (no WHERE clause - includes NULL values)
+    `CREATE INDEX IF NOT EXISTS idx_collaborations_responsible ON collaborations(responsible)`,
+
+    // People (Contacts) table indexes - foreign keys and search
+    `CREATE INDEX IF NOT EXISTS idx_people_company_id ON people(company_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_people_name ON people(name)`,
+    `CREATE INDEX IF NOT EXISTS idx_people_email ON people(email)`,
+
+    // Companies table indexes - search
+    `CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name)`,
+
+    // Projects table indexes - search and sorting
+    `CREATE INDEX IF NOT EXISTS idx_projects_name ON projects(name)`,
+    `CREATE INDEX IF NOT EXISTS idx_projects_created_at ON projects(created_at)`,
   ];
 
   for (const sql of createTableStatements) {

@@ -108,7 +108,7 @@ export default function CompanyDetailPage() {
               size={isMobile ? "icon" : "default"}
             >
               <Pencil className="size-4" />
-              {!isMobile && "Edit Company"}
+              {!isMobile && "Edit company"}
             </Button>
 
             <Button
@@ -116,7 +116,7 @@ export default function CompanyDetailPage() {
               size={isMobile ? "icon" : "default"}
             >
               <Trash2 className="size-4" />
-              {!isMobile && " Delete Company"}
+              {!isMobile && " Delete company"}
             </Button>
           </div>
         </div>

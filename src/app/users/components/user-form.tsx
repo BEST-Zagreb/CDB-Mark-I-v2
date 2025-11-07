@@ -147,16 +147,19 @@ export function UserForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={UserRole.ADMINISTRATOR}>
-                    Administrator
-                  </SelectItem>
-                  <SelectItem value={UserRole.PROJECT_RESPONSIBLE} disabled>
-                    Project responsible
-                  </SelectItem>
+                  <SelectItem value={UserRole.OBSERVER}>Observer</SelectItem>
+
                   <SelectItem value={UserRole.PROJECT_TEAM_MEMBER} disabled>
                     Project team member
                   </SelectItem>
-                  <SelectItem value={UserRole.OBSERVER}>Observer</SelectItem>
+
+                  <SelectItem value={UserRole.PROJECT_RESPONSIBLE} disabled>
+                    Project responsible
+                  </SelectItem>
+
+                  <SelectItem value={UserRole.ADMINISTRATOR}>
+                    Administrator
+                  </SelectItem>
                 </SelectContent>
               </Select>
 

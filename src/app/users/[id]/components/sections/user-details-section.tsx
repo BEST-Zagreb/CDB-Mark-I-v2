@@ -103,18 +103,24 @@ export function UserDetailsSection({ user }: UserDetailsSectionProps) {
             <label className="text-sm font-medium text-muted-foreground">
               Added By
             </label>
-            {user.addedByUser ? (
+            {user.addedByUser?.fullName ? (
               <div className="mt-1 flex items-center gap-1">
                 <Link
-                  href={`/users/${user.addedByUser?.id}`}
+                  href={`/users/${user.addedByUser.id}`}
                   className="text-sm text-primary hover:underline"
                 >
                   {user.addedByUser.fullName}
                 </Link>
-                <span className="text-xs text-muted-foreground">
-                  ({user.addedByUser?.email})
-                </span>
+                {user.addedByUser.email && (
+                  <span className="text-xs text-muted-foreground">
+                    ({user.addedByUser.email})
+                  </span>
+                )}
               </div>
+            ) : user.addedBy ? (
+              <p className="mt-1 text-sm italic text-muted-foreground">
+                User deleted
+              </p>
             ) : (
               <p className="mt-1 text-sm">-</p>
             )}

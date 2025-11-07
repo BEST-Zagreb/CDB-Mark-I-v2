@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAndCreateUser } from "@/lib/auth-utils";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { appUsers } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +14,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
+      );
+    }
+
+    // First, verify the session actually exists in the database
+    const session = await auth.api.getSession({ headers: request.headers });
+
+    if (!session?.user?.id || session.user.id !== id) {
+      return NextResponse.json(
+        { authorized: false, error: "Session not found or invalid" },
+        { status: 401 }
       );
     }
 

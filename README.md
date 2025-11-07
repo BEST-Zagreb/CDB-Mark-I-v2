@@ -43,18 +43,6 @@ Deployed and available on [new.cdb.best.hr](https://new.cdb.best.hr)
 This work is licensed under a
 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
 
-### Install Dependencies
-
-```bash
-# Install main dependencies
-pnpm install
-
-# Install better-sqlite3 for database scripts (requires native compilation)
-npm install better-sqlite3 --build-from-source
-```
-
-**Note:** The second command installs `better-sqlite3` with native bindings required for the database utility scripts. This package needs to be compiled for your specific platform and Node.js version.
-
 ## How to run
 
 ### Prerequisites
@@ -65,6 +53,13 @@ npm install better-sqlite3 --build-from-source
   npm install -g pnpm
   ```
 
+#### Install Dependencies
+
+```bash
+# Install main dependencies
+pnpm install .
+```
+
 ### Environment Setup
 
 1. Create a `.env.local` file in the project root:
@@ -73,7 +68,7 @@ npm install better-sqlite3 --build-from-source
    ```
 2. Configure the following services and environment variables:
 
-   - **Optional: restrict login domains.** Set `ALLOWED_EMAIL_DOMAINS` in `.env.local` to a comma-separated list of domains (for example `best.hr,example.com`). Only users whose email ends with one of the listed domains will be able to sign in without needing to make an account prior. Leave the value empty to disable auto-create user.
+   - **Optional:** Set `ALLOWED_EMAIL_DOMAINS` in `.env.local` to a comma-separated list of domains (for example `best.hr,example.com`). Only users whose email ends with one of the listed domains will be able to sign in without needing to make an account prior. Leave the value empty to disable auto-create user.
 
 #### 1. Turso Database
 
@@ -152,58 +147,86 @@ Location: `db/scripts/`
 - **`enable_cascading_deletes.js`** - Enable cascading deletes
 - **`analyze_db_cardinality.js`** - Analyze database relationships
 
-#### DB Migration Scripts
+##### DB Migration Scripts
 
 - **`migrate_to_turso.js`** - Migrate business data from local SQLite to Turso
 - **`add-auth-tables.js`** - Create Better Auth tables in Turso
 - **`verify-tables.js`** - Verify all tables exist in Turso
 
+##### DB Backup & Export Scripts
+
+- **`export_turso_db.js`** - Export the full Turso database into local files
+
 #### Option 1: Migrate Existing Database
 
 To migrate data from an existing CDB instance, follow these steps:
 
-First, if your database is on a remote server, copy it to your local machine:
+##### Step 1: Copy Database from Remote Server
+
+If your database is on a remote server, copy it to your local machine:
 
 ```bash
-# Copy database from server to local Desktop
+# Copy database from remote server to local Desktop
 scp user@vps_ip:/var/www/html/companydb/db/development.sqlite3 ~/Desktop/db.sqlite3
 
 # Copy to project db folder
 cp ~/Desktop/db.sqlite3 ./db/db.sqlite3
 ```
 
-Run preparation and normalization scripts on your local SQLite database:
+##### Step 2: Switch to npm for Database Scripts
+
+The database preparation scripts require npm (not pnpm) due to `better-sqlite3` native bindings:
 
 ```bash
-# 1. Normalize the database (clean up data)
+# Remove pnpm artifacts
+rm -rf node_modules
+
+# Install with npm
+npm install .
+```
+
+##### Step 3: Prepare Local SQLite Database
+
+Run preparation and normalization scripts:
+
+```bash
+# Normalize the database (clean up data inconsistencies)
 node db/scripts/normalize_db.js all
 
-# 2. Enable cascading deletes
+# Enable cascading deletes for referential integrity
 node db/scripts/enable_cascading_deletes.js
 
-# 3. Optional: Analyze database structure
+# Optional: Analyze database structure
 node db/scripts/analyze_db_cardinality.js
 ```
 
-Migrate Data to Turso to copy your companies, projects, contacts, and collaborations:
+##### Step 4: Migrate Business Data to Turso
+
+Migrate your companies, projects, contacts, and collaborations:
 
 ```bash
-# Set environment variables and run migration
-TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
-TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
-node db/scripts/migrate_to_turso.js
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/migrate_to_turso.js
 ```
 
-Create Users and Authentication Tables:
+##### Step 5: Create Authentication Tables
+
+Create Better Auth tables (user, session, account, verification, app_users):
 
 ```bash
-# Create auth tables (user, session, account, verification, app_users)
-TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) \
-TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) \
-node db/scripts/add-auth-tables.js
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) node db/scripts/add-auth-tables.js
 ```
 
-- **`add-auth-tables.js`** - Create Better Auth tables in Turso
+##### Step 6: Switch to pnpm
+
+Remove npm artifacts and reinstall dependencies with pnpm:
+
+```bash
+# Remove npm artifacts
+rm -rf node_modules package-lock.json
+
+# Reinstall with pnpm
+pnpm install .
+```
 
 #### Option 2: Fresh Database Setup
 
@@ -211,7 +234,7 @@ For a new installation without existing data:
 
 ```bash
 # Push the Drizzle schema to Turso (creates all tables)
-drizzle-kit push:sqlite
+TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(grep TURSO_DB_TOKEN .env.local | cut -d'=' -f2) pnpm drizzle-kit push
 ```
 
 ### Running the Application
@@ -223,6 +246,8 @@ drizzle-kit push:sqlite
    ```
 
 2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
+
+3. Log in with Google OAuth - the first user to sign in will be automatically created and granted the _Administrator_ role
 
 ## Deployment Guide (Netlify)
 
@@ -272,6 +297,7 @@ pnpm run build
 After domain changes, update:
 
 - Environment variable: `BETTER_AUTH_URL`
+- `trustedOrigins` in `auth.ts` file
 - Google OAuth settings:
   - Authorized domains
   - Redirect URIs

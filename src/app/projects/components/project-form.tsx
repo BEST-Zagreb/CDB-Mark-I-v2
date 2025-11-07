@@ -84,7 +84,7 @@ export function ProjectForm({
                   type="number"
                   placeholder="Enter fundraising goal amount"
                   min={0}
-                  step={100}
+                  step={1}
                   max={1000000}
                   {...field}
                   onChange={(e) => {

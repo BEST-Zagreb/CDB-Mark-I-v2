@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { appUsers, collaborations } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { appUsers, collaborations, user, session } from "@/db/schema";
+import { eq, sql, count } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User, type UserRoleType } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
@@ -15,16 +15,12 @@ export async function GET(
   try {
     const { id: userId } = await params;
 
-    // Get user and check if they have any collaborations
+    // Get user info
     const addedByUser = alias(appUsers, "addedByUser");
 
     const results = await db
       .select({
         user: appUsers,
-        hasCollaborations: sql<number>`EXISTS (
-          SELECT 1 FROM ${collaborations} 
-          WHERE ${collaborations.responsible} = ${appUsers.fullName}
-        )`,
         addedByFullName: addedByUser.fullName,
         addedByEmail: addedByUser.email,
       })
@@ -39,13 +35,21 @@ export async function GET(
     const result = results[0];
     const u = result.user;
 
+    // Check if user has any collaborations (for role determination)
+    const hasCollaborations = await db
+      .select({ id: collaborations.id })
+      .from(collaborations)
+      .where(eq(collaborations.responsible, u.fullName))
+      .limit(1)
+      .then((rows) => rows.length > 0);
+
     // If user's role is not Administrator or Project responsible, and they have collaborations,
     // display them as Project team member
     let role = u.role as UserRoleType;
     if (
       role !== "Administrator" &&
       role !== "Project responsible" &&
-      result.hasCollaborations
+      hasCollaborations
     ) {
       role = "Project team member";
     }
@@ -160,6 +164,12 @@ export async function PUT(
     }
 
     const updatedUser = result[0];
+
+    // If user was locked, invalidate all their sessions to force logout
+    if (validatedData.isLocked === true && updatedUser.isLocked) {
+      await db.delete(session).where(eq(session.userId, userId));
+    }
+
     const addedByInfo = await resolveAddedByUser(updatedUser.addedBy);
     const formattedUser: User = {
       id: updatedUser.id,
@@ -231,16 +241,57 @@ export async function DELETE(
 
     const { id: userId } = await params;
 
-    const result = await db
+    // Check if user is trying to delete themselves
+    const isDeletingSelf = authCheck.userId === userId;
+
+    // Get the user being deleted
+    const userToDelete = await db
+      .select()
+      .from(appUsers)
+      .where(eq(appUsers.id, userId))
+      .limit(1);
+
+    if (userToDelete.length === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // If deleting an Administrator, check if they're the last one
+    if (userToDelete[0].role === "Administrator") {
+      const adminCount = await db
+        .select({ count: count() })
+        .from(appUsers)
+        .where(eq(appUsers.role, "Administrator"));
+
+      const totalAdmins = adminCount[0]?.count || 0;
+
+      if (totalAdmins <= 1) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot delete the last administrator account. Please assign another user as administrator first.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Delete from appUsers first
+    const appUserResult = await db
       .delete(appUsers)
       .where(eq(appUsers.id, userId))
       .returning();
 
-    if (result.length === 0) {
+    if (appUserResult.length === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: "User deleted successfully" });
+    // Delete from Better Auth user table (this will cascade delete sessions via FK)
+    await db.delete(user).where(eq(user.id, userId));
+
+    return NextResponse.json({
+      message: "User deleted successfully",
+      deletedSelf: isDeletingSelf,
+    });
   } catch (error) {
     console.error("Error deleting user:", error);
     return NextResponse.json(

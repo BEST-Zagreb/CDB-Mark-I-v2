@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signIn, signOut } from "@/lib/auth-client";
+import { signIn, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,9 +16,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/app/users/hooks/use-users";
+import { toast } from "sonner";
+import { useAuthorizedSession } from "@/hooks/use-authorized-session";
 
 export function AuthButton() {
-  const { data: session, isPending } = useSession();
+  const { session, isPending } = useAuthorizedSession();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -29,6 +31,25 @@ export function AuthButton() {
   // Use fullName from database, fallback to session name (Gmail username)
   const displayName = userData?.fullName || session?.user?.name || "User";
 
+  const handleSignIn = async () => {
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (error) {
+      // Handle sign-in errors (e.g., authorization failures)
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to sign in. Please try again.";
+
+      toast.error(errorMessage, {
+        duration: 6000,
+      });
+    }
+  };
+
   if (isPending) {
     return <div className="h-10 w-32 rounded-full bg-muted animate-pulse" />;
   }
@@ -36,7 +57,7 @@ export function AuthButton() {
   if (!session) {
     return (
       <Button
-        onClick={() => signIn.social({ provider: "google", callbackURL: "/" })}
+        onClick={handleSignIn}
         variant="default"
         size="sm"
         className="gap-2"

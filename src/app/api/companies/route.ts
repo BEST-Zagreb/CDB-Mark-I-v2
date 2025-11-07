@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { companies, collaborations } from "@/db/schema";
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc, and, sql } from "drizzle-orm";
 import { companySchema, type Company } from "@/types/company";
 
 async function companyHasDoNotContact(companyId: number) {
@@ -20,16 +20,22 @@ async function companyHasDoNotContact(companyId: number) {
 }
 
 async function fetchDoNotContactCompanyIds() {
+  // Use GROUP BY for better performance with the composite index
+  // idx_collaborations_company_contact_future (company_id, contact_in_future)
   const rows = await db
-    .select({ companyId: collaborations.companyId })
+    .select({
+      companyId: collaborations.companyId,
+    })
     .from(collaborations)
-    .where(eq(collaborations.contactInFuture, 0));
+    .where(
+      and(
+        eq(collaborations.contactInFuture, 0),
+        sql`${collaborations.companyId} IS NOT NULL`
+      )
+    )
+    .groupBy(collaborations.companyId);
 
-  return new Set(
-    rows
-      .filter((row) => row.companyId != null)
-      .map((row) => row.companyId as number)
-  );
+  return new Set(rows.map((row) => row.companyId as number));
 }
 
 // GET /api/companies - Get all companies

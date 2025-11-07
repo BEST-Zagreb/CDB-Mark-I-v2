@@ -102,7 +102,7 @@ export default function ProjectDetailPage() {
                 size={isMobile ? "icon" : "default"}
               >
                 <Pencil className="size-4" />
-                {!isMobile && "Edit Project"}
+                {!isMobile && "Edit project"}
               </Button>
 
               <Button
@@ -110,7 +110,7 @@ export default function ProjectDetailPage() {
                 size={isMobile ? "icon" : "default"}
               >
                 <Trash2 className="size-4" />
-                {!isMobile && " Delete Project"}
+                {!isMobile && " Delete project"}
               </Button>
             </div>
           )}

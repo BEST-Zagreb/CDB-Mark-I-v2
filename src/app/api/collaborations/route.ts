@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { collaborations, companies, people, projects } from "@/db/schema";
+import {
+  collaborations,
+  companies,
+  people,
+  projects,
+  appUsers,
+} from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
-// GET /api/collaborations - Get all collaborations with optional project, company, or responsible filter
+// GET /api/collaborations - Get collaborations with required project, company, or responsible filter
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
     const responsible = searchParams.get("responsible");
+
+    // Require at least one filter to prevent fetching all collaborations
+    if (!projectId && !companyId && !responsible) {
+      return NextResponse.json(
+        {
+          error:
+            "Filter required: Please provide project_id, company_id, or responsible parameter",
+        },
+        { status: 400 }
+      );
+    }
 
     const baseQuery = db
       .select({
@@ -33,11 +50,13 @@ export async function GET(request: NextRequest) {
         companyName: companies.name,
         contactName: people.name,
         projectName: projects.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
-      .leftJoin(projects, eq(collaborations.projectId, projects.id));
+      .leftJoin(projects, eq(collaborations.projectId, projects.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName));
 
     let result;
     if (projectId) {
@@ -54,42 +73,67 @@ export async function GET(request: NextRequest) {
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)
         );
-    } else if (responsible) {
+    } else {
+      // responsible filter (guaranteed to be non-null due to check above)
       result = await baseQuery
-        .where(eq(collaborations.responsible, responsible))
+        .where(eq(collaborations.responsible, responsible!))
         .orderBy(
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)
         );
-    } else {
-      result = await baseQuery.orderBy(
-        desc(collaborations.updatedAt),
-        desc(collaborations.createdAt)
+    }
+
+    // For project and user views, check if any company has "do not contact" status
+    let doNotContactCompanyIds: Set<number> = new Set();
+    if (projectId || responsible) {
+      const doNotContactCompanies = await db
+        .selectDistinct({
+          companyId: collaborations.companyId,
+        })
+        .from(collaborations)
+        .where(eq(collaborations.contactInFuture, 0))
+        .groupBy(collaborations.companyId);
+
+      doNotContactCompanyIds = new Set(
+        doNotContactCompanies
+          .map((row) => row.companyId)
+          .filter((id): id is number => id !== null)
       );
     }
 
-    const formattedCollaborations: Collaboration[] = result.map((row) => ({
-      id: row.id,
-      companyId: row.companyId ?? 0,
-      projectId: row.projectId ?? 0,
-      contactId: row.contactId,
-      responsible: row.responsible,
-      comment: row.comment,
-      contacted: Boolean(row.contacted),
-      successful: row.successful === null ? null : Boolean(row.successful),
-      letter: Boolean(row.letter),
-      meeting: row.meeting === null ? null : Boolean(row.meeting),
-      priority: row.priority as "Low" | "Medium" | "High",
-      createdAt: row.createdAt ? new Date(row.createdAt) : null,
-      updatedAt: row.updatedAt ? new Date(row.updatedAt) : null,
-      amount: row.amount,
-      contactInFuture:
-        row.contactInFuture === null ? null : Boolean(row.contactInFuture),
-      type: row.type,
-      companyName: row.companyName ?? undefined,
-      contactName: row.contactName ?? undefined,
-      projectName: row.projectName ?? undefined,
-    }));
+    const formattedCollaborations: Collaboration[] = result.map((row) => {
+      // Check if this company is marked as "do not contact" in ANY collaboration
+      const companyHasDoNotContact =
+        (projectId || responsible) &&
+        doNotContactCompanyIds.has(row.companyId ?? 0);
+
+      return {
+        id: row.id,
+        companyId: row.companyId ?? 0,
+        projectId: row.projectId ?? 0,
+        contactId: row.contactId,
+        responsible: row.responsible,
+        comment: row.comment,
+        contacted: Boolean(row.contacted),
+        successful: row.successful === null ? null : Boolean(row.successful),
+        letter: Boolean(row.letter),
+        meeting: row.meeting === null ? null : Boolean(row.meeting),
+        priority: row.priority as "Low" | "Medium" | "High",
+        createdAt: row.createdAt ? new Date(row.createdAt) : null,
+        updatedAt: row.updatedAt ? new Date(row.updatedAt) : null,
+        amount: row.amount,
+        // Keep the actual collaboration's contactInFuture value
+        contactInFuture:
+          row.contactInFuture === null ? null : Boolean(row.contactInFuture),
+        type: row.type,
+        companyName: row.companyName ?? undefined,
+        contactName: row.contactName ?? undefined,
+        projectName: row.projectName ?? undefined,
+        responsibleUserId: row.responsibleUserId ?? undefined,
+        // Add warning flag if company has "do not contact" status
+        companyHasDoNotContact: companyHasDoNotContact || undefined,
+      };
+    });
 
     return NextResponse.json(formattedCollaborations);
   } catch (error) {
@@ -158,11 +202,13 @@ export async function POST(request: NextRequest) {
         companyName: companies.name,
         contactName: people.name,
         projectName: projects.name,
+        responsibleUserId: appUsers.id,
       })
       .from(collaborations)
       .leftJoin(companies, eq(collaborations.companyId, companies.id))
       .leftJoin(people, eq(collaborations.personId, people.id))
       .leftJoin(projects, eq(collaborations.projectId, projects.id))
+      .leftJoin(appUsers, eq(collaborations.responsible, appUsers.fullName))
       .where(eq(collaborations.id, insertedCollab.id));
 
     const row = fullResult[0];
@@ -188,6 +234,7 @@ export async function POST(request: NextRequest) {
       companyName: row.companyName ?? undefined,
       contactName: row.contactName ?? undefined,
       projectName: row.projectName ?? undefined,
+      responsibleUserId: row.responsibleUserId ?? undefined,
     };
 
     return NextResponse.json(collaboration, { status: 201 });

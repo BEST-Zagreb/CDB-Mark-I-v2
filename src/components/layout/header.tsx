@@ -1,26 +1,20 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { FolderOpen, Building, Home, Users } from "lucide-react";
-import { JSX, useEffect, useState, useRef } from "react";
+import { JSX, useEffect, useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AuthButton } from "@/components/layout/auth-button";
-import { useSession, signOut } from "@/lib/auth-client";
-import { toast } from "sonner";
+import { useAuthorizedSession } from "@/hooks/use-authorized-session";
 
 export default function Header(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
-  const authCheckRef = useRef<{ checked: boolean; sessionId: string | null }>({
-    checked: false,
-    sessionId: null,
-  });
+  const { session, isPending } = useAuthorizedSession();
 
   // Helper function to check if a path is active
   const isActivePath = (path: string) => {
@@ -34,58 +28,6 @@ export default function Header(): JSX.Element {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // Check authorization when user logs in
-  useEffect(() => {
-    const checkAuthorization = async () => {
-      // Only check if we have a session and haven't checked this session yet
-      if (!session?.user?.id) {
-        authCheckRef.current = { checked: false, sessionId: null };
-        return;
-      }
-
-      // Skip if we've already checked this session
-      if (
-        authCheckRef.current.checked &&
-        authCheckRef.current.sessionId === session.user.id
-      ) {
-        return;
-      }
-
-      authCheckRef.current = { checked: true, sessionId: session.user.id };
-
-      try {
-        const response = await fetch("/api/auth/check-authorization", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.name,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!data.authorized) {
-          // Sign out unauthorized user
-          await signOut();
-
-          // Show error toast after sign out
-          toast.error(data.error || "Access denied", {
-            duration: 6000,
-          });
-
-          // Use Next.js router for navigation (no page reload)
-          router.push("/");
-        }
-      } catch (error) {
-        console.error("Authorization check failed:", error);
-      }
-    };
-
-    checkAuthorization();
-  }, [session, router]);
 
   return (
     <>

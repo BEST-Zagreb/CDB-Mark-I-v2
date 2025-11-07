@@ -15,8 +15,8 @@ export default function Home() {
         <Image
           src="/cdb-logo-transparent.png"
           alt="Company DB logo"
-          width={96}
-          height={96}
+          width={512}
+          height={512}
           className="shrink-0 w-16 sm:w-32"
         />
 

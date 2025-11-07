@@ -9,7 +9,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
-    const baseQuery = db
+    // Require companyId filter to prevent fetching all contacts
+    if (!companyId) {
+      return NextResponse.json(
+        {
+          error: "Filter required: Please provide companyId parameter",
+        },
+        { status: 400 }
+      );
+    }
+
+    const result = await db
       .select({
         id: people.id,
         name: people.name,
@@ -21,13 +31,9 @@ export async function GET(request: NextRequest) {
         companyName: companies.name,
       })
       .from(people)
-      .leftJoin(companies, eq(people.companyId, companies.id));
-
-    const result = companyId
-      ? await baseQuery
-          .where(eq(people.companyId, parseInt(companyId)))
-          .orderBy(people.name)
-      : await baseQuery.orderBy(people.name);
+      .leftJoin(companies, eq(people.companyId, companies.id))
+      .where(eq(people.companyId, parseInt(companyId)))
+      .orderBy(people.name);
 
     const contacts: Contact[] = result.map((row) => ({
       id: row.id,

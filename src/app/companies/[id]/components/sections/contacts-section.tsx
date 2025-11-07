@@ -84,7 +84,7 @@ export function ContactsSection({ companyId }: ContactsSectionProps) {
               size={isMobile ? "icon" : "default"}
             >
               <Plus className="size-4" />
-              {!isMobile && "Add Contact"}
+              {!isMobile && "Add contact"}
             </Button>
           </div>
         </CardHeader>
