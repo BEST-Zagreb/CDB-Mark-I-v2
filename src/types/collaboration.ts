@@ -68,36 +68,3 @@ export const collaborationSchema = z.object({
 export type CollaborationFormData = z.infer<typeof collaborationSchema>;
 
 export type CollaborationSchema = z.infer<typeof collaborationSchema>;
-
-// Status helper functions
-export function getCollaborationStatusText(
-  collaboration: Collaboration
-): string {
-  if (collaboration.successful === true) return "Successful";
-  if (collaboration.successful === false) return "Failed";
-  if (collaboration.contacted) return "Contacted";
-  return "Not contacted";
-}
-
-export function getCollaborationStatusColor(
-  collaboration: Collaboration
-): string {
-  if (collaboration.successful === true) return "text-green-600";
-  if (collaboration.successful === false) return "text-red-600";
-  if (collaboration.contacted) return "text-yellow-600";
-  return "text-gray-600";
-}
-
-// Helper function to get priority order value for sorting
-export function getPriorityOrder(priority: string): number {
-  switch (priority) {
-    case "High":
-      return 3;
-    case "Medium":
-      return 2;
-    case "Low":
-      return 1;
-    default:
-      return 0;
-  }
-}
