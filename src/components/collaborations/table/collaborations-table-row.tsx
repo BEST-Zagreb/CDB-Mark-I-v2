@@ -222,7 +222,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <StatusIcon className={`size-6 ${statusColor}`} />
+                      <StatusIcon className={`size-5 ${statusColor}`} />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>{statusLabel}</p>
@@ -243,7 +243,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Phone className="size-5 text-blue-600" />
+                        <Phone className="size-4 text-blue-600" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Contacted</p>
@@ -256,7 +256,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Mail className="size-5 text-orange-400" />
+                        <Mail className="size-4 text-orange-400" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Letter Sent</p>
@@ -269,7 +269,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Briefcase className="size-5 text-purple-600" />
+                        <Briefcase className="size-4 text-purple-600" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Meeting Held</p>
@@ -284,7 +284,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <ClockAlert className="size-5 text-red-600" />
+                          <ClockAlert className="size-4 text-red-600" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Not contacted yet</p>
