@@ -201,19 +201,6 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   column.center && "justify-center"
                 } gap-1`}
               >
-                {collaboration.letter && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Mail className="size-4 text-blue-600" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Letter</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-
                 {collaboration.contacted && (
                   <TooltipProvider>
                     <Tooltip>
@@ -222,6 +209,19 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Contacted</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+
+                {collaboration.letter && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Mail className="size-4 text-blue-600" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Letter</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
