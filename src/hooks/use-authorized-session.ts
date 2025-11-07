@@ -51,7 +51,7 @@ export function useAuthorizedSession(): AuthorizedSessionState {
         return;
       }
 
-      // Mark as checking (null = in progress)
+      // Mark as checking (null = Pending)
       setIsAuthorized(null);
       authCheckRef.current = {
         checked: true,

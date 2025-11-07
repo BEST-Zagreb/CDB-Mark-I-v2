@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Collaboration } from "@/types/collaboration";
-import { getStatusPriority } from "@/lib/collaboration-utils";
+import {
+  getStatusPriority,
+  getProgressPriority,
+} from "@/lib/collaboration-utils";
 import { type TablePreferences } from "@/types/table";
 import { isColumnVisible, getSortIcon } from "@/lib/table-utils";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
@@ -58,6 +61,11 @@ export function CollaborationsTable({
           // Calculate status priority using helper function
           aValue = getStatusPriority(a);
           bValue = getStatusPriority(b);
+          break;
+        case "progress":
+          // Calculate progress priority using helper function
+          aValue = getProgressPriority(a);
+          bValue = getProgressPriority(b);
           break;
         case "priority":
           const priorityOrder = { High: 3, Medium: 2, Low: 1 };

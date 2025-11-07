@@ -15,10 +15,22 @@ export function getPriorityOrder(priority: string): number {
 }
 
 // Helper function to get status priority for sorting
+// Status (successful field): null = Pending, true = Successful, false = Rejected
+// For sorting: Successful (true) > Pending (null) > Rejected (false)
 export function getStatusPriority(collaboration: Collaboration): number {
-  if (collaboration.successful) return 4;
-  if (collaboration.meeting) return 3;
-  if (collaboration.letter) return 2;
-  if (collaboration.contacted) return 1;
-  return 0; // Not contacted yet
+  if (collaboration.successful === true) return 2; // Successful
+  if (collaboration.successful === null) return 1; // Pending
+  if (collaboration.successful === false) return 0; // Rejected
+  return 1; // Default to Pending
+}
+
+// Helper function to get progress priority for sorting
+// Progress indicators: contacted, letter, meeting
+// Higher number = more progress. Meeting > Letter > Contacted > None
+export function getProgressPriority(collaboration: Collaboration): number {
+  let priority = 0;
+  if (collaboration.contacted) priority += 1;
+  if (collaboration.letter) priority += 2;
+  if (collaboration.meeting) priority += 4;
+  return priority; // Range: 0-7 based on combination of flags
 }

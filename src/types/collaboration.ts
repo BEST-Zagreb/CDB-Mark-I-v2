@@ -8,10 +8,12 @@ export interface CollaborationDB {
   person_id: number | null;
   responsible: string | null;
   comment: string | null;
+  // Progress indicators (boolean)
   contacted: boolean;
-  successful: boolean | null;
   letter: boolean;
   meeting: boolean | null;
+  // Status field (tri-state: null = Pending, true = Successful, false = Rejected)
+  successful: boolean | null;
   priority: string; // Changed from number to string
   created_at: string | null;
   updated_at: string | null;
@@ -28,10 +30,12 @@ export interface Collaboration {
   contactId: number | null;
   responsible: string | null;
   comment: string | null;
+  // Progress indicators (boolean)
   contacted: boolean;
-  successful: boolean | null;
   letter: boolean;
   meeting: boolean | null;
+  // Status field (tri-state: null = Pending, true = Successful, false = Rejected)
+  successful: boolean | null;
   priority: "Low" | "Medium" | "High";
   createdAt: Date | string | null; // Can be string due to JSON serialization
   updatedAt: Date | string | null; // Can be string due to JSON serialization
@@ -54,10 +58,12 @@ export const collaborationSchema = z.object({
   contactId: z.number().positive().optional(),
   responsible: z.string().min(1, "Responsible contact is required"),
   comment: z.string().optional(),
+  // Progress indicators
   contacted: z.boolean(),
-  successful: z.boolean().optional(),
   letter: z.boolean(),
   meeting: z.boolean().optional(),
+  // Status field (tri-state: null = Pending, true = Successful, false = Rejected)
+  successful: z.boolean().nullable().optional(),
   priority: z.enum(["Low", "Medium", "High"]),
   amount: z.number().positive().optional(),
   contactInFuture: z.boolean().optional(),

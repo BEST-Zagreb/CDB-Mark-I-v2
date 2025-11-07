@@ -12,6 +12,7 @@ import {
   CalendarDays,
   ClockIcon,
   Pickaxe,
+  ListChecks,
 } from "lucide-react";
 import { Collaboration } from "@/types/collaboration";
 
@@ -22,7 +23,8 @@ export const COLLABORATION_FIELDS: Array<{
     | "companyName"
     | "projectName"
     | "contactName"
-    | "status";
+    | "status"
+    | "progress";
   label: string;
   required: boolean;
   sortable: boolean;
@@ -93,9 +95,18 @@ export const COLLABORATION_FIELDS: Array<{
     id: "status",
     label: "Status",
     required: false,
-    sortable: true, // Sort by status priority: successful > meeting > contacted > letter > not contacted
-    center: false,
+    sortable: true, // Sort by status: Successful > Pending > Rejected
+    center: true,
     icon: Pickaxe,
+  },
+
+  {
+    id: "progress",
+    label: "Progress",
+    required: false,
+    sortable: true,
+    center: true,
+    icon: ListChecks,
   },
 
   {

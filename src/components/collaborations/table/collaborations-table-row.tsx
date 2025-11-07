@@ -17,9 +17,11 @@ import {
   Phone,
   Mail,
   Briefcase,
+  BadgeHelp,
   BadgeEuro,
-  ClockAlert,
+  BadgeX,
   ShieldAlert,
+  ClockAlert,
 } from "lucide-react";
 import { COLLABORATION_FIELDS } from "@/config/collaboration-fields";
 import { Collaboration } from "@/types/collaboration";
@@ -191,21 +193,57 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
             </TableCell>
           );
         } else if (column.id === "status") {
+          // Inline status label and color logic
+          const statusLabel =
+            collaboration.successful === true
+              ? "Successful"
+              : collaboration.successful === false
+              ? "Rejected"
+              : "Pending";
+          const statusColor =
+            collaboration.successful === true
+              ? "text-green-600"
+              : collaboration.successful === false
+              ? "text-red-600"
+              : "text-yellow-600";
+          const StatusIcon =
+            collaboration.successful === true
+              ? BadgeEuro
+              : collaboration.successful === false
+              ? BadgeX
+              : BadgeHelp;
+
           return (
             <TableCell
               key={column.id}
               className={`max-w-50 ${column.center && "text-center"}`}
             >
-              <div
-                className={`flex items-center ${
-                  column.center && "justify-center"
-                } gap-1`}
-              >
+              <div className="flex items-center justify-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <StatusIcon className={`size-6 ${statusColor}`} />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{statusLabel}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </TableCell>
+          );
+        } else if (column.id === "progress") {
+          return (
+            <TableCell
+              key={column.id}
+              className={`max-w-50 ${column.center && "text-center"}`}
+            >
+              <div className="flex items-center justify-center gap-1">
                 {collaboration.contacted && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Phone className="size-4 text-green-600" />
+                        <Phone className="size-5 text-blue-600" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Contacted</p>
@@ -218,10 +256,10 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Mail className="size-4 text-blue-600" />
+                        <Mail className="size-5 text-orange-400" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Letter</p>
+                        <p>Letter Sent</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -231,23 +269,10 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Briefcase className="size-4 text-primary" />
+                        <Briefcase className="size-5 text-purple-600" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Meeting</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-
-                {collaboration.successful && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <BadgeEuro className="size-4 text-yellow-600" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Successful</p>
+                        <p>Meeting Held</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -255,12 +280,11 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
 
                 {!collaboration.contacted &&
                   !collaboration.letter &&
-                  !collaboration.meeting &&
-                  !collaboration.successful && (
+                  !collaboration.meeting && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <ClockAlert className="size-4 text-red-600" />
+                          <ClockAlert className="size-5 text-red-600" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Not contacted yet</p>

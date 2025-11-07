@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
 import { ResponsiblePersonSelect } from "@/components/collaborations/form/responsible-person-select";
@@ -58,6 +59,8 @@ export function CollaborationForm({
       comment: "",
       contacted: false,
       letter: false,
+      meeting: false,
+      successful: null, // Default to "Pending"
       priority: "Low",
       type: null,
       contactInFuture: true,
@@ -87,9 +90,14 @@ export function CollaborationForm({
         responsible: initialData.responsible || "",
         comment: initialData.comment || "",
         contacted: initialData.contacted,
-        successful: initialData.successful || undefined,
         letter: initialData.letter,
         meeting: initialData.meeting || undefined,
+        successful:
+          initialData.successful === null
+            ? null
+            : initialData.successful === true
+            ? true
+            : false,
         priority: initialData.priority,
         amount: initialData.amount || undefined,
         contactInFuture: initialData.contactInFuture || undefined,
@@ -107,6 +115,8 @@ export function CollaborationForm({
         comment: "",
         contacted: false,
         letter: false,
+        meeting: false,
+        successful: null, // Default to "Pending"
         priority: "Low",
         type: null,
         contactInFuture: true,
@@ -301,8 +311,8 @@ export function CollaborationForm({
           )}
         />
 
-        <p className="text-sm font-medium mb-2">Status</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+        <p className="text-sm font-medium mb-2">Progress Indicators</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <FormField
             control={form.control}
             name="contacted"
@@ -333,7 +343,7 @@ export function CollaborationForm({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Letter</FormLabel>
+                  <FormLabel>Letter Sent</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -351,30 +361,66 @@ export function CollaborationForm({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Meeting</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="successful"
-            render={({ field }) => (
-              <FormItem className="flex items-center gap-3">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value || false}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>Successful</FormLabel>
+                  <FormLabel>Meeting Held</FormLabel>
                 </div>
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="successful"
+          render={({ field }) => (
+            <FormItem className="">
+              <FormLabel>Collaboration Status</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={(value) => {
+                    field.onChange(
+                      value === "in-progress"
+                        ? null
+                        : value === "successful"
+                        ? true
+                        : false
+                    );
+                  }}
+                  value={
+                    field.value === null
+                      ? "in-progress"
+                      : field.value === true
+                      ? "successful"
+                      : "rejected"
+                  }
+                  disabled={isLoading}
+                  className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                >
+                  <FormItem className="flex items-center">
+                    <FormControl className="cursor-pointer">
+                      <RadioGroupItem value="in-progress" />
+                    </FormControl>
+                    <FormLabel className="font-normal">Pending</FormLabel>
+                  </FormItem>
+
+                  <FormItem className="flex items-center">
+                    <FormControl className="cursor-pointer">
+                      <RadioGroupItem value="successful" />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer">Successful</FormLabel>
+                  </FormItem>
+
+                  <FormItem className="flex items-center">
+                    <FormControl className="cursor-pointer">
+                      <RadioGroupItem value="rejected" />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer">Rejected</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
