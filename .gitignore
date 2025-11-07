@@ -41,7 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-db/db*
-
+# database dumps and exports
+*.sql
+*.sqlite
+*.sqlite3
+*.db
 
 desktop.ini
