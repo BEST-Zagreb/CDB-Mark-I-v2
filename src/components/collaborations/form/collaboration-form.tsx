@@ -93,11 +93,11 @@ export function CollaborationForm({
         letter: initialData.letter,
         meeting: initialData.meeting || undefined,
         successful:
-          initialData.successful === null
-            ? null
-            : initialData.successful === true
+          initialData.successful === true
             ? true
-            : false,
+            : initialData.successful === false
+            ? false
+            : null,
         priority: initialData.priority,
         amount: initialData.amount || undefined,
         contactInFuture: initialData.contactInFuture || undefined,
@@ -371,55 +371,60 @@ export function CollaborationForm({
         <FormField
           control={form.control}
           name="successful"
-          render={({ field }) => (
-            <FormItem className="">
-              <FormLabel>Collaboration Status</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={(value) => {
-                    if (value === "in-progress") {
-                      field.onChange(null);
-                    } else if (value === "successful") {
-                      field.onChange(true);
-                    } else if (value === "rejected") {
-                      field.onChange(false);
-                    }
-                  }}
-                  value={
-                    field.value === null || field.value === undefined
-                      ? "in-progress"
-                      : field.value === true
-                      ? "successful"
-                      : "rejected"
-                  }
-                  disabled={isLoading}
-                  className="grid grid-cols-1 sm:grid-cols-3 gap-2"
-                >
-                  <FormItem className="flex items-center">
-                    <FormControl className="cursor-pointer">
-                      <RadioGroupItem value="in-progress" />
-                    </FormControl>
-                    <FormLabel className="font-normal">Pending</FormLabel>
-                  </FormItem>
+          render={({ field }) => {
+            const displayValue =
+              field.value === true
+                ? "successful"
+                : field.value === false
+                ? "rejected"
+                : "in-progress";
 
-                  <FormItem className="flex items-center">
-                    <FormControl className="cursor-pointer">
-                      <RadioGroupItem value="successful" />
-                    </FormControl>
-                    <FormLabel className="cursor-pointer">Successful</FormLabel>
-                  </FormItem>
+            return (
+              <FormItem className="">
+                <FormLabel>Collaboration Status</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={(value) => {
+                      if (value === "in-progress") {
+                        field.onChange(null);
+                      } else if (value === "successful") {
+                        field.onChange(true);
+                      } else if (value === "rejected") {
+                        field.onChange(false);
+                      }
+                    }}
+                    value={displayValue}
+                    disabled={isLoading}
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                  >
+                    <FormItem className="flex items-center">
+                      <FormControl className="cursor-pointer">
+                        <RadioGroupItem value="in-progress" />
+                      </FormControl>
+                      <FormLabel className="font-normal">Pending</FormLabel>
+                    </FormItem>
 
-                  <FormItem className="flex items-center">
-                    <FormControl className="cursor-pointer">
-                      <RadioGroupItem value="rejected" />
-                    </FormControl>
-                    <FormLabel className="cursor-pointer">Rejected</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+                    <FormItem className="flex items-center">
+                      <FormControl className="cursor-pointer">
+                        <RadioGroupItem value="successful" />
+                      </FormControl>
+                      <FormLabel className="cursor-pointer">
+                        Successful
+                      </FormLabel>
+                    </FormItem>
+
+                    <FormItem className="flex items-center">
+                      <FormControl className="cursor-pointer">
+                        <RadioGroupItem value="rejected" />
+                      </FormControl>
+                      <FormLabel className="cursor-pointer">Rejected</FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField

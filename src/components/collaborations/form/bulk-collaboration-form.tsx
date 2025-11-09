@@ -84,11 +84,11 @@ export function BulkCollaborationForm({
         letter: initialData.letter,
         meeting: initialData.meeting || undefined,
         successful:
-          initialData.successful === null
-            ? null
-            : initialData.successful === true
+          initialData.successful === true
             ? true
-            : false,
+            : initialData.successful === false
+            ? false
+            : null, // For both null and undefined, use null (pending)
         priority: initialData.priority,
         amount: initialData.amount || undefined,
         contactInFuture: initialData.contactInFuture || undefined,
@@ -329,11 +329,11 @@ export function BulkCollaborationForm({
                     }
                   }}
                   value={
-                    field.value === null || field.value === undefined
-                      ? "in-progress"
-                      : field.value === true
+                    field.value === true
                       ? "successful"
-                      : "rejected"
+                      : field.value === false
+                      ? "rejected"
+                      : "in-progress"
                   }
                   disabled={isLoading}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-2"
