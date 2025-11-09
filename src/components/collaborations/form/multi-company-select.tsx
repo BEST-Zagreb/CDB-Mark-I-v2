@@ -152,7 +152,9 @@ export function MultiCompanySelect({
           </div>
           <CommandList>
             <CommandEmpty>
-              {searchValue ? "No companies found." : "Start typing to search..."}
+              {searchValue
+                ? "No companies found."
+                : "Start typing to search..."}
             </CommandEmpty>
             <CommandGroup>
               {filteredCompanies.map((company) => {
