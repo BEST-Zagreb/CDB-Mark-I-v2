@@ -12,7 +12,7 @@ import { useAuthorizedSession } from "@/hooks/use-authorized-session";
 
 export default function Header(): JSX.Element {
   const [isScrolled, setIsScrolled] = useState(false);
-  const isMobile = useIsMobile();
+
   const pathname = usePathname();
   const { session, isPending } = useAuthorizedSession();
 
@@ -43,7 +43,7 @@ export default function Header(): JSX.Element {
             <div className="flex items-center justify-between gap-4 flex-wrap py-2 sm:py-4">
               <div className="flex items-center justify-between sm:w-auto">
                 <div className="flex items-center space-x-2">
-                  {isMobile && !isPending && session && <SidebarTrigger />}
+                  {<SidebarTrigger className="lg:hidden" />}
 
                   <Link href="/" className="flex items-center space-x-2">
                     <Image
@@ -67,133 +67,131 @@ export default function Header(): JSX.Element {
                 </div>
               </div>
 
-              {!isPending && session && (
-                <ul className="hidden sm:flex gap-8 text-sm">
-                  <li>
-                    <Link
-                      href="/"
+              <ul className="hidden lg:flex gap-8 text-sm">
+                <li>
+                  <Link
+                    href="/"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      pathname === "/"
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <Home
                       className={cn(
-                        "flex items-center gap-2 duration-150 group hover:scale-110",
+                        "size-5 transition-colors",
                         pathname === "/"
                           ? "text-primary"
-                          : "text-muted-foreground hover:text-accent-foreground"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        pathname === "/"
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
                       )}
                     >
-                      <Home
-                        className={cn(
-                          "size-5 transition-colors",
-                          pathname === "/"
-                            ? "text-primary"
-                            : "group-hover:text-primary"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "transition-colors",
-                          pathname === "/"
-                            ? "text-primary font-bold"
-                            : "group-hover:text-primary"
-                        )}
-                      >
-                        Home
-                      </span>
-                    </Link>
-                  </li>
+                      Home
+                    </span>
+                  </Link>
+                </li>
 
-                  <li>
-                    <Link
-                      href="/projects"
+                <li>
+                  <Link
+                    href="/projects"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/projects")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <FolderOpen
                       className={cn(
-                        "flex items-center gap-2 duration-150 group hover:scale-110",
+                        "size-5 transition-colors",
                         isActivePath("/projects")
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-accent-foreground"
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/projects")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
                       )}
                     >
-                      <FolderOpen
-                        className={cn(
-                          "size-5 transition-colors",
-                          isActivePath("/projects")
-                            ? "text-primary font-bold"
-                            : "group-hover:text-primary"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "transition-colors",
-                          isActivePath("/projects")
-                            ? "text-primary font-bold"
-                            : "group-hover:text-primary"
-                        )}
-                      >
-                        Projects
-                      </span>
-                    </Link>
-                  </li>
+                      Projects
+                    </span>
+                  </Link>
+                </li>
 
-                  <li>
-                    <Link
-                      href="/companies"
+                <li>
+                  <Link
+                    href="/companies"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/companies")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <Building
                       className={cn(
-                        "flex items-center gap-2 duration-150 group hover:scale-110",
+                        "size-5 transition-colors",
                         isActivePath("/companies")
                           ? "text-primary"
-                          : "text-muted-foreground hover:text-accent-foreground"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/companies")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
                       )}
                     >
-                      <Building
-                        className={cn(
-                          "size-5 transition-colors",
-                          isActivePath("/companies")
-                            ? "text-primary"
-                            : "group-hover:text-primary"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "transition-colors",
-                          isActivePath("/companies")
-                            ? "text-primary font-bold"
-                            : "group-hover:text-primary"
-                        )}
-                      >
-                        Companies
-                      </span>
-                    </Link>
-                  </li>
+                      Companies
+                    </span>
+                  </Link>
+                </li>
 
-                  <li>
-                    <Link
-                      href="/users"
+                <li>
+                  <Link
+                    href="/users"
+                    className={cn(
+                      "flex items-center gap-2 duration-150 group hover:scale-110",
+                      isActivePath("/users")
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-accent-foreground"
+                    )}
+                  >
+                    <Users
                       className={cn(
-                        "flex items-center gap-2 duration-150 group hover:scale-110",
+                        "size-5 transition-colors",
                         isActivePath("/users")
                           ? "text-primary"
-                          : "text-muted-foreground hover:text-accent-foreground"
+                          : "group-hover:text-primary"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "transition-colors",
+                        isActivePath("/users")
+                          ? "text-primary font-bold"
+                          : "group-hover:text-primary"
                       )}
                     >
-                      <Users
-                        className={cn(
-                          "size-5 transition-colors",
-                          isActivePath("/users")
-                            ? "text-primary"
-                            : "group-hover:text-primary"
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "transition-colors",
-                          isActivePath("/users")
-                            ? "text-primary font-bold"
-                            : "group-hover:text-primary"
-                        )}
-                      >
-                        Users
-                      </span>
-                    </Link>
-                  </li>
-                </ul>
-              )}
+                      Users
+                    </span>
+                  </Link>
+                </li>
+              </ul>
 
               <AuthButton />
             </div>
