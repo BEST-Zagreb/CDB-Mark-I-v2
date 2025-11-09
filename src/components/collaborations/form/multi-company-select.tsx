@@ -44,22 +44,23 @@ export function MultiCompanySelect({
     error,
   } = useCompanies();
 
-  // Filter companies based on search - only show first 50 results
+  // Filter companies based on search
   const filteredCompanies = React.useMemo(() => {
     if (!allCompanies) return [];
-    if (!searchValue) return allCompanies.slice(0, 50); // Show first 50 by default
 
+    // If no search value or less than 2 characters, show first 50 companies
+    if (!searchValue || searchValue.length < 2)
+      return allCompanies.slice(0, 50);
+
+    // If user typed 2+ characters, show ALL matching results (no limit)
     const search = searchValue.toLowerCase();
-    return allCompanies
-      .filter(
-        (company) =>
-          company.name.toLowerCase().includes(search) ||
-          company.city?.toLowerCase().includes(search) ||
-          company.country?.toLowerCase().includes(search)
-      )
-      .slice(0, 50); // Limit to 50 results
+    return allCompanies.filter(
+      (company) =>
+        company.name.toLowerCase().includes(search) ||
+        company.city?.toLowerCase().includes(search) ||
+        company.country?.toLowerCase().includes(search)
+    );
   }, [allCompanies, searchValue]);
-
   const selectedCompanies = React.useMemo(() => {
     if (!allCompanies) return [];
     return allCompanies.filter((company) => values.includes(company.id));
@@ -130,11 +131,23 @@ export function MultiCompanySelect({
 
       <PopoverContent className="w-[70dvw] sm:max-w-96 p-0">
         <Command shouldFilter={false}>
-          <CommandInput
-            placeholder="Search companies..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
+          <div className="relative">
+            <CommandInput
+              placeholder="Search companies..."
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
+            {searchValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchValue("")}
+                className="absolute right-4 top-1/2 h-7 w-7 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <CommandList>
             <CommandEmpty>
               {searchValue
@@ -185,11 +198,21 @@ export function MultiCompanySelect({
               })}
             </CommandGroup>
           </CommandList>
-          {filteredCompanies.length >= 50 && (
-            <div className="border-t px-3 py-2 text-xs text-muted-foreground">
-              Showing first 50 results. Type to search for more.
-            </div>
-          )}
+          {(!searchValue || searchValue.length < 2) &&
+            filteredCompanies.length >= 50 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Showing first 50 companies. Start typing to search all
+                companies.
+              </div>
+            )}
+          {searchValue &&
+            searchValue.length >= 2 &&
+            filteredCompanies.length > 0 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Found {filteredCompanies.length} matching{" "}
+                {filteredCompanies.length === 1 ? "company" : "companies"}.
+              </div>
+            )}
         </Command>
       </PopoverContent>
     </Popover>
