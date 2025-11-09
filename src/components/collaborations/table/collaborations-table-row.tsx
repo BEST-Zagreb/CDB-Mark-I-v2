@@ -299,13 +299,16 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
           return (
             <TableCell
               key={column.id}
-              className={`max-w-50 ${column.center ? "text-center" : ""}`}
+              className={`${column.center ? "text-center" : ""}`}
             >
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="truncate">{collaboration.comment}</div>
+                    <div className="truncate w-max max-w-50">
+                      {collaboration.comment}
+                    </div>
                   </TooltipTrigger>
+
                   <TooltipContent>
                     <p className="max-w-xs font-medium whitespace-pre-wrap p-1">
                       {collaboration.comment}

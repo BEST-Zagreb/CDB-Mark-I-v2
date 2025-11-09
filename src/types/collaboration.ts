@@ -74,3 +74,27 @@ export const collaborationSchema = z.object({
 export type CollaborationFormData = z.infer<typeof collaborationSchema>;
 
 export type CollaborationSchema = z.infer<typeof collaborationSchema>;
+
+// Validation schema for bulk collaboration forms
+export const bulkCollaborationSchema = z.object({
+  companyIds: z
+    .array(z.number().positive())
+    .min(1, "At least one company is required"),
+  projectId: z.number().positive("Project is required"),
+  contactId: z.number().positive().optional(),
+  responsible: z.string().min(1, "Responsible contact is required"),
+  comment: z.string().optional(),
+  // Progress indicators
+  contacted: z.boolean(),
+  letter: z.boolean(),
+  meeting: z.boolean().optional(),
+  // Status field (tri-state: null = Pending, true = Successful, false = Rejected)
+  successful: z.boolean().nullable().optional(),
+  priority: z.enum(["Low", "Medium", "High"]),
+  amount: z.number().positive().optional(),
+  contactInFuture: z.boolean().optional(),
+  type: z.enum(["Financial", "Material", "Educational"]).nullable(),
+});
+
+// Form data for creating bulk collaborations
+export type BulkCollaborationFormData = z.infer<typeof bulkCollaborationSchema>;

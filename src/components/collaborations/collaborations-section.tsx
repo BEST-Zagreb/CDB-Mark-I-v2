@@ -1,6 +1,12 @@
 "use client";
 
-import { Handshake, Plus, ClipboardPaste } from "lucide-react";
+import {
+  Handshake,
+  Plus,
+  ClipboardPaste,
+  MoreVertical,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { CollaborationsTable } from "@/components/collaborations/table/collaborations-table";
 import { ColumnSelector } from "@/components/common/table/column-selector";
@@ -16,9 +28,13 @@ import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
+import { BulkCollaborationForm } from "@/components/collaborations/form/bulk-collaboration-form";
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
-import { CollaborationFormData } from "@/types/collaboration";
+import {
+  CollaborationFormData,
+  BulkCollaborationFormData,
+} from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
@@ -44,11 +60,15 @@ export function CollaborationsSection() {
     isLoadingCollaborations,
     collaborationDialogOpen,
     setCollaborationDialogOpen,
+    bulkCollaborationDialogOpen,
+    setBulkCollaborationDialogOpen,
     editingCollaboration,
     handleAddCollaboration,
+    handleAddBulkCollaboration,
     handleEditCollaboration,
     handleDeleteCollaboration,
     handleSubmitCollaboration,
+    handleSubmitBulkCollaboration,
     isSubmitting,
   } = useCollaborationsOperations();
 
@@ -134,26 +154,6 @@ export function CollaborationsSection() {
 
             {pageType !== "users" && (
               <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-                {/* TODO (implement copy collabs): {pageType === "projects" && (
-                  <Button
-                    onClick={handleAddCollaboration}
-                    size={isMobile ? "icon" : "default"}
-                  >
-                    <ClipboardPaste className="size-5" />
-                    {!isMobile && "Copy Collaborations"}
-                  </Button>
-                )} */}
-
-                {/* TODO (implement bulk add collabs): {pageType === "projects" && (
-                  <Button
-                    onClick={handleAddCollaboration}
-                    size={isMobile ? "icon" : "default"}
-                  >
-                    <ClipboardPaste className="size-5" />
-                    {!isMobile && "Copy Collaborations"}
-                  </Button>
-                )} */}
-
                 <Button
                   onClick={handleAddCollaboration}
                   size={isMobile ? "icon" : "default"}
@@ -161,6 +161,26 @@ export function CollaborationsSection() {
                   <Plus className="size-5" />
                   {!isMobile && "Log collaboration"}
                 </Button>
+
+                {pageType === "projects" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size={"icon"}>
+                        <MoreVertical className="size-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={handleAddBulkCollaboration}
+                        className="cursor-pointer"
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        Bulk log collaborations
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             )}
           </div>
@@ -214,6 +234,24 @@ export function CollaborationsSection() {
           <CollaborationForm
             initialData={formProps.initialData}
             companyId={pageType === "companies" ? (id as number) : undefined}
+            projectId={pageType === "projects" ? (id as number) : undefined}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
+
+      <FormDialog<BulkCollaborationFormData>
+        open={bulkCollaborationDialogOpen}
+        onOpenChange={setBulkCollaborationDialogOpen}
+        entity="Bulk Collaborations"
+        initialData={undefined}
+        onSubmit={handleSubmitBulkCollaboration}
+        isLoading={isSubmitting}
+      >
+        {(formProps) => (
+          <BulkCollaborationForm
+            initialData={formProps.initialData}
             projectId={pageType === "projects" ? (id as number) : undefined}
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}

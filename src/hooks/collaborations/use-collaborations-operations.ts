@@ -9,8 +9,13 @@ import {
   useCreateCollaboration,
   useUpdateCollaboration,
   useDeleteCollaboration,
+  useCreateBulkCollaborations,
 } from "@/hooks/collaborations/use-collaborations";
-import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import {
+  Collaboration,
+  CollaborationFormData,
+  BulkCollaborationFormData,
+} from "@/types/collaboration";
 import { useUser } from "@/app/users/hooks/use-users";
 
 export function useCollaborationsOperations() {
@@ -30,6 +35,8 @@ export function useCollaborationsOperations() {
   const userName = user?.fullName;
 
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
+  const [bulkCollaborationDialogOpen, setBulkCollaborationDialogOpen] =
+    useState(false);
   const [editingCollaboration, setEditingCollaboration] = useState<
     Collaboration | undefined
   >();
@@ -57,10 +64,15 @@ export function useCollaborationsOperations() {
   const createCollaborationMutation = useCreateCollaboration();
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
+  const createBulkCollaborationsMutation = useCreateBulkCollaborations();
 
   const handleAddCollaboration = () => {
     setEditingCollaboration(undefined);
     setCollaborationDialogOpen(true);
+  };
+
+  const handleAddBulkCollaboration = () => {
+    setBulkCollaborationDialogOpen(true);
   };
 
   const handleEditCollaboration = (collaboration: Collaboration) => {
@@ -99,21 +111,41 @@ export function useCollaborationsOperations() {
     setCollaborationDialogOpen(false);
   };
 
+  const handleSubmitBulkCollaboration = async (
+    data: BulkCollaborationFormData
+  ) => {
+    // Prepare collaboration data based on page type
+    let collaborationData = { ...data };
+
+    // Only override projectId for projects pages
+    if (pageType === "projects") {
+      collaborationData = { ...data, projectId: id as number };
+    }
+
+    await createBulkCollaborationsMutation.mutateAsync(collaborationData);
+    setBulkCollaborationDialogOpen(false);
+  };
+
   const isSubmitting =
     createCollaborationMutation.isPending ||
     updateCollaborationMutation.isPending ||
-    deleteCollaborationMutation.isPending;
+    deleteCollaborationMutation.isPending ||
+    createBulkCollaborationsMutation.isPending;
 
   return {
     collaborations,
     isLoadingCollaborations,
     collaborationDialogOpen,
     setCollaborationDialogOpen,
+    bulkCollaborationDialogOpen,
+    setBulkCollaborationDialogOpen,
     editingCollaboration,
     handleAddCollaboration,
+    handleAddBulkCollaboration,
     handleEditCollaboration,
     handleDeleteCollaboration,
     handleSubmitCollaboration,
+    handleSubmitBulkCollaboration,
     isSubmitting,
   };
 }

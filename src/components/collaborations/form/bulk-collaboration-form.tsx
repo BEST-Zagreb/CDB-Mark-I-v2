@@ -23,37 +23,33 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CompanySelect } from "@/components/collaborations/form/company-select";
 import { ProjectSelect } from "@/components/collaborations/form/project-select";
 import { ResponsiblePersonSelect } from "@/components/collaborations/form/responsible-person-select";
-import { useContactsByCompany } from "@/app/companies/[id]/hooks/use-contacts";
+import { MultiCompanySelect } from "@/components/collaborations/form/multi-company-select";
 import {
-  Collaboration,
-  CollaborationFormData,
-  collaborationSchema,
+  BulkCollaborationFormData,
+  bulkCollaborationSchema,
 } from "@/types/collaboration";
 import { Separator } from "@/components/ui/separator";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 
-interface CollaborationFormProps {
-  initialData?: CollaborationFormData | null;
+interface BulkCollaborationFormProps {
+  initialData?: BulkCollaborationFormData | null;
   projectId?: number;
-  companyId?: number;
-  onSubmit: (data: CollaborationFormData) => Promise<void>;
+  onSubmit: (data: BulkCollaborationFormData) => Promise<void>;
   isLoading?: boolean;
 }
 
-export function CollaborationForm({
+export function BulkCollaborationForm({
   initialData,
   projectId,
-  companyId,
   onSubmit,
   isLoading = false,
-}: CollaborationFormProps) {
-  const form = useForm<CollaborationFormData>({
-    resolver: zodResolver(collaborationSchema),
+}: BulkCollaborationFormProps) {
+  const form = useForm<BulkCollaborationFormData>({
+    resolver: zodResolver(bulkCollaborationSchema),
     defaultValues: {
-      companyId: companyId || 0,
+      companyIds: [],
       projectId: projectId || 0,
       responsible: "",
       comment: "",
@@ -67,24 +63,19 @@ export function CollaborationForm({
     },
   });
 
-  // Watch the selected company ID to fetch contacts
-  const selectedCompanyId = form.watch("companyId");
-  const { data: contacts = [], isLoading: isLoadingContacts } =
-    useContactsByCompany(selectedCompanyId);
-
   // Track if form has been properly initialized with data
   const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   // Determine if we should show loading state
   const isFormLoading = isLoading || (initialData && !isFormInitialized);
 
-  // Reset form when collaboration changes
+  // Reset form when data changes
   useEffect(() => {
     setIsFormInitialized(false);
 
     if (initialData) {
       form.reset({
-        companyId: initialData.companyId,
+        companyIds: initialData.companyIds,
         projectId: initialData.projectId,
         contactId: initialData.contactId || undefined,
         responsible: initialData.responsible || "",
@@ -109,7 +100,7 @@ export function CollaborationForm({
       });
     } else {
       form.reset({
-        companyId: companyId || 0,
+        companyIds: [],
         projectId: projectId || 0,
         responsible: "",
         comment: "",
@@ -123,16 +114,9 @@ export function CollaborationForm({
       });
       setIsFormInitialized(true);
     }
-  }, [initialData, form, projectId, companyId]);
+  }, [initialData, form, projectId]);
 
-  // Mark form as initialized when contacts are loaded (for edit mode)
-  useEffect(() => {
-    if (initialData && selectedCompanyId && !isLoadingContacts) {
-      setIsFormInitialized(true);
-    }
-  }, [initialData, selectedCompanyId, isLoadingContacts]);
-
-  const handleSubmit = async (data: CollaborationFormData) => {
+  const handleSubmit = async (data: BulkCollaborationFormData) => {
     try {
       await onSubmit(data);
     } catch (error) {
@@ -152,83 +136,42 @@ export function CollaborationForm({
         onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="companyId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Company *</FormLabel>
-                <FormControl>
-                  <CompanySelect
-                    value={field.value || undefined}
-                    onValueChange={(value) => field.onChange(value || 0)}
-                    disabled={!!companyId || !!initialData} // Disable if companyId is provided (on company page) or in edit mode
-                    className="w-full"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="projectId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project *</FormLabel>
-                <FormControl>
-                  <ProjectSelect
-                    value={field.value || undefined}
-                    onValueChange={(value) => field.onChange(value || 0)}
-                    disabled={!!projectId || !!initialData} // Disable if projectId is provided (on project page) or in edit mode
-                    className="w-full"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="projectId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Project *</FormLabel>
+              <FormControl>
+                <ProjectSelect
+                  value={field.value || undefined}
+                  onValueChange={(value) => field.onChange(value || 0)}
+                  disabled={!!projectId || !!initialData} // Disable if projectId is provided (on project page) or in edit mode
+                  className="w-full"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
-          name="contactId"
+          name="companyIds"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contact Person</FormLabel>
-              <Select
-                onValueChange={(value) =>
-                  field.onChange(value === "none" ? undefined : parseInt(value))
-                }
-                value={field.value?.toString() || "none"}
-                disabled={!selectedCompanyId || selectedCompanyId === 0}
-              >
-                <FormControl className="w-full">
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        !selectedCompanyId || selectedCompanyId === 0
-                          ? "Select a company first"
-                          : "Select contact person"
-                      }
-                    />
-                  </SelectTrigger>
-                </FormControl>
-
-                <SelectContent>
-                  <SelectItem value="none">Unknown/Not specified</SelectItem>
-                  {contacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id.toString()}>
-                      {contact.name}
-                      <span className="text-muted-foreground">
-                        {contact.function && ` (${contact.function})`}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Companies *</FormLabel>
+              <FormControl>
+                <MultiCompanySelect
+                  values={field.value}
+                  onValuesChange={field.onChange}
+                  placeholder="Select one or multiple companies"
+                  className="w-full"
+                />
+              </FormControl>
+              <FormDescription>
+                Select one or more companies to create collaborations for
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -430,7 +373,7 @@ export function CollaborationForm({
               <FormLabel>Comment</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Add any comments about this collaboration"
+                  placeholder="Add any comments about these collaborations"
                   {...field}
                   disabled={isLoading}
                   rows={4}
@@ -484,7 +427,8 @@ export function CollaborationForm({
               <div className="space-y-1 leading-none">
                 <FormLabel>Contact in Future</FormLabel>
                 <FormDescription>
-                  Mark if this company should be contacted for future projects
+                  Mark if these companies should be contacted for future
+                  projects
                 </FormDescription>
               </div>
             </FormItem>

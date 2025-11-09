@@ -7,7 +7,7 @@ import {
   projects,
   appUsers,
 } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
 
 // GET /api/collaborations - Get collaborations with required project, company, or responsible filter
@@ -149,6 +149,30 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const data: CollaborationFormData = await request.json();
+
+    // Check if collaboration already exists
+    const existingCollaboration = await db
+      .select()
+      .from(collaborations)
+      .where(
+        and(
+          eq(collaborations.companyId, data.companyId),
+          eq(collaborations.projectId, data.projectId)
+        )
+      )
+      .limit(1);
+
+    if (existingCollaboration.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Collaboration between this company and project already exists",
+          existing: true,
+        },
+        { status: 409 } // Conflict status code
+      );
+    }
+
     const now = new Date().toISOString();
 
     const result = await db
@@ -161,7 +185,11 @@ export async function POST(request: NextRequest) {
         comment: data.comment || null,
         contacted: data.contacted ? 1 : 0,
         successful:
-          data.successful !== undefined ? (data.successful ? 1 : 0) : null,
+          data.successful === null || data.successful === undefined
+            ? null
+            : data.successful
+            ? 1
+            : 0,
         letter: data.letter ? 1 : 0,
         meeting: data.meeting !== undefined ? (data.meeting ? 1 : 0) : null,
         priority: data.priority,

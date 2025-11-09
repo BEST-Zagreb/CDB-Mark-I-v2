@@ -2,7 +2,10 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { collaborationService } from "@/services/collaboration.service";
-import { CollaborationFormData } from "@/types/collaboration";
+import {
+  CollaborationFormData,
+  BulkCollaborationFormData,
+} from "@/types/collaboration";
 import { toast } from "sonner";
 
 // Query keys
@@ -95,12 +98,20 @@ export function useCreateCollaboration() {
       }
       toast.success("Collaboration created successfully");
     },
-    onError: (error: unknown) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to create collaboration";
-      toast.error(message);
+    onError: (error: any) => {
+      // Check if it's a conflict error (collaboration already exists)
+      if (error.response?.status === 409) {
+        toast.error(
+          error.response?.data?.error ||
+            "Collaboration between this company and project already exists"
+        );
+      } else {
+        const message =
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create collaboration";
+        toast.error(message);
+      }
     },
   });
 }
@@ -180,5 +191,86 @@ export function useResponsiblePersons() {
     queryKey: ["collaborations", "responsible"],
     queryFn: collaborationService.getResponsiblePersons,
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+export function useCreateBulkCollaborations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: BulkCollaborationFormData) => {
+      return collaborationService.createBulk(data);
+    },
+    onSuccess: (response) => {
+      const newCollaborations = response.collaborations;
+
+      queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
+      // Invalidate project and company specific queries
+      if (newCollaborations && newCollaborations.length > 0) {
+        const projectId = newCollaborations[0].projectId;
+        if (projectId) {
+          queryClient.invalidateQueries({
+            queryKey: collaborationKeys.byProject(projectId),
+          });
+        }
+        // Invalidate each company's queries
+        newCollaborations.forEach((collab) => {
+          if (collab.companyId) {
+            queryClient.invalidateQueries({
+              queryKey: collaborationKeys.byCompany(collab.companyId),
+            });
+          }
+        });
+        // Invalidate responsible person specific queries
+        const responsible = newCollaborations[0].responsible;
+        if (responsible) {
+          queryClient.invalidateQueries({
+            queryKey: collaborationKeys.byResponsible(responsible),
+          });
+        }
+      }
+
+      // Show appropriate success message
+      if (response.message) {
+        // Some companies were skipped
+        toast.success(response.message);
+        if (response.skippedCompanies && response.skippedCompanies.length > 0) {
+          toast.info(
+            `Skipped companies: ${response.skippedCompanies.join(", ")}`
+          );
+        }
+      } else {
+        toast.success(
+          `${newCollaborations.length} collaboration${
+            newCollaborations.length === 1 ? "" : "s"
+          } created successfully`
+        );
+      }
+    },
+    onError: (error: any) => {
+      // Check if it's a conflict error (all companies already exist)
+      if (error.response?.status === 409) {
+        const errorData = error.response?.data;
+        if (
+          errorData?.existingCompanies &&
+          errorData.existingCompanies.length > 0
+        ) {
+          toast.error(
+            `${errorData.error}: ${errorData.existingCompanies.join(", ")}`
+          );
+        } else {
+          toast.error(
+            errorData?.error ||
+              "All selected companies already have collaborations for this project"
+          );
+        }
+      } else {
+        const message =
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create bulk collaborations";
+        toast.error(message);
+      }
+    },
   });
 }

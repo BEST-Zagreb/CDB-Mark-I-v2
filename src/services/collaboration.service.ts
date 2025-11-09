@@ -1,5 +1,9 @@
 import axios from "axios";
-import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import {
+  Collaboration,
+  CollaborationFormData,
+  BulkCollaborationFormData,
+} from "@/types/collaboration";
 import { User } from "@/types/user";
 
 const API_BASE = "/api/collaborations";
@@ -62,6 +66,16 @@ export const collaborationService = {
   // Get all unique responsible persons
   async getResponsiblePersons(): Promise<User[]> {
     const response = await axios.get(`${API_BASE}/responsible`);
+    return response.data;
+  },
+
+  // Create multiple collaborations at once
+  async createBulk(data: BulkCollaborationFormData): Promise<{
+    collaborations: Collaboration[];
+    skippedCompanies?: string[];
+    message?: string;
+  }> {
+    const response = await axios.post(`${API_BASE}/bulk`, data);
     return response.data;
   },
 };

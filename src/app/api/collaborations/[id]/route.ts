@@ -117,7 +117,11 @@ export async function PUT(
         comment: data.comment || null,
         contacted: data.contacted ? 1 : 0,
         successful:
-          data.successful !== undefined ? (data.successful ? 1 : 0) : null,
+          data.successful === null || data.successful === undefined
+            ? null
+            : data.successful
+            ? 1
+            : 0,
         letter: data.letter ? 1 : 0,
         meeting: data.meeting !== undefined ? (data.meeting ? 1 : 0) : null,
         priority: data.priority,
