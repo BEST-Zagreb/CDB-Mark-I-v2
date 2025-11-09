@@ -377,7 +377,7 @@ export function CollaborationForm({
                 ? "successful"
                 : field.value === false
                 ? "rejected"
-                : "in-progress";
+                : "pending";
 
             return (
               <FormItem className="">
@@ -385,7 +385,7 @@ export function CollaborationForm({
                 <FormControl>
                   <RadioGroup
                     onValueChange={(value) => {
-                      if (value === "in-progress") {
+                      if (value === "pending") {
                         field.onChange(null);
                       } else if (value === "successful") {
                         field.onChange(true);
@@ -399,7 +399,7 @@ export function CollaborationForm({
                   >
                     <FormItem className="flex items-center">
                       <FormControl className="cursor-pointer">
-                        <RadioGroupItem value="in-progress" />
+                        <RadioGroupItem value="pending" />
                       </FormControl>
                       <FormLabel className="font-normal">Pending</FormLabel>
                     </FormItem>

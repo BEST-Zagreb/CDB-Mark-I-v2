@@ -320,7 +320,7 @@ export function BulkCollaborationForm({
               <FormControl>
                 <RadioGroup
                   onValueChange={(value) => {
-                    if (value === "in-progress") {
+                    if (value === "pending") {
                       field.onChange(null);
                     } else if (value === "successful") {
                       field.onChange(true);
@@ -333,14 +333,14 @@ export function BulkCollaborationForm({
                       ? "successful"
                       : field.value === false
                       ? "rejected"
-                      : "in-progress"
+                      : "pending"
                   }
                   disabled={isLoading}
                   className="grid grid-cols-1 sm:grid-cols-3 gap-2"
                 >
                   <FormItem className="flex items-center">
                     <FormControl className="cursor-pointer">
-                      <RadioGroupItem value="in-progress" />
+                      <RadioGroupItem value="pending" />
                     </FormControl>
                     <FormLabel className="font-normal">Pending</FormLabel>
                   </FormItem>
