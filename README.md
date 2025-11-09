@@ -12,7 +12,7 @@ The app is built with Next.js (App Router), TypeScript, React Query for data fet
 
 ## Link
 
-Deployed and available on [new.cdb.best.hr](https://new.cdb.best.hr)
+Deployed and available on [new.cdb.best.hr](https://cdb.best.hr)
 
 ## Visuals
 
