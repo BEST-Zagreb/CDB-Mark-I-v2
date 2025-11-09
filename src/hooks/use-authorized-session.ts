@@ -28,6 +28,8 @@ export function useAuthorizedSession(): AuthorizedSessionState {
   });
 
   useEffect(() => {
+    const abortController = new AbortController();
+
     const checkAuthorization = async () => {
       // If no session, user is on public page (middleware handles protected pages)
       // Set as "authorized" to allow rendering of public UI (login button, etc)
@@ -51,8 +53,12 @@ export function useAuthorizedSession(): AuthorizedSessionState {
         return;
       }
 
-      // Mark as checking (null = Pending)
-      setIsAuthorized(null);
+      // Only set to null (pending) if this is a new session
+      // For pathname changes, keep the previous authorization status to prevent flickering
+      if (sessionChanged || !authCheckRef.current.checked) {
+        setIsAuthorized(null);
+      }
+
       authCheckRef.current = {
         checked: true,
         sessionId: session.user.id,
@@ -68,9 +74,15 @@ export function useAuthorizedSession(): AuthorizedSessionState {
             email: session.user.email,
             name: session.user.name,
           }),
+          signal: abortController.signal,
         });
 
         const data = await response.json();
+
+        // Don't process response if request was aborted
+        if (abortController.signal.aborted) {
+          return;
+        }
 
         if (!data.authorized) {
           // Sign out unauthorized user
@@ -94,12 +106,21 @@ export function useAuthorizedSession(): AuthorizedSessionState {
           setIsAuthorized(true);
         }
       } catch (error) {
+        // Ignore abort errors - they're expected when component unmounts or session changes
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
         console.error("Authorization check failed:", error);
         setIsAuthorized(false);
       }
     };
 
     checkAuthorization();
+
+    // Cleanup: abort any in-flight requests when session/pathname changes or component unmounts
+    return () => {
+      abortController.abort();
+    };
   }, [session, router, pathname]);
 
   // Return session only if authorized or no session exists

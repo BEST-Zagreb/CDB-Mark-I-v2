@@ -31,6 +31,8 @@ export function useUser(id: string) {
     queryKey: userKeys.detail(id),
     queryFn: () => userService.getById(id),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevents refetching on route changes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep cached data longer
   });
 }
 
