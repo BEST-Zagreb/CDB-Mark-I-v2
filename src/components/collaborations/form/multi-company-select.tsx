@@ -135,7 +135,9 @@ export function MultiCompanySelect({
             <CommandInput
               placeholder="Search companies..."
               value={searchValue}
-              onValueChange={setSearchValue}
+              onValueChange={(value) => {
+                setSearchValue(value);
+              }}
             />
             {searchValue && (
               <Button
@@ -150,9 +152,7 @@ export function MultiCompanySelect({
           </div>
           <CommandList>
             <CommandEmpty>
-              {searchValue
-                ? "No companies found."
-                : "Start typing to search..."}
+              {searchValue ? "No companies found." : "Start typing to search..."}
             </CommandEmpty>
             <CommandGroup>
               {filteredCompanies.map((company) => {

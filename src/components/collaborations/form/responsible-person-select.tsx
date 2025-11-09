@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,13 +60,23 @@ export function ResponsiblePersonSelect({
     onValueChange(trimmedValue);
   };
 
-  const filteredOptions = responsiblePersons.filter(
-    (responsiblePerson) =>
-      responsiblePerson.fullName
-        .toLowerCase()
-        .includes(inputValue.toLowerCase()) ||
-      responsiblePerson.email?.toLowerCase().includes(inputValue.toLowerCase())
-  );
+  const filteredOptions = React.useMemo(() => {
+    // If no search value or less than 2 characters, show first 50
+    if (!inputValue || inputValue.length < 2) {
+      return responsiblePersons.slice(0, 50);
+    }
+
+    // If user typed 2+ characters, show ALL matching results
+    return responsiblePersons.filter(
+      (responsiblePerson) =>
+        responsiblePerson.fullName
+          .toLowerCase()
+          .includes(inputValue.toLowerCase()) ||
+        responsiblePerson.email
+          ?.toLowerCase()
+          .includes(inputValue.toLowerCase())
+    );
+  }, [responsiblePersons, inputValue]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -83,15 +93,32 @@ export function ResponsiblePersonSelect({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[70dvw] sm:max-w-115 p-0">
-        <Command>
-          <CommandInput
-            placeholder="Search or type new name..."
-            value={inputValue}
-            onValueChange={handleInputChange}
-          />
+      <PopoverContent className="w-[70dvw] sm:max-w-96 p-0">
+        <Command shouldFilter={false}>
+          <div className="relative">
+            <CommandInput
+              placeholder="Search or type new name..."
+              value={inputValue}
+              onValueChange={handleInputChange}
+            />
+            {inputValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setInputValue("");
+                  onValueChange("");
+                }}
+                className="absolute right-4 top-1/2 h-7 w-7 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <CommandList>
-            {filteredOptions.length === 0 && inputValue ? (
+            {filteredOptions.length === 0 &&
+            inputValue &&
+            inputValue.length >= 2 ? (
               <CommandEmpty className="p-2">
                 <div>
                   <p className="text-sm text-muted-foreground">
@@ -110,7 +137,7 @@ export function ResponsiblePersonSelect({
             ) : (
               <>
                 {filteredOptions.length === 0 && (
-                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandEmpty>Start typing to search...</CommandEmpty>
                 )}
 
                 <CommandGroup>
@@ -125,18 +152,34 @@ export function ResponsiblePersonSelect({
                       onSelect={() => handleSelect(responsiblePerson.fullName)}
                       className="cursor-pointer mb-1"
                     >
-                      {responsiblePerson.fullName}{" "}
-                      {responsiblePerson.email && (
-                        <span className="text-muted-foreground ml-auto text-xs">
-                          {responsiblePerson.email}
-                        </span>
-                      )}
+                      <div className="flex-1 truncate">
+                        {responsiblePerson.fullName}
+                        {responsiblePerson.email && (
+                          <span className="text-muted-foreground ml-2">
+                            ({responsiblePerson.email})
+                          </span>
+                        )}
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
               </>
             )}
           </CommandList>
+          {(!inputValue || inputValue.length < 2) &&
+            filteredOptions.length >= 50 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Showing first 50 persons. Start typing to search all persons.
+              </div>
+            )}
+          {inputValue &&
+            inputValue.length >= 2 &&
+            filteredOptions.length > 0 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Found {filteredOptions.length} matching{" "}
+                {filteredOptions.length === 1 ? "person" : "persons"}.
+              </div>
+            )}
         </Command>
       </PopoverContent>
     </Popover>

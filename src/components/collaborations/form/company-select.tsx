@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Loader2 } from "lucide-react";
+import { ChevronsUpDown, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,8 +46,12 @@ export function CompanySelect({
   // Filter companies based on search
   const filteredCompanies = React.useMemo(() => {
     if (!allCompanies) return [];
-    if (!searchValue) return allCompanies;
 
+    // If no search value or less than 2 characters, show first 50 companies
+    if (!searchValue || searchValue.length < 2)
+      return allCompanies.slice(0, 50);
+
+    // If user typed 2+ characters, show ALL matching results
     const search = searchValue.toLowerCase();
     return allCompanies.filter(
       (company) =>
@@ -77,29 +81,49 @@ export function CompanySelect({
           className={cn("justify-between w-full truncate", className)}
           disabled={disabled || isLoadingCompanies}
         >
-          {isLoadingCompanies ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Loading companies...
-            </>
-          ) : selectedCompany ? (
-            <span className="truncate">{selectedCompany.name}</span>
-          ) : (
-            placeholder
-          )}
+          <span className="truncate">
+            {isLoadingCompanies ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />
+                Loading companies...
+              </>
+            ) : selectedCompany ? (
+              selectedCompany.name
+            ) : (
+              placeholder
+            )}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
 
       <PopoverContent className="w-[70dvw] sm:max-w-56 p-0">
-        <Command>
-          <CommandInput
-            placeholder="Search companies..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
+        <Command shouldFilter={false}>
+          <div className="relative">
+            <CommandInput
+              placeholder="Search companies..."
+              value={searchValue}
+              onValueChange={(value) => {
+                setSearchValue(value);
+              }}
+            />
+            {searchValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchValue("");
+                }}
+                className="absolute right-4 top-1/2 h-7 w-7 -translate-y-1/2 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <CommandList>
-            <CommandEmpty>No company found.</CommandEmpty>
+            <CommandEmpty>
+              {searchValue ? "No company found." : "Start typing to search..."}
+            </CommandEmpty>
             <CommandGroup>
               {filteredCompanies?.map((company) => (
                 <CommandItem
@@ -117,13 +141,11 @@ export function CompanySelect({
                     setSearchValue("");
                   }}
                 >
-                  <div className="flex flex-col w-full">
-                    <span className="font-medium truncate">{company.name}</span>
-                    {(company.city || company.country) && (
-                      <span className="text-xs text-muted-foreground">
-                        {[company.city, company.country]
-                          .filter(Boolean)
-                          .join(", ")}
+                  <div className="flex-1 truncate">
+                    {company.name}
+                    {company.city && (
+                      <span className="text-muted-foreground ml-2">
+                        ({company.city})
                       </span>
                     )}
                   </div>
@@ -131,6 +153,21 @@ export function CompanySelect({
               )) || []}
             </CommandGroup>
           </CommandList>
+          {(!searchValue || searchValue.length < 2) &&
+            filteredCompanies.length >= 50 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Showing first 50 companies. Start typing to search all
+                companies.
+              </div>
+            )}
+          {searchValue &&
+            searchValue.length >= 2 &&
+            filteredCompanies.length > 0 && (
+              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+                Found {filteredCompanies.length} matching{" "}
+                {filteredCompanies.length === 1 ? "company" : "companies"}.
+              </div>
+            )}
         </Command>
       </PopoverContent>
     </Popover>
