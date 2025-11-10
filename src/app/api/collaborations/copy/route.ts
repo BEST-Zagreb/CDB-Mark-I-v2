@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { collaborations } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { CopyCollaborationFormData } from "@/types/collaboration";
 
 // POST /api/collaborations/copy - Copy collaborations from one project to another
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     const {
       sourceProjectId,
       projectId: targetProjectId,
+      companyIds,
       copyCompany,
       copyContactPerson,
       copyType,
@@ -33,15 +34,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch all collaborations from the source project
+    // Fetch collaborations from the source project for selected companies
     const sourceCollaborations = await db
       .select()
       .from(collaborations)
-      .where(eq(collaborations.projectId, sourceProjectId));
+      .where(
+        and(
+          eq(collaborations.projectId, sourceProjectId),
+          inArray(collaborations.companyId, companyIds)
+        )
+      );
 
     if (sourceCollaborations.length === 0) {
       return NextResponse.json(
-        { error: "No collaborations found in source project" },
+        {
+          error:
+            "No collaborations found for selected companies in source project",
+        },
         { status: 404 }
       );
     }
@@ -65,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "All companies from source project already have collaborations in target project",
+            "All selected companies already have collaborations in target project",
           skipped: sourceCollaborations.length,
         },
         { status: 400 }

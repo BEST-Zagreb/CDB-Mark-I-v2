@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,7 +17,14 @@ import {
   CopyCollaborationFormData,
   copyCollaborationSchema,
 } from "@/types/collaboration";
-import { Separator } from "@/components/ui/separator";
+import {
+  MultiSelect,
+  MultiSelectContent,
+  MultiSelectItem,
+  MultiSelectTrigger,
+  MultiSelectValue,
+} from "@/components/ui/multi-select";
+import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 
 interface CopyCollaborationFormProps {
   currentProjectId?: number;
@@ -29,10 +37,30 @@ export function CopyCollaborationForm({
   onSubmit,
   isLoading = false,
 }: CopyCollaborationFormProps) {
+  // Get collaborations for the current project to populate company options
+  const { data: collaborations = [] } = useCollaborationsByProject(
+    currentProjectId || 0
+  );
+
+  // Extract unique companies from collaborations
+  const availableCompanies = React.useMemo(() => {
+    const companyMap = new Map<number, string>();
+    collaborations.forEach((collab) => {
+      if (collab.companyId && collab.companyName) {
+        companyMap.set(collab.companyId, collab.companyName);
+      }
+    });
+    return Array.from(companyMap.entries()).map(([id, name]) => ({
+      id,
+      name,
+    }));
+  }, [collaborations]);
+
   const form = useForm<CopyCollaborationFormData>({
     resolver: zodResolver(copyCollaborationSchema),
     defaultValues: {
       projectId: 0,
+      companyIds: availableCompanies.map((c) => c.id), // Default to all companies
       copyCompany: true,
       copyContactPerson: true,
       copyType: true,
@@ -45,6 +73,16 @@ export function CopyCollaborationForm({
       copyAmount: false,
     },
   });
+
+  // Update form when available companies change
+  React.useEffect(() => {
+    if (availableCompanies.length > 0) {
+      form.setValue(
+        "companyIds",
+        availableCompanies.map((c) => c.id)
+      );
+    }
+  }, [availableCompanies, form]);
 
   const handleSubmit = async (data: CopyCollaborationFormData) => {
     try {
@@ -99,12 +137,45 @@ export function CopyCollaborationForm({
           />
         </div>
 
-        <div className="space-y-4">
-          <FormDescription>
-            Select which fields should be copied from the current collaborations
-            for each company
-          </FormDescription>
+        <FormField
+          control={form.control}
+          name="companyIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Select Companies</FormLabel>
+              <FormControl>
+                <MultiSelect
+                  values={field.value?.map(String) || []}
+                  onValuesChange={(values) =>
+                    field.onChange(values.map(Number))
+                  }
+                >
+                  <MultiSelectTrigger className="w-full">
+                    <MultiSelectValue placeholder="Select companies to copy" />
+                  </MultiSelectTrigger>
 
+                  <MultiSelectContent>
+                    {availableCompanies.map((company) => (
+                      <MultiSelectItem
+                        key={company.id}
+                        value={company.id.toString()}
+                      >
+                        {company.name}
+                      </MultiSelectItem>
+                    ))}
+                  </MultiSelectContent>
+                </MultiSelect>
+              </FormControl>
+
+              <FormDescription>
+                Select which fields should be copied from the current
+                collaborations for each selected company
+              </FormDescription>
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-4">
           {/* Type and Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField

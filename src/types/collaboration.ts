@@ -102,6 +102,9 @@ export type BulkCollaborationFormData = z.infer<typeof bulkCollaborationSchema>;
 // Validation schema for copy collaboration forms
 export const copyCollaborationSchema = z.object({
   projectId: z.number().positive("Project is required"),
+  companyIds: z
+    .array(z.number().positive())
+    .min(1, "At least one company must be selected"),
   copyCompany: z.boolean(),
   copyContactPerson: z.boolean(),
   copyType: z.boolean(),
