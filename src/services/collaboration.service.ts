@@ -3,6 +3,8 @@ import {
   Collaboration,
   CollaborationFormData,
   BulkCollaborationFormData,
+  CopyCollaborationFormData,
+  CopyCollaborationResponse,
 } from "@/types/collaboration";
 import { User } from "@/types/user";
 
@@ -76,6 +78,14 @@ export const collaborationService = {
     message?: string;
   }> {
     const response = await axios.post(`${API_BASE}/bulk`, data);
+    return response.data;
+  },
+
+  // Copy collaborations from one project to another
+  async copy(
+    data: CopyCollaborationFormData & { sourceProjectId: number }
+  ): Promise<CopyCollaborationResponse> {
+    const response = await axios.post(`${API_BASE}/copy`, data);
     return response.data;
   },
 };

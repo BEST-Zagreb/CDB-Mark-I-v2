@@ -26,6 +26,7 @@ interface ProjectSelectProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  excludeProjectId?: number;
 }
 
 export function ProjectSelect({
@@ -34,6 +35,7 @@ export function ProjectSelect({
   placeholder = "Select project...",
   disabled = false,
   className,
+  excludeProjectId,
 }: ProjectSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
@@ -44,13 +46,20 @@ export function ProjectSelect({
   const mostRecentProject = React.useMemo(() => {
     if (!allProjects || allProjects.length === 0) return null;
 
-    return allProjects.reduce((mostRecent, current) => {
+    // Filter out excluded project if specified
+    const eligibleProjects = excludeProjectId
+      ? allProjects.filter((project) => project.id !== excludeProjectId)
+      : allProjects;
+
+    if (eligibleProjects.length === 0) return null;
+
+    return eligibleProjects.reduce((mostRecent, current) => {
       if (!current.updated_at) return mostRecent;
       if (!mostRecent.updated_at) return current;
 
       return current.updated_at > mostRecent.updated_at ? current : mostRecent;
     });
-  }, [allProjects]);
+  }, [allProjects, excludeProjectId]);
 
   // Auto-select the most recent project when no value is provided and projects are loaded
   useEffect(() => {
@@ -69,15 +78,20 @@ export function ProjectSelect({
   const filteredProjects = React.useMemo(() => {
     if (!allProjects) return [];
 
+    // Filter out excluded project if specified
+    const projects = excludeProjectId
+      ? allProjects.filter((project) => project.id !== excludeProjectId)
+      : allProjects;
+
     // If no search value or less than 2 characters, show first 50 projects
-    if (!searchValue || searchValue.length < 2) return allProjects.slice(0, 50);
+    if (!searchValue || searchValue.length < 2) return projects.slice(0, 50);
 
     // If user typed 2+ characters, show ALL matching results
     const search = searchValue.toLowerCase();
-    return allProjects.filter((project) =>
+    return projects.filter((project) =>
       project.name.toLowerCase().includes(search)
     );
-  }, [allProjects, searchValue]);
+  }, [allProjects, searchValue, excludeProjectId]);
 
   const selectedProject = allProjects?.find((project) => project.id === value);
 

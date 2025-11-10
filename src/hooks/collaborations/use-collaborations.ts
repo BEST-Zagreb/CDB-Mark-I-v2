@@ -5,8 +5,18 @@ import { collaborationService } from "@/services/collaboration.service";
 import {
   CollaborationFormData,
   BulkCollaborationFormData,
+  CopyCollaborationFormData,
+  CopyCollaborationResponse,
 } from "@/types/collaboration";
 import { toast } from "sonner";
+import { AxiosError } from "axios";
+
+// Error type for API responses
+interface ApiErrorResponse {
+  error?: string;
+  existingCompanies?: string[];
+  skipped?: number;
+}
 
 // Query keys
 export const collaborationKeys = {
@@ -98,7 +108,7 @@ export function useCreateCollaboration() {
       }
       toast.success("Collaboration created successfully");
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ApiErrorResponse>) => {
       // Check if it's a conflict error (collaboration already exists)
       if (error.response?.status === 409) {
         toast.error(
@@ -247,7 +257,7 @@ export function useCreateBulkCollaborations() {
         );
       }
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ApiErrorResponse>) => {
       // Check if it's a conflict error (all companies already exist)
       if (error.response?.status === 409) {
         const errorData = error.response?.data;
@@ -269,6 +279,68 @@ export function useCreateBulkCollaborations() {
           error.response?.data?.error ||
           error.message ||
           "Failed to create bulk collaborations";
+        toast.error(message);
+      }
+    },
+  });
+}
+
+export function useCopyCollaborations() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    CopyCollaborationResponse,
+    AxiosError<ApiErrorResponse>,
+    CopyCollaborationFormData & { sourceProjectId: number }
+  >({
+    mutationFn: (data) => {
+      return collaborationService.copy(data);
+    },
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
+
+      // Invalidate both source and target project queries
+      if (response.sourceProjectId) {
+        queryClient.invalidateQueries({
+          queryKey: collaborationKeys.byProject(response.sourceProjectId),
+        });
+      }
+      if (response.targetProjectId) {
+        queryClient.invalidateQueries({
+          queryKey: collaborationKeys.byProject(response.targetProjectId),
+        });
+      }
+
+      // Show appropriate success message
+      if (response.skipped > 0) {
+        toast.success(
+          `Created ${response.created} collaboration${
+            response.created === 1 ? "" : "s"
+          }`,
+          {
+            description: `Skipped ${response.skipped} duplicate compan${
+              response.skipped === 1 ? "y" : "ies"
+            }`,
+          }
+        );
+      } else {
+        toast.success(
+          `Successfully copied ${response.created} collaboration${
+            response.created === 1 ? "" : "s"
+          }`
+        );
+      }
+    },
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      const errorData = error.response?.data;
+
+      if (error.response?.status === 400 && errorData?.skipped) {
+        toast.error(
+          errorData.error || "All companies already exist in target project"
+        );
+      } else {
+        const message =
+          errorData?.error || error.message || "Failed to copy collaborations";
         toast.error(message);
       }
     },

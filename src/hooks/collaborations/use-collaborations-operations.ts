@@ -10,11 +10,13 @@ import {
   useUpdateCollaboration,
   useDeleteCollaboration,
   useCreateBulkCollaborations,
+  useCopyCollaborations,
 } from "@/hooks/collaborations/use-collaborations";
 import {
   Collaboration,
   CollaborationFormData,
   BulkCollaborationFormData,
+  CopyCollaborationFormData,
 } from "@/types/collaboration";
 import { useUser } from "@/app/users/hooks/use-users";
 
@@ -36,6 +38,8 @@ export function useCollaborationsOperations() {
 
   const [collaborationDialogOpen, setCollaborationDialogOpen] = useState(false);
   const [bulkCollaborationDialogOpen, setBulkCollaborationDialogOpen] =
+    useState(false);
+  const [copyCollaborationDialogOpen, setCopyCollaborationDialogOpen] =
     useState(false);
   const [editingCollaboration, setEditingCollaboration] = useState<
     Collaboration | undefined
@@ -65,6 +69,7 @@ export function useCollaborationsOperations() {
   const updateCollaborationMutation = useUpdateCollaboration();
   const deleteCollaborationMutation = useDeleteCollaboration();
   const createBulkCollaborationsMutation = useCreateBulkCollaborations();
+  const copyCollaborationsMutation = useCopyCollaborations();
 
   const handleAddCollaboration = () => {
     setEditingCollaboration(undefined);
@@ -73,6 +78,10 @@ export function useCollaborationsOperations() {
 
   const handleAddBulkCollaboration = () => {
     setBulkCollaborationDialogOpen(true);
+  };
+
+  const handleCopyCollaborations = () => {
+    setCopyCollaborationDialogOpen(true);
   };
 
   const handleEditCollaboration = (collaboration: Collaboration) => {
@@ -126,11 +135,26 @@ export function useCollaborationsOperations() {
     setBulkCollaborationDialogOpen(false);
   };
 
+  const handleSubmitCopyCollaboration = async (
+    data: CopyCollaborationFormData
+  ) => {
+    // Only available on projects page
+    if (pageType !== "projects") return;
+
+    await copyCollaborationsMutation.mutateAsync({
+      ...data,
+      sourceProjectId: id as number,
+    });
+
+    setCopyCollaborationDialogOpen(false);
+  };
+
   const isSubmitting =
     createCollaborationMutation.isPending ||
     updateCollaborationMutation.isPending ||
     deleteCollaborationMutation.isPending ||
-    createBulkCollaborationsMutation.isPending;
+    createBulkCollaborationsMutation.isPending ||
+    copyCollaborationsMutation.isPending;
 
   return {
     collaborations,
@@ -139,13 +163,17 @@ export function useCollaborationsOperations() {
     setCollaborationDialogOpen,
     bulkCollaborationDialogOpen,
     setBulkCollaborationDialogOpen,
+    copyCollaborationDialogOpen,
+    setCopyCollaborationDialogOpen,
     editingCollaboration,
     handleAddCollaboration,
     handleAddBulkCollaboration,
+    handleCopyCollaborations,
     handleEditCollaboration,
     handleDeleteCollaboration,
     handleSubmitCollaboration,
     handleSubmitBulkCollaboration,
+    handleSubmitCopyCollaboration,
     isSubmitting,
   };
 }

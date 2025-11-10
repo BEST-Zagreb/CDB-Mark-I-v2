@@ -98,3 +98,30 @@ export const bulkCollaborationSchema = z.object({
 
 // Form data for creating bulk collaborations
 export type BulkCollaborationFormData = z.infer<typeof bulkCollaborationSchema>;
+
+// Validation schema for copy collaboration forms
+export const copyCollaborationSchema = z.object({
+  projectId: z.number().positive("Project is required"),
+  copyCompany: z.boolean(),
+  copyContactPerson: z.boolean(),
+  copyType: z.boolean(),
+  copyPriority: z.boolean(),
+  copyContactInFuture: z.boolean(),
+  copyResponsible: z.boolean(),
+  copyComment: z.boolean(),
+  copyProgress: z.boolean(),
+  copyStatus: z.boolean(),
+  copyAmount: z.boolean(),
+});
+
+// Form data for copying collaborations
+export type CopyCollaborationFormData = z.infer<typeof copyCollaborationSchema>;
+
+// Response type for copy operation
+export interface CopyCollaborationResponse {
+  created: number;
+  skipped: number;
+  message: string;
+  sourceProjectId: number;
+  targetProjectId: number;
+}

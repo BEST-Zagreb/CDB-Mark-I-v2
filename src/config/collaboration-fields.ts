@@ -105,7 +105,7 @@ export const COLLABORATION_FIELDS: Array<{
     label: "Progress",
     required: false,
     sortable: true,
-    center: true,
+    center: false,
     icon: ListChecks,
   },
 

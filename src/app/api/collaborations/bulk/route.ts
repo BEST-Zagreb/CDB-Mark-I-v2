@@ -184,7 +184,11 @@ export async function POST(request: NextRequest) {
     }));
 
     // Return the created collaborations along with any skipped companies info
-    const response: any = {
+    const response: {
+      collaborations: typeof formattedCollaborations;
+      skippedCompanies?: string[];
+      message?: string;
+    } = {
       collaborations: formattedCollaborations,
     };
 

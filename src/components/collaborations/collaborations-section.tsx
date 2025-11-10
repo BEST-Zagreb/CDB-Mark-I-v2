@@ -6,6 +6,7 @@ import {
   ClipboardPaste,
   MoreVertical,
   Users,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +30,13 @@ import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CollaborationForm } from "@/components/collaborations/form/collaboration-form";
 import { BulkCollaborationForm } from "@/components/collaborations/form/bulk-collaboration-form";
+import { CopyCollaborationForm } from "@/components/collaborations/form/copy-collaboration-form";
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import {
   CollaborationFormData,
   BulkCollaborationFormData,
+  CopyCollaborationFormData,
 } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Suspense } from "react";
@@ -62,13 +65,17 @@ export function CollaborationsSection() {
     setCollaborationDialogOpen,
     bulkCollaborationDialogOpen,
     setBulkCollaborationDialogOpen,
+    copyCollaborationDialogOpen,
+    setCopyCollaborationDialogOpen,
     editingCollaboration,
     handleAddCollaboration,
     handleAddBulkCollaboration,
+    handleCopyCollaborations,
     handleEditCollaboration,
     handleDeleteCollaboration,
     handleSubmitCollaboration,
     handleSubmitBulkCollaboration,
+    handleSubmitCopyCollaboration,
     isSubmitting,
   } = useCollaborationsOperations();
 
@@ -176,7 +183,14 @@ export function CollaborationsSection() {
                         className="cursor-pointer"
                       >
                         <Users className="mr-2 h-4 w-4" />
-                        Bulk log collaborations
+                        Log multiple collaborations
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCopyCollaborations}
+                        className="cursor-pointer"
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy collaborations
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -253,6 +267,25 @@ export function CollaborationsSection() {
           <BulkCollaborationForm
             initialData={formProps.initialData}
             projectId={pageType === "projects" ? (id as number) : undefined}
+            onSubmit={formProps.onSubmit}
+            isLoading={formProps.isLoading}
+          />
+        )}
+      </FormDialog>
+
+      <FormDialog<CopyCollaborationFormData>
+        open={copyCollaborationDialogOpen}
+        onOpenChange={setCopyCollaborationDialogOpen}
+        entity="Copy Collaborations"
+        initialData={undefined}
+        onSubmit={handleSubmitCopyCollaboration}
+        isLoading={isSubmitting}
+      >
+        {(formProps) => (
+          <CopyCollaborationForm
+            currentProjectId={
+              pageType === "projects" ? (id as number) : undefined
+            }
             onSubmit={formProps.onSubmit}
             isLoading={formProps.isLoading}
           />
