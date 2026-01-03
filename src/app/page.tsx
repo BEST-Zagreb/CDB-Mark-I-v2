@@ -11,13 +11,13 @@ export default function Home() {
         <AuthRequiredAlert />
       </Suspense>
 
-      <div className="w-fit text-pretty flex items-center justify-center gap-6 mt-[30dvh] mx-auto">
+      <div className="w-fit text-pretty flex items-center justify-center gap-6 mt-[25dvh] mx-auto flex-wrap">
         <Image
           src="/cdb-logo-transparent.png"
-          alt="Company DB logo"
+          alt="Company DB logo by Ilona"
           width={512}
           height={512}
-          className="shrink-0 w-16 sm:w-32"
+          className="shrink-0 w-32 sm:w-48"
         />
 
         <div className="flex flex-col items-center justify-center">
