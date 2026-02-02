@@ -14,6 +14,8 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Project, ProjectFormData } from "@/types/project";
 import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
 import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
+import { useProjectResponsible } from "@/app/projects/[id]/hooks/use-project-responsible";
+
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -26,6 +28,8 @@ export default function ProjectDetailPage() {
   // Custom hooks for operations
   const projectOps = useProjectDetailOperations(projectId);
   const { data: collaborations = [] } = useCollaborationsByProject(projectId);
+  const { data: projectResponsibleName } = useProjectResponsible(projectId);
+
 
   const {
     project,
@@ -119,6 +123,7 @@ export default function ProjectDetailPage() {
         <ProjectDetailsSection
           project={project}
           collaborations={collaborations}
+          projectResponsibleName={projectResponsibleName}
         />
 
         <CollaborationsSection />

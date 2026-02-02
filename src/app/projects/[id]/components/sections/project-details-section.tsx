@@ -9,11 +9,13 @@ import { formatCurrency } from "@/lib/format-utils";
 interface ProjectDetailsSectionProps {
   project: Project;
   collaborations?: Collaboration[];
+  projectResponsibleName?: string | null;
 }
 
 export function ProjectDetailsSection({
   project,
   collaborations = [],
+  projectResponsibleName,
 }: ProjectDetailsSectionProps) {
   const formatDate = (date: Date | string | null) => {
     if (!date) return "-";
@@ -58,13 +60,10 @@ export function ProjectDetailsSection({
   return (
     <Card>
       <CardContent className="space-y-6">
-        {/* Row 1: Created, Updated */}
-
+        {/* Row 1: Created, Updated, Responsible */}
         <div className="flex flex-wrap items-center justify-left gap-6">
           <div className="flex-1">
-            <label className="text-sm font-medium text-muted-foreground">
-              Created
-            </label>
+            <label className="text-sm font-medium text-muted-foreground">Created</label>
             <p className="mt-1 text-sm">{formatDate(project.created_at)}</p>
           </div>
 
@@ -74,7 +73,19 @@ export function ProjectDetailsSection({
             </label>
             <p className="mt-1 text-sm">{formatDate(project.updated_at)}</p>
           </div>
+
+          <div className="flex-1">
+            <label className="text-sm font-medium text-muted-foreground">
+              Project Responsible
+            </label>
+            <p className="mt-1 text-sm">
+              {projectResponsibleName && projectResponsibleName.trim() !== ""
+                ? projectResponsibleName
+                : "-"}
+            </p>
+          </div>
         </div>
+
 
         {/* Row 2: Fundraising Progress */}
         {!project.frGoal ? null : (
