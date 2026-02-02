@@ -60,7 +60,6 @@ export function UsersTable({
           break;
         case "fullName":
         case "email":
-        case "role":
         case "description":
           aValue = a[sortField];
           bValue = b[sortField];

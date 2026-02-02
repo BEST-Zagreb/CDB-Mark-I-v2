@@ -28,7 +28,7 @@ export async function checkIsAdmin(request: NextRequest) {
 
   const userId = session.user.id;
 
-  // Fetch user from database to check role
+  // Fetch user from database to check if user isAdmin
   const users = await db
     .select()
     .from(appUsers)

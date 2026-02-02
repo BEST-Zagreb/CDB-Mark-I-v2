@@ -68,7 +68,6 @@ export default function UserDetailPage() {
     ? {
         fullName: user.fullName,
         email: user.email,
-        role: user.role,
         description: user.description,
         isLocked: user.isLocked,
         isAdmin: user.isAdmin ?? false,

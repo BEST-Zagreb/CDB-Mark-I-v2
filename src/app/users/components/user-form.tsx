@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { userSchema, type UserFormData, UserRole } from "@/types/user";
+import { userSchema, type UserFormData } from "@/types/user";
 import { useSession } from "@/lib/auth-client";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
@@ -56,7 +56,6 @@ export function UserForm({
     defaultValues: {
       fullName: initialData?.fullName || "",
       email: initialData?.email || "",
-      role: initialData?.role || UserRole.OBSERVER,
       description: initialData?.description || "",
       isLocked: initialData?.isLocked || false,
     },
@@ -124,44 +123,6 @@ export function UserForm({
                   disabled={isLoading || !!isRestrictedEdit}
                 />
               </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem className="w-full">
-              <FormLabel>Role</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                disabled={isLoading || !!isRestrictedEdit}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={UserRole.OBSERVER}>Observer</SelectItem>
-
-                  <SelectItem value={UserRole.PROJECT_TEAM_MEMBER} disabled>
-                    Project team member
-                  </SelectItem>
-
-                  <SelectItem value={UserRole.PROJECT_RESPONSIBLE} disabled>
-                    Project responsible
-                  </SelectItem>
-
-                  <SelectItem value={UserRole.ADMINISTRATOR}>
-                    Administrator
-                  </SelectItem>
-                </SelectContent>
-              </Select>
 
               <FormMessage />
             </FormItem>

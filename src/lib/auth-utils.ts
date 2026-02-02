@@ -111,6 +111,7 @@ export async function checkAndCreateUser(userInfo: {
       userRole = "Observer";
     }
   }
+  const roleToInsert = userRole ?? "Observer";
 
   // If user qualifies for auto-creation, create them
   if (userRole) {
@@ -119,7 +120,7 @@ export async function checkAndCreateUser(userInfo: {
         id,
         fullName: name,
         email,
-        role: userRole,
+        role: roleToInsert,
         description: null,
         isLocked: false,
         createdAt: now,

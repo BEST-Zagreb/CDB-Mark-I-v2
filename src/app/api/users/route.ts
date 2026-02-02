@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { appUsers, collaborations } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
-import { userSchema, type User, type UserRoleType } from "@/types/user";
+import { userSchema, type User } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
 import { resolveAddedByUser } from "@/lib/user-utils";
 
@@ -38,22 +38,10 @@ export async function GET() {
         // Check if user has collaborations
         const hasCollaborations = collaboratorsSet.has(u.fullName);
 
-        // If user's role is not Administrator or Project responsible, and they have collaborations,
-        // display them as Project team member
-        let role = u.role as UserRoleType;
-        if (
-          role !== "Administrator" &&
-          role !== "Project responsible" &&
-          hasCollaborations
-        ) {
-          role = "Project team member";
-        }
-
         return {
           id: u.id,
           fullName: u.fullName,
           email: u.email,
-          role: role,
           description: u.description,
           createdAt: u.createdAt,
           updatedAt: u.updatedAt,
@@ -103,7 +91,7 @@ export async function POST(request: NextRequest) {
         id: crypto.randomUUID(),
         fullName: validatedData.fullName,
         email: validatedData.email,
-        role: validatedData.role,
+        role: "Observer",          // privremeno dok DB ima role NOT NULL
         description: validatedData.description ?? null,
         isLocked: validatedData.isLocked ?? false,
         createdAt: nowISO,
@@ -122,7 +110,6 @@ export async function POST(request: NextRequest) {
         id: newUser.id,
         fullName: newUser.fullName,
         email: newUser.email,
-        role: newUser.role as UserRoleType,
         description: newUser.description,
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,

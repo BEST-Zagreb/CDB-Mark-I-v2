@@ -134,8 +134,10 @@ The application uses **Drizzle ORM** with a **Turso** (LibSQL) database. The sch
 | `projects`                                   | Project tracking                                               |
 | `people`                                     | Contact persons (linked to companies)                          |
 | `collaborations`                             | Partnership tracking between companies (contacts) and projects |
-| `app_users`                                  | Application user profiles with roles                           |
+| `app_users`                                  | Application user profiles                                      |
 | `user`, `session`, `account`, `verification` | Better Auth authentication tables                              |
+| `project_members`                            | Project members and their role                                 |
+
 
 #### Database Utility Scripts
 
@@ -247,7 +249,7 @@ TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(gr
 
 2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
 
-3. Log in with Google OAuth - the first user to sign in will be automatically created and granted the _Administrator_ role
+3. Log in with Google OAuth - the first user to sign in will be automatically created and granted the isAdmin role
 
 ## Deployment Guide (Netlify)
 

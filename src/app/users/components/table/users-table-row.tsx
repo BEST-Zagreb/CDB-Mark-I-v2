@@ -86,12 +86,6 @@ export const UsersTableRow = memo(function UsersTableRow({
         </TableCell>
       )}
 
-      {isColumnVisible("role", tablePreferences) && (
-        <TableCell className="max-w-50">
-          <div className="text-pretty">{user.role || "-"}</div>
-        </TableCell>
-      )}
-
       {isColumnVisible("description", tablePreferences) && (
         <TableCell className="max-w-50">
           {user.description ? (

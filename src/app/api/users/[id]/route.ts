@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { appUsers, collaborations, user, session } from "@/db/schema";
 import { eq, sql, count } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
-import { userSchema, type User, type UserRoleType } from "@/types/user";
+import { userSchema, type User } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
 import { resolveAddedByUser } from "@/lib/user-utils";
 
@@ -35,30 +35,10 @@ export async function GET(
     const result = results[0];
     const u = result.user;
 
-    // Check if user has any collaborations (for role determination)
-    const hasCollaborations = await db
-      .select({ id: collaborations.id })
-      .from(collaborations)
-      .where(eq(collaborations.responsible, u.fullName))
-      .limit(1)
-      .then((rows) => rows.length > 0);
-
-    // If user's role is not Administrator or Project responsible, and they have collaborations,
-    // display them as Project team member
-    let role = u.role as UserRoleType;
-    if (
-      role !== "Administrator" &&
-      role !== "Project responsible" &&
-      hasCollaborations
-    ) {
-      role = "Project team member";
-    }
-
     const formattedUser: User = {
       id: u.id,
       fullName: u.fullName,
       email: u.email,
-      role: role,
       description: u.description,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
@@ -176,7 +156,6 @@ export async function PUT(
       id: updatedUser.id,
       fullName: updatedUser.fullName,
       email: updatedUser.email,
-      role: updatedUser.role as UserRoleType,
       description: updatedUser.description,
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,

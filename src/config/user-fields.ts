@@ -37,14 +37,6 @@ export const USER_FIELDS = [
     icon: Mail,
   },
   {
-    id: "role",
-    label: "Role",
-    required: false,
-    sortable: true,
-    center: false,
-    icon: Shield,
-  },
-  {
     id: "description",
     label: "Description",
     required: false,
@@ -98,7 +90,6 @@ export const USER_FIELDS = [
 export const DEFAULT_USER_COLUMNS = [
   "fullName",
   "email",
-  "role",
   "addedBy",
   "lastLogin",
 ] as const;

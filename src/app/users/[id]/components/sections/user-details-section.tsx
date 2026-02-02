@@ -56,13 +56,6 @@ export function UserDetailsSection({ user }: UserDetailsSectionProps) {
         <div className="flex flex-wrap items-center justify-left gap-6">
           <div className="flex-1">
             <label className="text-sm font-medium text-muted-foreground">
-              Role
-            </label>
-            <p className="mt-1 text-sm">{user.role || "-"}</p>
-          </div>
-
-          <div className="flex-1">
-            <label className="text-sm font-medium text-muted-foreground">
               Account Locked Status
             </label>
             <p className="mt-1 text-sm">

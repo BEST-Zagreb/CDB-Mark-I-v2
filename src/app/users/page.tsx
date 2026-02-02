@@ -49,7 +49,6 @@ export default function UsersPage() {
     ? {
         fullName: editingUser.fullName,
         email: editingUser.email,
-        role: editingUser.role,
         description: editingUser.description,
         isLocked: editingUser.isLocked,
       }
