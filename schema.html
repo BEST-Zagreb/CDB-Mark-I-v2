@@ -651,6 +651,55 @@
                 </div>
             </div>
 
+            <!-- Project Members Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>🧩 project_members</span>
+                    <span class="table-type">Junction</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">project_id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK (composite)</span>
+                                <span class="badge badge-fk">FK → projects</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                                <span class="badge badge-notnull">NOT NULL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">app_user_id</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK (composite)</span>
+                                <span class="badge badge-fk">FK → app_users</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                                <span class="badge badge-notnull">NOT NULL</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">role</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                            <div class="field-type" style="margin-top: 6px;">
+                                Default: <strong>Project team member</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- App Users Table -->
             <div class="table-card">
                 <div class="table-header">
@@ -737,7 +786,6 @@
                         </div>
                     </div>
 
-                    <!-- ✅ NOVO -->
                     <div class="field">
                         <div class="field-info">
                             <div class="field-name">is_admin</div>
@@ -749,7 +797,6 @@
                         </div>
                     </div>
 
-                    <!-- ✅ SQLite/Turso BOOL je INTEGER (0/1) -->
                     <div class="field">
                         <div class="field-info">
                             <div class="field-name">is_locked</div>
@@ -804,6 +851,18 @@
             </div>
 
             <div class="relationship">
+                <div><strong>project_members → projects</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Each membership belongs to one project. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting a project removes all its memberships.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>project_members → app_users</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Each membership belongs to one app user. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting an app user removes all their memberships.</p>
+            </div>
+
+            <div class="relationship">
                 <div><strong>companies → people (reverse)</strong></div>
                 <div class="relationship-type">One-to-Many</div>
                 <p style="margin-top: 8px; color: #666;">One company can have many people working for it.</p>
@@ -819,6 +878,18 @@
                 <div><strong>projects → collaborations (reverse)</strong></div>
                 <div class="relationship-type">One-to-Many</div>
                 <p style="margin-top: 8px; color: #666;">One project can have many collaborations.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>projects → project_members (reverse)</strong></div>
+                <div class="relationship-type">One-to-Many</div>
+                <p style="margin-top: 8px; color: #666;">One project can have many project members (responsible + team members).</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>app_users → project_members (reverse)</strong></div>
+                <div class="relationship-type">One-to-Many</div>
+                <p style="margin-top: 8px; color: #666;">One app user can belong to many projects through memberships.</p>
             </div>
         </div>
 
@@ -924,6 +995,26 @@
                             <td>responsible</td>
                             <td>Find collaborations by responsible person</td>
                         </tr>
+
+                        <tr>
+                            <td>project_members</td>
+                            <td>idx_project_members_project_id</td>
+                            <td>project_id</td>
+                            <td>Find members by project</td>
+                        </tr>
+                        <tr>
+                            <td>project_members</td>
+                            <td>idx_project_members_app_user_id</td>
+                            <td>app_user_id</td>
+                            <td>Find projects by user</td>
+                        </tr>
+                        <tr>
+                            <td>project_members</td>
+                            <td>idx_project_members_role</td>
+                            <td>role</td>
+                            <td>Filter memberships by role</td>
+                        </tr>
+
                         <tr>
                             <td>app_users</td>
                             <td>idx_app_users_email</td>
@@ -948,15 +1039,12 @@
                             <td>last_login</td>
                             <td>Track user activity</td>
                         </tr>
-
-                        <!-- ✅ NOVO -->
                         <tr>
                             <td>app_users</td>
                             <td>idx_app_users_is_admin</td>
                             <td>is_admin</td>
                             <td>Filter admin users</td>
                         </tr>
-
                         <tr>
                             <td>app_users</td>
                             <td>idx_app_users_is_locked</td>
@@ -997,6 +1085,10 @@
                         </tr>
                     </tbody>
                 </table>
+                <p style="margin-top: 12px; color: #6b7280; font-size: 0.9em;">
+                    Note: Project membership roles are stored in <strong>project_members.role</strong> and can be:
+                    <strong>Project responsible</strong> or <strong>Project team member</strong>.
+                </p>
             </div>
         </div>
     </div>

@@ -4,6 +4,7 @@ import {
   text,
   real,
   index,
+  primaryKey,
 } from "drizzle-orm/sqlite-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -108,39 +109,6 @@ export const collaborations = sqliteTable(
   ]
 );
 
-// Relations
-export const companiesRelations = relations(companies, ({ many }) => ({
-  people: many(people),
-  collaborations: many(collaborations),
-}));
-
-export const projectsRelations = relations(projects, ({ many }) => ({
-  collaborations: many(collaborations),
-}));
-
-export const peopleRelations = relations(people, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [people.companyId],
-    references: [companies.id],
-  }),
-  collaborations: many(collaborations),
-}));
-
-export const collaborationsRelations = relations(collaborations, ({ one }) => ({
-  company: one(companies, {
-    fields: [collaborations.companyId],
-    references: [companies.id],
-  }),
-  project: one(projects, {
-    fields: [collaborations.projectId],
-    references: [projects.id],
-  }),
-  person: one(people, {
-    fields: [collaborations.personId],
-    references: [people.id],
-  }),
-}));
-
 // App Users table (extends Better Auth user)
 export const appUsers = sqliteTable(
   "app_users",
@@ -171,6 +139,32 @@ export const appUsers = sqliteTable(
     index("idx_app_users_is_locked").on(table.isLocked),
   ]
 );
+
+export const projectMembers = sqliteTable(
+  "project_members",
+  {
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+
+    appUserId: text("app_user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+
+    role: text("role")
+      .notNull()
+      .default("Project team member"),
+  },
+  (table) => [
+    // sprječava duplikate (projectId, appUserId)
+    primaryKey({ columns: [table.projectId, table.appUserId] }),
+
+    index("idx_project_members_project_id").on(table.projectId),
+    index("idx_project_members_app_user_id").on(table.appUserId),
+    index("idx_project_members_role").on(table.role),
+  ]
+);
+
 
 // Better Auth tables
 export const user = sqliteTable("user", {
@@ -224,6 +218,60 @@ export const verification = sqliteTable("verification", {
   createdAt: integer("createdAt", { mode: "timestamp" }),
   updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });
+
+// Relations
+export const companiesRelations = relations(companies, ({ many }) => ({
+  people: many(people),
+  collaborations: many(collaborations),
+}));
+
+export const peopleRelations = relations(people, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [people.companyId],
+    references: [companies.id],
+  }),
+  collaborations: many(collaborations),
+}));
+
+export const collaborationsRelations = relations(collaborations, ({ one }) => ({
+  company: one(companies, {
+    fields: [collaborations.companyId],
+    references: [companies.id],
+  }),
+  project: one(projects, {
+    fields: [collaborations.projectId],
+    references: [projects.id],
+  }),
+  person: one(people, {
+    fields: [collaborations.personId],
+    references: [people.id],
+  }),
+}));
+
+export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectMembers.projectId],
+    references: [projects.id],
+  }),
+  appUser: one(appUsers, {
+    fields: [projectMembers.appUserId],
+    references: [appUsers.id],
+  }),
+}));
+
+export const projectsRelations = relations(projects, ({ many }) => ({
+  collaborations: many(collaborations),
+  members: many(projectMembers),
+}));
+
+export const appUsersRelations = relations(appUsers, ({ many, one }) => ({
+  projectMemberships: many(projectMembers),
+  addedByUser: one(appUsers, {
+    fields: [appUsers.addedBy],
+    references: [appUsers.id],
+  }),
+}));
+
 
 // Export types
 export type Company = typeof companies.$inferSelect;
