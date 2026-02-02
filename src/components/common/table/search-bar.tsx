@@ -33,7 +33,12 @@ export function SearchBar({
 
   // Update URL when debounced search query changes
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
+    const currentValue = searchParams.get(searchParam) || "";
+
+    // ✅ Guard: ako je već isto u URL-u, ne diraj URL (sprječava loop)
+    if (currentValue === debouncedSearchQuery) return;
+
+    const params = new URLSearchParams(searchParams.toString());
 
     if (debouncedSearchQuery) {
       params.set(searchParam, debouncedSearchQuery);
@@ -41,9 +46,12 @@ export function SearchBar({
       params.delete(searchParam);
     }
 
+    const next = params.toString();
+
     // Update URL without triggering a page reload
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [debouncedSearchQuery, router, searchParams, searchParam]);
+    router.replace(next ? `?${next}` : "?", { scroll: false });
+  }, [debouncedSearchQuery, router, searchParam, searchParams]);
+
 
   // Notify parent component of search changes
   useEffect(() => {
