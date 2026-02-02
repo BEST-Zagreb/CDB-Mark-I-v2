@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
-import { UserRole } from "@/types/user";
 
 /**
  * Hook to check if the current user is an administrator
@@ -23,7 +22,7 @@ export function useIsAdmin() {
   });
 
   const isPending = sessionPending || userPending;
-  const isAdmin = userData?.role === UserRole.ADMINISTRATOR;
+  const isAdmin = !!userData?.isAdmin;
 
   return { isAdmin, isPending };
 }

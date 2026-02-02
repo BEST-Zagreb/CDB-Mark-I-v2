@@ -66,6 +66,7 @@ export async function GET(
       addedByUser: await resolveAddedByUser(u.addedBy),
       lastLogin: u.lastLogin,
       isLocked: u.isLocked,
+      isAdmin: u.isAdmin ?? false,
     };
 
     return NextResponse.json(formattedUser);
@@ -140,7 +141,7 @@ export async function PUT(
       validatedData.isLocked === true
     ) {
       // Prevent locking administrator accounts
-      if (existingUser[0].role === "Administrator") {
+      if (existingUser[0].isAdmin) {
         return NextResponse.json(
           { error: "Cannot lock administrator accounts" },
           { status: 403 }
@@ -183,6 +184,7 @@ export async function PUT(
       addedByUser: addedByInfo,
       lastLogin: updatedUser.lastLogin,
       isLocked: updatedUser.isLocked,
+      isAdmin: updatedUser.isAdmin ?? false,
     };
 
     return NextResponse.json(formattedUser);
@@ -256,11 +258,11 @@ export async function DELETE(
     }
 
     // If deleting an Administrator, check if they're the last one
-    if (userToDelete[0].role === "Administrator") {
+    if (userToDelete[0].isAdmin) {
       const adminCount = await db
         .select({ count: count() })
         .from(appUsers)
-        .where(eq(appUsers.role, "Administrator"));
+        .where(eq(appUsers.isAdmin, true));
 
       const totalAdmins = adminCount[0]?.count || 0;
 

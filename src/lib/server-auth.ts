@@ -55,7 +55,7 @@ export async function checkIsAdmin(request: NextRequest) {
   }
 
   // Check if user is an administrator
-  const isAdmin = user.role === "Administrator";
+  const isAdmin = user.isAdmin ?? false;
 
   return {
     isAdmin,

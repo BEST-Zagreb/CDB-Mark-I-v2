@@ -63,6 +63,7 @@ export async function GET() {
             : null,
           lastLogin: u.lastLogin,
           isLocked: u.isLocked,
+          isAdmin: u.isAdmin ?? false,
         };
       }
     );
@@ -109,6 +110,7 @@ export async function POST(request: NextRequest) {
         updatedAt: nowISO,
         addedBy: authCheck.userId,
         lastLogin: null,
+        isAdmin: false,
       })
       .returning();
 
@@ -128,6 +130,7 @@ export async function POST(request: NextRequest) {
         addedByUser: addedByInfo,
         lastLogin: newUser.lastLogin,
         isLocked: newUser.isLocked,
+        isAdmin: newUser.isAdmin ?? false,
       };
 
       return NextResponse.json(formattedUser, { status: 201 });

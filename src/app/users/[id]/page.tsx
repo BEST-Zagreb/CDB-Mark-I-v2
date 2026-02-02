@@ -71,6 +71,7 @@ export default function UserDetailPage() {
         role: user.role,
         description: user.description,
         isLocked: user.isLocked,
+        isAdmin: user.isAdmin ?? false,
       }
     : undefined;
 

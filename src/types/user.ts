@@ -27,6 +27,7 @@ export interface User {
   } | null;
   lastLogin: Date | string | null;
   isLocked: boolean;
+  isAdmin: boolean;
 }
 
 // Zod schema for user validation (for form input)
@@ -63,6 +64,7 @@ export type UserFormData = {
   role: UserRoleType;
   description?: string | null;
   isLocked: boolean;
+  isAdmin?: boolean;
 };
 
 // Schema for create user request

@@ -45,7 +45,7 @@ export function UserForm({
   // Determine if we should hide the lock checkbox
   // Hide if editing own account OR if the account is an administrator
   const isEditingOwnAccount = editingUserId && editingUserId === currentUserId;
-  const isAdminAccount = initialData?.role === UserRole.ADMINISTRATOR;
+  const isAdminAccount = initialData?.isAdmin === true;
   const shouldHideLockField = isEditingOwnAccount || isAdminAccount;
 
   // Non-admin users editing their own profile can only edit name and description
