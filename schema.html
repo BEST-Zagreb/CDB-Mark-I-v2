@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-pk { background-color: #fbbf24; }
+        .legend-fk { background-color: #ec4899; }
+        .legend-regular { background-color: #e5e7eb; }
+        .legend-indexed { background-color: #93c5fd; }
+
+        .schema-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .table-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-type {
+            font-size: 0.8em;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: normal;
+        }
+
+        .table-body {
+            padding: 0;
+        }
+
+        .field {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+        }
+
+        .field:last-child {
+            border-bottom: none;
+        }
+
+        .field-info {
+            flex: 1;
+        }
+
+        .field-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .field-type {
+            color: #6b7280;
+            font-size: 0.85em;
+            margin-top: 3px;
+        }
+
+        .field-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .badge {
+            font-size: 0.75em;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .badge-pk {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-fk {
+            background-color: #fce7f3;
+            color: #831843;
+        }
+
+        .badge-unique {
+            background-color: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .badge-indexed {
+            background-color: #dcfce7;
+            color: #14532d;
+        }
+
+        .badge-notnull {
+            background-color: #fecaca;
+            color: #7c2d12;
+        }
+
+        .relationships {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .relationships h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .relationship {
+            padding: 15px;
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+
+        .relationship strong {
+            color: #1f2937;
+        }
+
+        .relationship-type {
+            color: #764ba2;
+            font-weight: 600;
+        }
+
+        .mermaid-diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        .mermaid-diagram h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .index-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .index-table th {
+            background: #f3f4f6;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            color: #1f2937;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .index-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+
+        .auth-tables {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .auth-tables h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .schema-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .legend-items {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Database Schema</h1>
+
+        <div class="legend">
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-box legend-pk"></div>
+                    <span>Primary Key</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box legend-fk"></div>
+                    <span>Foreign Key</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box legend-indexed"></div>
+                    <span>Indexed</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box legend-regular"></div>
+                    <span>Regular Field</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="schema-container">
+            <!-- Companies Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>🏢 companies</span>
+                    <span class="table-type">Core</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK</span>
+                                <span class="badge badge-notnull">AUTO INCREMENT</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">name</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">url</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">address</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">city</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">zip</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">country</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">phone</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">budgeting_month</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">comment</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>📋 projects</span>
+                    <span class="table-type">Core</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK</span>
+                                <span class="badge badge-notnull">AUTO INCREMENT</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">name</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">fr_goal</div>
+                            <div class="field-type">REAL</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">created_at</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">updated_at</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- People Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>👥 people</span>
+                    <span class="table-type">Core</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK</span>
+                                <span class="badge badge-notnull">AUTO INCREMENT</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">name</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">email</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">phone</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">company_id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-fk">FK → companies</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">function</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">created_at</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaborations Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>🤝 collaborations</span>
+                    <span class="table-type">Junction</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK</span>
+                                <span class="badge badge-notnull">AUTO INCREMENT</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">company_id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-fk">FK → companies</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">project_id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-fk">FK → projects</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">person_id</div>
+                            <div class="field-type">INTEGER</div>
+                            <div class="field-badges">
+                                <span class="badge badge-fk">FK → people</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">responsible</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">comment</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">contacted</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">successful</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">letter</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">meeting</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">priority</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">type</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">amount</div>
+                            <div class="field-type">REAL</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">contact_in_future</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">created_at</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">updated_at</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- App Users Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <span>🔐 app_users</span>
+                    <span class="table-type">Auth</span>
+                </div>
+                <div class="table-body">
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">id</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-pk">PK</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">full_name</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">email</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                                <span class="badge badge-unique">UNIQUE</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">role</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">description</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">created_at</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">updated_at</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">added_by</div>
+                            <div class="field-type">TEXT</div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">last_login</div>
+                            <div class="field-type">TEXT</div>
+                            <div class="field-badges">
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ NOVO -->
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">is_admin</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ SQLite/Turso BOOL je INTEGER (0/1) -->
+                    <div class="field">
+                        <div class="field-info">
+                            <div class="field-name">is_locked</div>
+                            <div class="field-type">INTEGER (BOOL)</div>
+                            <div class="field-badges">
+                                <span class="badge badge-notnull">NOT NULL</span>
+                                <span class="badge badge-indexed">INDEXED</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Better Auth Tables Summary -->
+            <div class="table-card auth-tables">
+                <h3>🔑 Better Auth Tables</h3>
+                <p style="margin-bottom: 10px; color: #666;">External authentication system managed by Better Auth</p>
+                <ul style="margin-left: 20px; color: #666;">
+                    <li><strong>user:</strong> Core user table with profile info</li>
+                    <li><strong>session:</strong> Active user sessions with tokens</li>
+                    <li><strong>account:</strong> OAuth/provider accounts linked to users</li>
+                    <li><strong>verification:</strong> Email/code verification records</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="relationships">
+            <h2>🔗 Relationships</h2>
+
+            <div class="relationship">
+                <div><strong>people → companies</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Each person belongs to one company. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting a company removes all associated people.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>collaborations → companies</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Multiple collaborations can involve one company. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting a company removes all its collaborations.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>collaborations → projects</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Multiple collaborations can be associated with one project. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting a project removes all its collaborations.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>collaborations → people</strong></div>
+                <div class="relationship-type">Many-to-One</div>
+                <p style="margin-top: 8px; color: #666;">Multiple collaborations can involve one person. <span style="color: #d32f2f;">CASCADE delete:</span> Deleting a person removes all their collaboration records.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>companies → people (reverse)</strong></div>
+                <div class="relationship-type">One-to-Many</div>
+                <p style="margin-top: 8px; color: #666;">One company can have many people working for it.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>companies → collaborations (reverse)</strong></div>
+                <div class="relationship-type">One-to-Many</div>
+                <p style="margin-top: 8px; color: #666;">One company can be involved in many collaborations.</p>
+            </div>
+
+            <div class="relationship">
+                <div><strong>projects → collaborations (reverse)</strong></div>
+                <div class="relationship-type">One-to-Many</div>
+                <p style="margin-top: 8px; color: #666;">One project can have many collaborations.</p>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab(event, 'indexes')">📑 Indexes</button>
+            <button class="tab-button" onclick="switchTab(event, 'roles')">👤 App User Roles</button>
+        </div>
+
+        <div id="indexes" class="tab-content active">
+            <div class="mermaid-diagram">
+                <h3>Database Indexes</h3>
+                <table class="index-table">
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Index Name</th>
+                            <th>Columns</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>companies</td>
+                            <td>idx_companies_name</td>
+                            <td>name</td>
+                            <td>Search companies by name</td>
+                        </tr>
+                        <tr>
+                            <td>projects</td>
+                            <td>idx_projects_name</td>
+                            <td>name</td>
+                            <td>Search projects by name</td>
+                        </tr>
+                        <tr>
+                            <td>projects</td>
+                            <td>idx_projects_created_at</td>
+                            <td>created_at</td>
+                            <td>Sort/filter by creation date</td>
+                        </tr>
+                        <tr>
+                            <td>people</td>
+                            <td>idx_people_company_id</td>
+                            <td>company_id</td>
+                            <td>Find people by company</td>
+                        </tr>
+                        <tr>
+                            <td>people</td>
+                            <td>idx_people_name</td>
+                            <td>name</td>
+                            <td>Search people by name</td>
+                        </tr>
+                        <tr>
+                            <td>people</td>
+                            <td>idx_people_email</td>
+                            <td>email</td>
+                            <td>Look up person by email</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_company_id</td>
+                            <td>company_id</td>
+                            <td>Find collaborations by company</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_project_id</td>
+                            <td>project_id</td>
+                            <td>Find collaborations by project</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_person_id</td>
+                            <td>person_id</td>
+                            <td>Find collaborations by person</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_updated_at</td>
+                            <td>updated_at</td>
+                            <td>Sort by last update</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_created_at</td>
+                            <td>created_at</td>
+                            <td>Sort/filter by creation date</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_company_contact_future</td>
+                            <td>company_id, contact_in_future</td>
+                            <td>Find future contacts by company</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_contact_future</td>
+                            <td>contact_in_future</td>
+                            <td>Filter future contacts</td>
+                        </tr>
+                        <tr>
+                            <td>collaborations</td>
+                            <td>idx_collaborations_responsible</td>
+                            <td>responsible</td>
+                            <td>Find collaborations by responsible person</td>
+                        </tr>
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_email</td>
+                            <td>email</td>
+                            <td>Look up app user by email</td>
+                        </tr>
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_role</td>
+                            <td>role</td>
+                            <td>Find users by role</td>
+                        </tr>
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_full_name</td>
+                            <td>full_name</td>
+                            <td>Search users by name</td>
+                        </tr>
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_last_login</td>
+                            <td>last_login</td>
+                            <td>Track user activity</td>
+                        </tr>
+
+                        <!-- ✅ NOVO -->
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_is_admin</td>
+                            <td>is_admin</td>
+                            <td>Filter admin users</td>
+                        </tr>
+
+                        <tr>
+                            <td>app_users</td>
+                            <td>idx_app_users_is_locked</td>
+                            <td>is_locked</td>
+                            <td>Filter active/locked users</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="roles" class="tab-content">
+            <div class="mermaid-diagram">
+                <h3>App User Roles</h3>
+                <table class="index-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Administrator</strong></td>
+                            <td>Full system access, can manage users and all data</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Project responsible</strong></td>
+                            <td>Manages one or more projects and their collaborations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Project team member</strong></td>
+                            <td>Can view and update collaborations within assigned projects</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Observer</strong></td>
+                            <td>Read-only access to project data</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

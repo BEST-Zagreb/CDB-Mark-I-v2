@@ -154,6 +154,10 @@ export const appUsers = sqliteTable(
     updatedAt: text("updated_at").notNull(),
     addedBy: text("added_by"), // User ID who added this user
     lastLogin: text("last_login"),
+
+    isAdmin: integer("is_admin", { mode: "boolean" })
+      .default(false),
+
     isLocked: integer("is_locked", { mode: "boolean" })
       .notNull()
       .default(false),
@@ -163,6 +167,7 @@ export const appUsers = sqliteTable(
     index("idx_app_users_role").on(table.role),
     index("idx_app_users_full_name").on(table.fullName),
     index("idx_app_users_last_login").on(table.lastLogin),
+    index("idx_app_users_is_admin").on(table.isAdmin),
     index("idx_app_users_is_locked").on(table.isLocked),
   ]
 );
