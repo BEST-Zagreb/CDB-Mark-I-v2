@@ -249,7 +249,7 @@ TURSO_DB_URL=$(grep TURSO_DB_URL .env.local | cut -d'=' -f2) TURSO_DB_TOKEN=$(gr
 
 2. Access the application at: **[http://localhost:3000](http://localhost:3000)**
 
-3. Log in with Google OAuth - the first user to sign in will be automatically created and granted the isAdmin role
+3. Log in with Google OAuth - the first user to sign in will be automatically created and granted admin access
 
 ## Deployment Guide (Netlify)
 

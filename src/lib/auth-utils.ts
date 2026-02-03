@@ -107,10 +107,6 @@ export async function checkAndCreateUser(userInfo: {
 
   const shouldAutoCreate = isFirstUser || isAllowedDomain;
 
-  // Legacy DB column (role) is still NOT NULL for now; keep it stable.
-  // We'll remove this column in a later migration.
-  const roleToInsert = "Observer";
-
   // If user qualifies for auto-creation, create them
   if (shouldAutoCreate) {
     try {
@@ -118,7 +114,6 @@ export async function checkAndCreateUser(userInfo: {
         id,
         fullName: name,
         email,
-        role: roleToInsert, // legacy, will be removed
         description: null,
         isLocked: false,
         createdAt: now,

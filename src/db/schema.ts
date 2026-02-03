@@ -116,7 +116,6 @@ export const appUsers = sqliteTable(
     id: text("id").primaryKey(), // References Better Auth user.id
     fullName: text("full_name").notNull(),
     email: text("email").notNull().unique(),
-    role: text("role").notNull(), // Administrator, Project responsible, Project team member, Observer
     description: text("description"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
@@ -132,7 +131,6 @@ export const appUsers = sqliteTable(
   },
   (table) => [
     index("idx_app_users_email").on(table.email),
-    index("idx_app_users_role").on(table.role),
     index("idx_app_users_full_name").on(table.fullName),
     index("idx_app_users_last_login").on(table.lastLogin),
     index("idx_app_users_is_admin").on(table.isAdmin),

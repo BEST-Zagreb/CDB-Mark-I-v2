@@ -104,7 +104,7 @@ export async function PUT(
       }
     }
 
-    // Fetch the user to check their role
+    // Fetch the user to check admin status / lock status
     const existingUser = await db
       .select()
       .from(appUsers)

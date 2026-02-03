@@ -33,7 +33,6 @@ async function addAuthTables() {
         id TEXT PRIMARY KEY,
         full_name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
-        role TEXT NOT NULL,
         description TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
@@ -47,9 +46,6 @@ async function addAuthTables() {
     // Create indexes for app_users
     await tursoDb.execute(
       `CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email)`
-    );
-    await tursoDb.execute(
-      `CREATE INDEX IF NOT EXISTS idx_app_users_role ON app_users(role)`
     );
     await tursoDb.execute(
       `CREATE INDEX IF NOT EXISTS idx_app_users_full_name ON app_users(full_name)`

@@ -736,16 +736,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="field">
-                        <div class="field-info">
-                            <div class="field-name">role</div>
-                            <div class="field-type">TEXT</div>
-                            <div class="field-badges">
-                                <span class="badge badge-notnull">NOT NULL</span>
-                                <span class="badge badge-indexed">INDEXED</span>
-                            </div>
-                        </div>
-                    </div>
+
+                    <!-- role column removed -->
+
                     <div class="field">
                         <div class="field-info">
                             <div class="field-name">description</div>
@@ -895,7 +888,7 @@
 
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab(event, 'indexes')">📑 Indexes</button>
-            <button class="tab-button" onclick="switchTab(event, 'roles')">👤 App User Roles</button>
+            <button class="tab-button" onclick="switchTab(event, 'access')">🔐 Access & Project Roles</button>
         </div>
 
         <div id="indexes" class="tab-content active">
@@ -1023,12 +1016,6 @@
                         </tr>
                         <tr>
                             <td>app_users</td>
-                            <td>idx_app_users_role</td>
-                            <td>role</td>
-                            <td>Find users by role</td>
-                        </tr>
-                        <tr>
-                            <td>app_users</td>
                             <td>idx_app_users_full_name</td>
                             <td>full_name</td>
                             <td>Search users by name</td>
@@ -1056,38 +1043,45 @@
             </div>
         </div>
 
-        <div id="roles" class="tab-content">
+        <div id="access" class="tab-content">
             <div class="mermaid-diagram">
-                <h3>App User Roles</h3>
+                <h3>Access & Project Membership</h3>
+
                 <table class="index-table">
                     <thead>
                         <tr>
-                            <th>Role</th>
-                            <th>Description</th>
+                            <th>Concept</th>
+                            <th>Stored In</th>
+                            <th>Meaning</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Administrator</strong></td>
-                            <td>Full system access, can manage users and all data</td>
+                            <td><strong>Admin access</strong></td>
+                            <td><code>app_users.is_admin</code></td>
+                            <td>Full system access (manage users + all data)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Account locked</strong></td>
+                            <td><code>app_users.is_locked</code></td>
+                            <td>Prevents access even if the user exists</td>
                         </tr>
                         <tr>
                             <td><strong>Project responsible</strong></td>
-                            <td>Manages one or more projects and their collaborations</td>
+                            <td><code>project_members.role</code></td>
+                            <td>User is responsible for a project</td>
                         </tr>
                         <tr>
                             <td><strong>Project team member</strong></td>
-                            <td>Can view and update collaborations within assigned projects</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Observer</strong></td>
-                            <td>Read-only access to project data</td>
+                            <td><code>project_members.role</code></td>
+                            <td>User is a member of a project team</td>
                         </tr>
                     </tbody>
                 </table>
+
                 <p style="margin-top: 12px; color: #6b7280; font-size: 0.9em;">
-                    Note: Project membership roles are stored in <strong>project_members.role</strong> and can be:
-                    <strong>Project responsible</strong> or <strong>Project team member</strong>.
+                    Note: Application-wide “roles” are not stored in <strong>app_users</strong> anymore.
+                    Project membership roles live in <strong>project_members.role</strong>.
                 </p>
             </div>
         </div>

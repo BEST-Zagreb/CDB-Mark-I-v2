@@ -29,15 +29,8 @@ export async function GET() {
       .from(collaborations)
       .where(sql`${collaborations.responsible} IS NOT NULL`);
 
-    const collaboratorsSet = new Set(
-      usersWithCollaborations.map((row) => row.responsible)
-    );
-
     const formattedUsers: User[] = results.map(
       ({ user: u, addedByFullName, addedByEmail }) => {
-        // Check if user has collaborations
-        const hasCollaborations = collaboratorsSet.has(u.fullName);
-
         return {
           id: u.id,
           fullName: u.fullName,
@@ -91,7 +84,6 @@ export async function POST(request: NextRequest) {
         id: crypto.randomUUID(),
         fullName: validatedData.fullName,
         email: validatedData.email,
-        role: "Observer",          // privremeno dok DB ima role NOT NULL
         description: validatedData.description ?? null,
         isLocked: validatedData.isLocked ?? false,
         createdAt: nowISO,
