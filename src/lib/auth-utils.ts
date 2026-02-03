@@ -96,38 +96,38 @@ export async function checkAndCreateUser(userInfo: {
   const totalUsers = userCount[0]?.count || 0;
   const now = new Date().toISOString();
 
-  // Determine user role based on conditions
-  let userRole: string | null = null;
+  // First user becomes admin (via isAdmin flag)
+  const isFirstUser = totalUsers === 0;
 
-  if (totalUsers === 0) {
-    userRole = "Administrator"; // First user becomes admin
-  } else {
-    // Check if user's email domain is in the allowed list
-    const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(",") || [];
-    if (
-      allowedDomains.length > 0 &&
-      allowedDomains.some((domain) => email.endsWith(`@${domain}`))
-    ) {
-      userRole = "Observer";
-    }
-  }
-  const roleToInsert = userRole ?? "Observer";
+  // Check if user's email domain is in the allowed list
+  const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(",") || [];
+  const isAllowedDomain =
+    allowedDomains.length > 0 &&
+    allowedDomains.some((domain) => email.endsWith(`@${domain}`));
+
+  const shouldAutoCreate = isFirstUser || isAllowedDomain;
+
+  // Legacy DB column (role) is still NOT NULL for now; keep it stable.
+  // We'll remove this column in a later migration.
+  const roleToInsert = "Observer";
 
   // If user qualifies for auto-creation, create them
-  if (userRole) {
+  if (shouldAutoCreate) {
     try {
       await db.insert(appUsers).values({
         id,
         fullName: name,
         email,
-        role: roleToInsert,
+        role: roleToInsert, // legacy, will be removed
         description: null,
         isLocked: false,
         createdAt: now,
         updatedAt: now,
         addedBy: null,
         lastLogin: now,
+        isAdmin: isFirstUser, // ✅ real admin flag
       });
+
       return { authorized: true };
     } catch (error: unknown) {
       // Handle race condition: user was created by another process
