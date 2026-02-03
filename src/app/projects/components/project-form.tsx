@@ -13,9 +13,22 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   projectSchema,
+  createProjectSchema,
   type ProjectFormData,
-  type Project,
 } from "@/types/project";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import { useUsers } from "@/app/users/hooks/use-users";
+
+
+
 
 interface ProjectFormProps {
   initialData?: ProjectFormData | null;
@@ -28,13 +41,18 @@ export function ProjectForm({
   onSubmit,
   isLoading = false,
 }: ProjectFormProps) {
+  const schema = initialData ? projectSchema : createProjectSchema;
   const form = useForm<ProjectFormData>({
-    resolver: zodResolver(projectSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: initialData?.name || "",
       frGoal: initialData?.frGoal || null,
+      responsibleUserId: "",
     },
   });
+
+  const { data: users = [], isLoading: isLoadingUsers } = useUsers();
+  const selectableUsers = users.filter((u) => !u.isLocked);
 
   const handleSubmit = async (data: ProjectFormData) => {
     try {
@@ -99,6 +117,38 @@ export function ProjectForm({
             </FormItem>
           )}
         />
+
+        {!initialData && (
+        <FormField
+          control={form.control}
+          name="responsibleUserId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Project Responsible</FormLabel>
+              <Select
+                value={field.value || ""}
+                onValueChange={field.onChange}
+                disabled={isLoading || isLoadingUsers}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select responsible person" />
+                  </SelectTrigger>
+                </FormControl>
+
+                <SelectContent>
+                  {selectableUsers.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.fullName} ({u.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        )}
       </form>
     </Form>
   );

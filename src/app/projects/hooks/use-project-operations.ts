@@ -7,7 +7,7 @@ import {
   useUpdateProject,
   useDeleteProject,
 } from "@/app/projects/hooks/use-projects";
-import { Project, ProjectFormData } from "@/types/project";
+import { Project, ProjectFormData, CreateProjectData } from "@/types/project";
 
 export function useProjectOperations() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -40,7 +40,7 @@ export function useProjectOperations() {
       await updateMutation.mutateAsync({ id: editingProject.id, data });
     } else {
       // Create new project
-      await createMutation.mutateAsync(data);
+      await createMutation.mutateAsync(data as CreateProjectData);
     }
     setDialogOpen(false);
   };

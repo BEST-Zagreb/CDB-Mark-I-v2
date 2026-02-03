@@ -32,13 +32,19 @@ export const projectSchema = z.object({
 });
 
 // Schema for creating a new project
-export const createProjectSchema = projectSchema;
+export const createProjectSchema = projectSchema.extend({
+  responsibleUserId: z.string().min(1, "Project responsible is required"),
+});
 
 // Schema for updating a project
 export const updateProjectSchema = projectSchema.partial();
 
 // Schema for project form data
-export type ProjectFormData = z.infer<typeof projectSchema>;
+// Form can include responsibleUserId (required only on create)
+export type ProjectFormData = z.infer<typeof projectSchema> & {
+  responsibleUserId?: string;
+};
+
 
 // Schema for create project request
 export type CreateProjectData = z.infer<typeof createProjectSchema>;

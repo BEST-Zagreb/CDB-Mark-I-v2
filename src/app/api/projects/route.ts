@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { projects } from "@/db/schema";
-import { desc, sql } from "drizzle-orm";
-import { projectSchema, type Project } from "@/types/project";
+import { appUsers, projectMembers, projects } from "@/db/schema";
+import { desc, eq, sql } from "drizzle-orm";
+import { createProjectSchema, type Project } from "@/types/project";
 import { checkIsAdmin } from "@/lib/server-auth";
+
+const parseDate = (dateStr: string | null): Date | null => {
+  if (!dateStr || dateStr === "null") return null;
+  const date = new Date(dateStr);
+  return isNaN(date.getTime()) ? null : date;
+};
 
 // GET /api/projects - Get all projects
 export async function GET() {
@@ -16,21 +22,13 @@ export async function GET() {
         desc(projects.createdAt)
       );
 
-    const formattedProjects: Project[] = results.map((project) => {
-      const parseDate = (dateStr: string | null): Date | null => {
-        if (!dateStr || dateStr === "null") return null;
-        const date = new Date(dateStr);
-        return isNaN(date.getTime()) ? null : date;
-      };
-
-      return {
-        id: project.id!,
-        name: project.name || "",
-        frGoal: project.frGoal,
-        created_at: parseDate(project.createdAt),
-        updated_at: parseDate(project.updatedAt),
-      };
-    });
+    const formattedProjects: Project[] = results.map((project) => ({
+      id: project.id!,
+      name: project.name || "",
+      frGoal: project.frGoal,
+      created_at: parseDate(project.createdAt),
+      updated_at: parseDate(project.updatedAt),
+    }));
 
     return NextResponse.json(formattedProjects);
   } catch (error) {
@@ -56,42 +54,60 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate the request body
-    const validatedData = projectSchema.parse(body);
+    // Validate the request body (expects responsibleUserId here)
+    const validatedData = createProjectSchema.parse(body);
+
+    // Optional: verify responsible user exists and is not locked
+    const [responsible] = await db
+      .select({ id: appUsers.id, isLocked: appUsers.isLocked })
+      .from(appUsers)
+      .where(eq(appUsers.id, validatedData.responsibleUserId))
+      .limit(1);
+
+    if (!responsible || responsible.isLocked) {
+      return NextResponse.json(
+        { error: "Invalid project responsible user" },
+        { status: 400 }
+      );
+    }
 
     const now = new Date().toISOString();
 
-    const result = await db
-      .insert(projects)
-      .values({
-        name: validatedData.name,
-        frGoal: validatedData.frGoal || null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+    const newProject = await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(projects)
+        .values({
+          name: validatedData.name,
+          frGoal: validatedData.frGoal || null,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
 
-    if (result && result.length > 0) {
-      const newProject = result[0];
+      if (!inserted || inserted.length === 0) {
+        throw new Error("Failed to create project");
+      }
 
-      const parseDate = (dateStr: string | null): Date | null => {
-        if (!dateStr || dateStr === "null") return null;
-        const date = new Date(dateStr);
-        return isNaN(date.getTime()) ? null : date;
-      };
+      const project = inserted[0];
 
-      const formattedProject: Project = {
-        id: newProject.id!,
-        name: newProject.name || "",
-        frGoal: newProject.frGoal,
-        created_at: parseDate(newProject.createdAt),
-        updated_at: parseDate(newProject.updatedAt),
-      };
+      await tx.insert(projectMembers).values({
+        projectId: project.id!,
+        appUserId: validatedData.responsibleUserId,
+        role: "Project responsible",
+      });
 
-      return NextResponse.json(formattedProject, { status: 201 });
-    } else {
-      throw new Error("Failed to create project");
-    }
+      return project;
+    });
+
+    const formattedProject: Project = {
+      id: newProject.id!,
+      name: newProject.name || "",
+      frGoal: newProject.frGoal,
+      created_at: parseDate(newProject.createdAt),
+      updated_at: parseDate(newProject.updatedAt),
+    };
+
+    return NextResponse.json(formattedProject, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);
 
