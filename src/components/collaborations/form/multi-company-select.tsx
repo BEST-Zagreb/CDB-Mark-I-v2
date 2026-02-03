@@ -44,15 +44,11 @@ export function MultiCompanySelect({
     error,
   } = useCompanies();
 
-  // Filter companies based on search
   const filteredCompanies = React.useMemo(() => {
     if (!allCompanies) return [];
 
-    // If no search value or less than 2 characters, show first 50 companies
-    if (!searchValue || searchValue.length < 2)
-      return allCompanies.slice(0, 50);
+    if (!searchValue || searchValue.length < 2) return allCompanies.slice(0, 50);
 
-    // If user typed 2+ characters, show ALL matching results (no limit)
     const search = searchValue.toLowerCase();
     return allCompanies.filter(
       (company) =>
@@ -61,6 +57,7 @@ export function MultiCompanySelect({
         company.country?.toLowerCase().includes(search)
     );
   }, [allCompanies, searchValue]);
+
   const selectedCompanies = React.useMemo(() => {
     if (!allCompanies) return [];
     return allCompanies.filter((company) => values.includes(company.id));
@@ -78,6 +75,17 @@ export function MultiCompanySelect({
     e.preventDefault();
     e.stopPropagation();
     onValuesChange(values.filter((id) => id !== companyId));
+  };
+
+  const removeCompanyKeyDown = (
+    companyId: number,
+    e: React.KeyboardEvent
+  ) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onValuesChange(values.filter((id) => id !== companyId));
+    }
   };
 
   if (error) {
@@ -112,19 +120,25 @@ export function MultiCompanySelect({
                   className="mr-1 mb-1"
                 >
                   {company.name}
-                  <button
-                    type="button"
-                    className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+
+                  {/* IMPORTANT: do NOT render <button> inside <Button> */}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Remove ${company.name}`}
+                    className="ml-1 inline-flex rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
                     onMouseDown={(e) => removeCompany(company.id, e)}
+                    onKeyDown={(e) => removeCompanyKeyDown(company.id, e)}
                   >
                     <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                  </button>
+                  </span>
                 </Badge>
               ))
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}
           </div>
+
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -150,12 +164,12 @@ export function MultiCompanySelect({
               </Button>
             )}
           </div>
+
           <CommandList>
             <CommandEmpty>
-              {searchValue
-                ? "No companies found."
-                : "Start typing to search..."}
+              {searchValue ? "No companies found." : "Start typing to search..."}
             </CommandEmpty>
+
             <CommandGroup>
               {filteredCompanies.map((company) => {
                 const isSelected = values.includes(company.id);
@@ -187,6 +201,7 @@ export function MultiCompanySelect({
                         />
                       </svg>
                     </div>
+
                     <div className="flex-1 truncate">
                       {company.name}
                       {company.city && (
@@ -200,13 +215,14 @@ export function MultiCompanySelect({
               })}
             </CommandGroup>
           </CommandList>
+
           {(!searchValue || searchValue.length < 2) &&
             filteredCompanies.length >= 50 && (
               <div className="border-t px-3 py-2 text-xs text-muted-foreground">
-                Showing first 50 companies. Start typing to search all
-                companies.
+                Showing first 50 companies. Start typing to search all companies.
               </div>
             )}
+
           {searchValue &&
             searchValue.length >= 2 &&
             filteredCompanies.length > 0 && (
