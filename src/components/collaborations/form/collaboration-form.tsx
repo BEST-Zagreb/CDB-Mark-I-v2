@@ -69,6 +69,10 @@ export function CollaborationForm({
 
   // Watch the selected company ID to fetch contacts
   const selectedCompanyId = form.watch("companyId");
+
+  // Watch projectId so ResponsiblePersonSelect can show only team members
+  const selectedProjectId = form.watch("projectId");
+
   const { data: contacts = [], isLoading: isLoadingContacts } =
     useContactsByCompany(selectedCompanyId);
 
@@ -254,9 +258,7 @@ export function CollaborationForm({
                   </FormControl>
 
                   <SelectContent>
-                    <SelectItem value="unknown">
-                      Unknown/Not specified
-                    </SelectItem>
+                    <SelectItem value="unknown">Unknown/Not specified</SelectItem>
                     <SelectItem value="Financial">Financial</SelectItem>
                     <SelectItem value="Material">Material</SelectItem>
                     <SelectItem value="Educational">Educational</SelectItem>
@@ -304,6 +306,7 @@ export function CollaborationForm({
                   value={field.value}
                   onValueChange={field.onChange}
                   placeholder="Search or enter responsible person name"
+                  projectId={selectedProjectId}
                 />
               </FormControl>
               <FormMessage />
@@ -408,9 +411,7 @@ export function CollaborationForm({
                       <FormControl className="cursor-pointer">
                         <RadioGroupItem value="successful" />
                       </FormControl>
-                      <FormLabel className="cursor-pointer">
-                        Successful
-                      </FormLabel>
+                      <FormLabel className="cursor-pointer">Successful</FormLabel>
                     </FormItem>
 
                     <FormItem className="flex items-center">
@@ -429,16 +430,39 @@ export function CollaborationForm({
 
         <FormField
           control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Amount</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value ? parseInt(value) : undefined);
+                  }}
+                />
+              </FormControl>
+              <FormDescription>
+                Enter the amount of the collaboration value
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="comment"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Comment</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Add any comments about this collaboration"
+                  placeholder="Enter additional comments"
+                  className="resize-none min-h-[100px]"
                   {...field}
-                  disabled={isLoading}
-                  rows={4}
                 />
               </FormControl>
               <FormMessage />
@@ -446,50 +470,23 @@ export function CollaborationForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Achieved value</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  step={1}
-                  min={0}
-                  max={1000000}
-                  {...field}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    field.onChange(value ? parseFloat(value) : undefined);
-                  }}
-                  value={field.value || ""}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Separator className="my-4" />
+        <Separator />
 
         <FormField
           control={form.control}
           name="contactInFuture"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex items-center gap-3">
               <FormControl>
                 <Checkbox
-                  checked={field.value || false}
+                  checked={field.value ?? true}
                   onCheckedChange={field.onChange}
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Contact in Future</FormLabel>
+                <FormLabel>Contact in the future</FormLabel>
                 <FormDescription>
-                  Mark if this company should be contacted for future projects
+                  Should this company be contacted again in the future?
                 </FormDescription>
               </div>
             </FormItem>

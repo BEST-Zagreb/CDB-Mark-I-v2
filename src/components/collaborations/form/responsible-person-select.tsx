@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { ChevronsUpDown, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -17,9 +16,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
 import { useResponsiblePersons } from "@/hooks/collaborations/use-collaborations";
-import { is } from "drizzle-orm";
+import { projectMemberService } from "@/services/project-member.service";
 
 interface ResponsiblePersonSelectProps {
   value?: string;
@@ -27,20 +28,67 @@ interface ResponsiblePersonSelectProps {
 
   placeholder?: string;
   disabled?: boolean;
+
+  /** Ako je postavljen, u dropdownu prikazujemo samo članove tog projekta */
+  projectId?: number;
 }
+
+type PersonOption = {
+  id?: string;
+  fullName: string;
+  email?: string | null;
+};
 
 export function ResponsiblePersonSelect({
   value,
   onValueChange,
-
   placeholder = "Search or enter responsible person...",
+  disabled = false,
+  projectId,
 }: ResponsiblePersonSelectProps) {
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
 
-  // Fetch all existing responsible persons for autocomplete
+  const restrictToProjectMembers = !!projectId && projectId > 0;
+
+  // Global responsible persons (legacy) - used when we don't have projectId
   const { data: responsiblePersons = [], isLoading: isLoadingResponsible } =
     useResponsiblePersons();
+
+  // Project members - used when projectId is availible
+  const {
+    data: projectMemberPersons = [],
+    isLoading: isLoadingProjectMembers,
+  } = useQuery({
+    queryKey: ["projectMembersForResponsibleSelect", projectId],
+    queryFn: async () => {
+      const data = await projectMemberService.getByProject(projectId!);
+      // mapiraj na shape koji select očekuje
+      const mapped: PersonOption[] = data.items.map((m) => ({
+        id: m.appUserId,
+        fullName: m.fullName,
+        email: m.email,
+      }));
+      // opcionalno: uniq po fullName+email
+      const seen = new Set<string>();
+      return mapped.filter((p) => {
+        const key = `${p.fullName}|${p.email ?? ""}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    },
+    enabled: restrictToProjectMembers,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const options: PersonOption[] = restrictToProjectMembers
+    ? projectMemberPersons
+    : (responsiblePersons as unknown as PersonOption[]);
+
+  const isLoadingOptions = restrictToProjectMembers
+    ? isLoadingProjectMembers
+    : isLoadingResponsible;
 
   // Update input value when value prop changes
   useEffect(() => {
@@ -60,23 +108,18 @@ export function ResponsiblePersonSelect({
     onValueChange(trimmedValue);
   };
 
-  const filteredOptions = React.useMemo(() => {
-    // If no search value or less than 2 characters, show first 50
+  const filteredOptions = useMemo(() => {
     if (!inputValue || inputValue.length < 2) {
-      return responsiblePersons.slice(0, 50);
+      return options.slice(0, 50);
     }
 
-    // If user typed 2+ characters, show ALL matching results
-    return responsiblePersons.filter(
-      (responsiblePerson) =>
-        responsiblePerson.fullName
-          .toLowerCase()
-          .includes(inputValue.toLowerCase()) ||
-        responsiblePerson.email
-          ?.toLowerCase()
-          .includes(inputValue.toLowerCase())
+    const q = inputValue.toLowerCase();
+    return options.filter(
+      (p) =>
+        p.fullName.toLowerCase().includes(q) ||
+        (p.email?.toLowerCase().includes(q) ?? false)
     );
-  }, [responsiblePersons, inputValue]);
+  }, [options, inputValue]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -86,7 +129,7 @@ export function ResponsiblePersonSelect({
           role="combobox"
           aria-expanded={open}
           className="justify-between w-full truncate"
-          disabled={isLoadingResponsible}
+          disabled={disabled || isLoadingOptions}
         >
           {inputValue || placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -97,7 +140,11 @@ export function ResponsiblePersonSelect({
         <Command shouldFilter={false}>
           <div className="relative">
             <CommandInput
-              placeholder="Search or type new name..."
+              placeholder={
+                restrictToProjectMembers
+                  ? "Search team members or type new name..."
+                  : "Search or type new name..."
+              }
               value={inputValue}
               onValueChange={handleInputChange}
             />
@@ -115,71 +162,68 @@ export function ResponsiblePersonSelect({
               </Button>
             )}
           </div>
-          <CommandList>
-            {filteredOptions.length === 0 &&
-            inputValue &&
-            inputValue.length >= 2 ? (
-              <CommandEmpty className="p-2">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    No existing matches found.
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => handleSelect(inputValue)}
-                  >
-                    Use &quot;{inputValue}&quot;
-                  </Button>
-                </div>
-              </CommandEmpty>
-            ) : (
-              <>
-                {filteredOptions.length === 0 && (
-                  <CommandEmpty>Start typing to search...</CommandEmpty>
-                )}
 
-                <CommandGroup>
-                  {filteredOptions.map((responsiblePerson) => (
-                    <CommandItem
-                      key={
-                        responsiblePerson.id ||
-                        responsiblePerson.email ||
-                        responsiblePerson.fullName
-                      }
-                      value={responsiblePerson.fullName}
-                      onSelect={() => handleSelect(responsiblePerson.fullName)}
-                      className="cursor-pointer mb-1"
+          <CommandList>
+            {(!restrictToProjectMembers || (projectId && projectId > 0)) ? (
+              filteredOptions.length === 0 && inputValue && inputValue.length >= 2 ? (
+                <CommandEmpty className="p-2">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      No existing matches found.
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleSelect(inputValue)}
                     >
-                      <div className="flex-1 truncate">
-                        {responsiblePerson.fullName}
-                        {responsiblePerson.email && (
-                          <span className="text-muted-foreground ml-2">
-                            ({responsiblePerson.email})
-                          </span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </>
+                      Use &quot;{inputValue}&quot;
+                    </Button>
+                  </div>
+                </CommandEmpty>
+              ) : (
+                <>
+                  {filteredOptions.length === 0 && (
+                    <CommandEmpty>Start typing to search...</CommandEmpty>
+                  )}
+
+                  <CommandGroup>
+                    {filteredOptions.map((p) => (
+                      <CommandItem
+                        key={p.id || p.email || p.fullName}
+                        value={p.fullName}
+                        onSelect={() => handleSelect(p.fullName)}
+                        className="cursor-pointer mb-1"
+                      >
+                        <div className="flex-1 truncate">
+                          {p.fullName}
+                          {p.email && (
+                            <span className="text-muted-foreground ml-2">
+                              ({p.email})
+                            </span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )
+            ) : (
+              <CommandEmpty>Select a project first.</CommandEmpty>
             )}
           </CommandList>
-          {(!inputValue || inputValue.length < 2) &&
-            filteredOptions.length >= 50 && (
-              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
-                Showing first 50 persons. Start typing to search all persons.
-              </div>
-            )}
-          {inputValue &&
-            inputValue.length >= 2 &&
-            filteredOptions.length > 0 && (
-              <div className="border-t px-3 py-2 text-xs text-muted-foreground">
-                Found {filteredOptions.length} matching{" "}
-                {filteredOptions.length === 1 ? "person" : "persons"}.
-              </div>
-            )}
+
+          {(!inputValue || inputValue.length < 2) && filteredOptions.length >= 50 && (
+            <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+              Showing first 50 persons. Start typing to search all persons.
+            </div>
+          )}
+          {inputValue && inputValue.length >= 2 && filteredOptions.length > 0 && (
+            <div className="border-t px-3 py-2 text-xs text-muted-foreground">
+              Found {filteredOptions.length} matching{" "}
+              {filteredOptions.length === 1 ? "person" : "persons"}.
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
