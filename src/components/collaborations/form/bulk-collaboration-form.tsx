@@ -241,7 +241,7 @@ export function BulkCollaborationForm({
           name="responsible"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Responsible Person *</FormLabel>
+              <FormLabel>Responsible Person</FormLabel>
 
               <FormControl>
                 <ResponsiblePersonSelect

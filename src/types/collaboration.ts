@@ -28,7 +28,10 @@ export interface Collaboration {
   companyId: number;
   projectId: number;
   contactId: number | null;
+
+  // Responsible is now optional in forms; DB may store null
   responsible: string | null;
+
   comment: string | null;
   // Progress indicators (boolean)
   contacted: boolean;
@@ -56,7 +59,7 @@ export const collaborationSchema = z.object({
   companyId: z.number().positive("Company is required"),
   projectId: z.number().positive("Project is required"),
   contactId: z.number().positive().optional(),
-  responsible: z.string().min(1, "Responsible contact is required"),
+  responsible: z.string().optional(),
   comment: z.string().optional(),
   // Progress indicators
   contacted: z.boolean(),
@@ -72,7 +75,6 @@ export const collaborationSchema = z.object({
 
 // Form data for creating/updating collaborations
 export type CollaborationFormData = z.infer<typeof collaborationSchema>;
-
 export type CollaborationSchema = z.infer<typeof collaborationSchema>;
 
 // Validation schema for bulk collaboration forms
@@ -82,7 +84,7 @@ export const bulkCollaborationSchema = z.object({
     .min(1, "At least one company is required"),
   projectId: z.number().positive("Project is required"),
   contactId: z.number().positive().optional(),
-  responsible: z.string().min(1, "Responsible contact is required"),
+  responsible: z.string().optional(),
   comment: z.string().optional(),
   // Progress indicators
   contacted: z.boolean(),
