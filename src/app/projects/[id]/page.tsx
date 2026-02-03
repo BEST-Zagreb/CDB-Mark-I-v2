@@ -1,35 +1,49 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, UserPlus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/common/form-dialog";
 import { ProjectForm } from "@/app/projects/components/project-form";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
+
 import { useProjectDetailOperations } from "@/app/projects/[id]/hooks/use-project-detail-operations";
 import { useCollaborationsByProject } from "@/hooks/collaborations/use-collaborations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { Project, ProjectFormData } from "@/types/project";
-import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
-import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
 import { useProjectResponsible } from "@/app/projects/[id]/hooks/use-project-responsible";
 
+import type { ProjectFormData } from "@/types/project";
+import { ProjectDetailsSection } from "@/app/projects/[id]/components/sections/project-details-section";
+import { CollaborationsSection } from "@/components/collaborations/collaborations-section";
+
+// NEW: permission + dialog for adding members
+import { useIsProjectResponsible } from "./hooks/use-is-project-responsible";
+import { AddProjectMembersDialog } from "./components/add-project-members-dialog";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
+
   const rawId = params.id as string;
   const projectId = rawId ? parseInt(rawId) : 0;
+
   const isMobile = useIsMobile();
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
+
+  const [addMembersOpen, setAddMembersOpen] = useState(false);
+  const { isResponsible, isPending: isResponsiblePending } =
+    useIsProjectResponsible(projectId);
+
+  const canAddMembers = isAdmin || isResponsible;
+  const permsPending = isAdminPending || isResponsiblePending;
 
   // Custom hooks for operations
   const projectOps = useProjectDetailOperations(projectId);
   const { data: collaborations = [] } = useCollaborationsByProject(projectId);
   const { data: projectResponsibleName } = useProjectResponsible(projectId);
-
 
   const {
     project,
@@ -99,23 +113,36 @@ export default function ProjectDetailPage() {
             </h1>
           </div>
 
-          {isAdmin && (
+          {/* Buttons: visible to admin + responsible */}
+          {!permsPending && canAddMembers && (
             <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
               <Button
-                onClick={handleEditProject}
+                onClick={() => setAddMembersOpen(true)}
                 size={isMobile ? "icon" : "default"}
               >
-                <Pencil className="size-4" />
-                {!isMobile && "Edit project"}
+                <UserPlus className="size-4" />
+                {!isMobile && "Add project members"}
               </Button>
 
-              <Button
-                onClick={() => handleDeleteProject(project)}
-                size={isMobile ? "icon" : "default"}
-              >
-                <Trash2 className="size-4" />
-                {!isMobile && " Delete project"}
-              </Button>
+              {isAdmin && (
+                <>
+                  <Button
+                    onClick={handleEditProject}
+                    size={isMobile ? "icon" : "default"}
+                  >
+                    <Pencil className="size-4" />
+                    {!isMobile && "Edit project"}
+                  </Button>
+
+                  <Button
+                    onClick={() => handleDeleteProject(project)}
+                    size={isMobile ? "icon" : "default"}
+                  >
+                    <Trash2 className="size-4" />
+                    {!isMobile && "Delete project"}
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -145,6 +172,12 @@ export default function ProjectDetailPage() {
           />
         )}
       </FormDialog>
+
+      <AddProjectMembersDialog
+        projectId={projectId}
+        open={addMembersOpen}
+        onOpenChange={setAddMembersOpen}
+      />
     </div>
   );
 }
