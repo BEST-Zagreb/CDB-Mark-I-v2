@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Trash2, UserPlus } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, UserMinus, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/common/form-dialog";
@@ -22,6 +22,7 @@ import { CollaborationsSection } from "@/components/collaborations/collaboration
 // NEW: permission + dialog for adding members
 import { useIsProjectResponsible } from "./hooks/use-is-project-responsible";
 import { AddProjectMembersDialog } from "./components/add-project-members-dialog";
+import { RemoveProjectMembersDialog } from "./components/remove-project-members-dialog";
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -34,6 +35,7 @@ export default function ProjectDetailPage() {
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
 
   const [addMembersOpen, setAddMembersOpen] = useState(false);
+  const [removeMembersOpen, setRemoveMembersOpen] = useState(false);
   const { isResponsible, isPending: isResponsiblePending } =
     useIsProjectResponsible(projectId);
 
@@ -124,6 +126,14 @@ export default function ProjectDetailPage() {
                 {!isMobile && "Add project members"}
               </Button>
 
+              <Button
+                onClick={() => setRemoveMembersOpen(true)}
+                size={isMobile ? "icon" : "default"}
+              >
+                <UserMinus className="size-4" />
+                {!isMobile && "Remove members"}
+              </Button>
+
               {isAdmin && (
                 <>
                   <Button
@@ -177,6 +187,12 @@ export default function ProjectDetailPage() {
         projectId={projectId}
         open={addMembersOpen}
         onOpenChange={setAddMembersOpen}
+      />
+
+      <RemoveProjectMembersDialog
+        projectId={projectId}
+        open={removeMembersOpen}
+        onOpenChange={setRemoveMembersOpen}
       />
     </div>
   );

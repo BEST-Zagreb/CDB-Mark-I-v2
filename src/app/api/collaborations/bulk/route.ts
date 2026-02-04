@@ -109,8 +109,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Non-admins cannot create collaborations assigned to someone else.
-    const responsibleValue = perms.isAdmin ? (data.responsible ?? null) : perms.fullName;
+    // Team members never reach this endpoint; project responsibles can assign responsible freely.
+    const responsibleValue =
+      perms.isAdmin || perms.canManageAll
+        ? (data.responsible ?? null)
+        : perms.fullName;
 
     // Check for existing collaborations
     const existingCollaborations = await db
@@ -367,7 +370,7 @@ export async function PUT(request: NextRequest) {
     const missingIds = uniqueIds.filter((id) => !existingIds.has(id));
     const idsToUpdate = uniqueIds.filter((id) => existingIds.has(id));
 
-    if (!perms.isAdmin) {
+    if (!perms.isAdmin && !perms.canManageAll) {
       const allowedIds = new Set(
         existing
           .filter((r) => !!r.responsible && r.responsible === perms.fullName)
@@ -424,7 +427,8 @@ export async function PUT(request: NextRequest) {
     if (append) {
       await db.transaction(async (tx) => {
         for (const row of existing) {
-          if (!perms.isAdmin && row.responsible !== perms.fullName) continue;
+          if (!perms.isAdmin && !perms.canManageAll && row.responsible !== perms.fullName)
+            continue;
           const current = (row.comment ?? "").toString();
           const nextComment = current
             ? `${current.replace(/\s+$/, "")}\n${append}`
@@ -490,7 +494,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!perms.isAdmin) {
+    if (!perms.isAdmin && !perms.canManageAll) {
       const rows = await db
         .select({ id: collaborations.id, responsible: collaborations.responsible })
         .from(collaborations)

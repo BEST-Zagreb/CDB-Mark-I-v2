@@ -173,10 +173,7 @@ export async function PUT(
       const role = await getProjectRole(ctx.userId, projectId);
 
       if (role === RESPONSIBLE_ROLE) {
-        // can update only own collaborations
-        if (!existing.responsible || existing.responsible !== ctx.fullName) {
-          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        // Project responsible on this project: can update any collaboration in this project.
       } else if (role === TEAM_MEMBER_ROLE) {
         if (!existing.responsible || existing.responsible !== ctx.fullName) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -362,10 +359,6 @@ export async function DELETE(
 
       const role = await getProjectRole(ctx.userId, row.projectId ?? 0);
       if (role !== RESPONSIBLE_ROLE) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-
-      if (!row.responsible || row.responsible !== ctx.fullName) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }

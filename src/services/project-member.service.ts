@@ -19,6 +19,11 @@ export type AddProjectMembersResponse = {
   invalidOrLocked: string[];
 };
 
+export type RemoveProjectMembersResponse = {
+  deletedCount: number;
+  deletedUserIds: string[];
+};
+
 export const projectMemberService = {
   getByProject: async (projectId: number, role?: string) => {
     const params = new URLSearchParams({ projectId: String(projectId) });
@@ -35,6 +40,19 @@ export const projectMemberService = {
       projectId,
       userIds,
     });
+    return res.data;
+  },
+
+  removeMembers: async (projectId: number, userIds: string[]) => {
+    const res = await api.delete<RemoveProjectMembersResponse>(
+      "/project-members",
+      {
+        data: {
+          projectId,
+          userIds,
+        },
+      }
+    );
     return res.data;
   },
 };

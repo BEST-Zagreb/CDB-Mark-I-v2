@@ -573,6 +573,8 @@ export function CollaborationsSection() {
               currentUserName={
                 pageType === "users"
                   ? userName
+                  : pageType === "projects" && canManageAll
+                  ? undefined
                   : isAdmin
                   ? undefined
                   : myFullName

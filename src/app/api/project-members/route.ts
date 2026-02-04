@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { appUsers, projectMembers, projects } from "@/db/schema";
+import { appUsers, collaborations, projectMembers, projects } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -12,6 +12,11 @@ import {
 } from "@/lib/rbac";
 
 const addProjectMembersSchema = z.object({
+  projectId: z.number().int().positive(),
+  userIds: z.array(z.string().min(1)).min(1, "Select at least one user"),
+});
+
+const removeProjectMembersSchema = z.object({
   projectId: z.number().int().positive(),
   userIds: z.array(z.string().min(1)).min(1, "Select at least one user"),
 });
@@ -169,6 +174,110 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to add project members" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json(
+        { error: authRes.error },
+        { status: authRes.status }
+      );
+    }
+
+    const { ctx } = authRes;
+
+    const rawBody = await request.json();
+    const validated = removeProjectMembersSchema.parse(rawBody);
+
+    // Only admin or project responsible for THIS project can remove members.
+    if (!ctx.isAdmin) {
+      const role = await getProjectRole(ctx.userId, validated.projectId);
+      if (role !== RESPONSIBLE_ROLE) {
+        return NextResponse.json(
+          { error: "Insufficient permissions" },
+          { status: 403 }
+        );
+      }
+    }
+
+    const uniqueUserIds = Array.from(new Set(validated.userIds));
+
+    const users = await db
+      .select({ id: appUsers.id, fullName: appUsers.fullName })
+      .from(appUsers)
+      .where(inArray(appUsers.id, uniqueUserIds));
+
+    const fullNameById = new Map(
+      users
+        .filter((u) => !!u.fullName)
+        .map((u) => [u.id, (u.fullName ?? "").toString()])
+    );
+
+    // Safety: only remove team members, never project responsibles.
+    const now = new Date().toISOString();
+
+    const result = await db.transaction(async (tx) => {
+      const deleted = await tx
+        .delete(projectMembers)
+        .where(
+          and(
+            eq(projectMembers.projectId, validated.projectId),
+            inArray(projectMembers.appUserId, uniqueUserIds),
+            eq(projectMembers.role, TEAM_MEMBER_ROLE)
+          )
+        )
+        .returning({ appUserId: projectMembers.appUserId });
+
+      const deletedUserIds = deleted.map((r) => r.appUserId);
+      const fullNamesToClear = Array.from(
+        new Set(
+          deletedUserIds
+            .map((id) => fullNameById.get(id))
+            .filter((n): n is string => !!n)
+        )
+      );
+
+      let clearedResponsibleCount = 0;
+      if (fullNamesToClear.length > 0) {
+        const cleared = await tx
+          .update(collaborations)
+          .set({ responsible: null, updatedAt: now })
+          .where(
+            and(
+              eq(collaborations.projectId, validated.projectId),
+              inArray(collaborations.responsible, fullNamesToClear)
+            )
+          )
+          .returning({ id: collaborations.id });
+
+        clearedResponsibleCount = cleared.length;
+      }
+
+      return { deletedUserIds, clearedResponsibleCount };
+    });
+
+    return NextResponse.json({
+      deletedCount: result.deletedUserIds.length,
+      deletedUserIds: result.deletedUserIds,
+      clearedResponsibleCount: result.clearedResponsibleCount,
+    });
+  } catch (error) {
+    console.error("Error removing project members:", error);
+
+    if (error instanceof Error && error.name === "ZodError") {
+      return NextResponse.json(
+        { error: "Invalid request", details: error },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Failed to remove project members" },
       { status: 500 }
     );
   }

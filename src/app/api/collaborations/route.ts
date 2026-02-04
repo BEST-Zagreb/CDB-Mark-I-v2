@@ -222,9 +222,6 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-
-      // Non-admin users can only create collaborations assigned to themselves.
-      data.responsible = ctx.fullName;
     }
 
     // Check if collaboration already exists
