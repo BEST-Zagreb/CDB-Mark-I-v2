@@ -45,8 +45,7 @@ export function UserForm({
   // Determine if we should hide the lock checkbox
   // Hide if editing own account OR if the account is an administrator
   const isEditingOwnAccount = editingUserId && editingUserId === currentUserId;
-  const isAdminAccount = initialData?.isAdmin === true;
-  const shouldHideLockField = isEditingOwnAccount || isAdminAccount;
+  const isEditingExistingUser = !!editingUserId;
 
   // Non-admin users editing their own profile can only edit name and description
   const isRestrictedEdit = isEditingOwnAccount && !isAdmin;
@@ -58,8 +57,16 @@ export function UserForm({
       email: initialData?.email || "",
       description: initialData?.description || "",
       isLocked: initialData?.isLocked || false,
+      isAdmin: initialData?.isAdmin ?? false,
     },
   });
+
+  const isAdminChecked = form.watch("isAdmin") === true;
+  const shouldHideLockField = isEditingOwnAccount || isAdminChecked;
+
+  // Only admins can manage admin role, and not on their own account
+  // (also enabled on the create-user form)
+  const canManageAdminRole = isAdmin && !isEditingOwnAccount;
 
   const handleSubmit = async (data: UserFormData) => {
     try {
@@ -146,6 +153,40 @@ export function UserForm({
             </FormItem>
           )}
         />
+
+        {canManageAdminRole && (
+          <FormField
+            control={form.control}
+            name="isAdmin"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value === true}
+                    onCheckedChange={(checked) => {
+                      const value = checked === true;
+                      field.onChange(value);
+                      if (value) {
+                        form.setValue("isLocked", false, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+                      }
+                    }}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+
+                <div>
+                  <FormLabel>Administrator</FormLabel>
+                  <FormDescription>
+                    If checked, this user has administrator permissions.
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Only show lock account checkbox if not editing own account and not admin account */}
         {!shouldHideLockField && (

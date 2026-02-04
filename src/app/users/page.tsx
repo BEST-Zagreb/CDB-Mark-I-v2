@@ -51,6 +51,7 @@ export default function UsersPage() {
         email: editingUser.email,
         description: editingUser.description,
         isLocked: editingUser.isLocked,
+        isAdmin: editingUser.isAdmin ?? false,
       }
     : undefined;
 

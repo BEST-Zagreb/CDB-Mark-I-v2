@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
         fullName: validatedData.fullName,
         email: validatedData.email,
         description: validatedData.description ?? null,
-        isLocked: validatedData.isLocked ?? false,
+        isLocked: validatedData.isAdmin ? false : (validatedData.isLocked ?? false),
         createdAt: nowISO,
         updatedAt: nowISO,
         addedBy: authCheck.userId,
         lastLogin: null,
-        isAdmin: false,
+        isAdmin: validatedData.isAdmin ?? false,
       })
       .returning();
 

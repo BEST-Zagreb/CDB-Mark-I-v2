@@ -194,6 +194,8 @@ export function CollaborationsTable({
       <Table>
         <TableHeader className="bg-zinc-100">
           <TableRow>
+            {/* Actions - Always visible */}
+            <TableHead className="text-center font-bold">Actions</TableHead>
             {visibleColumnsFields.map((column) => {
               if (!isColumnVisible(column.id, tablePreferences)) return null;
 
@@ -227,8 +229,6 @@ export function CollaborationsTable({
                 </TableHead>
               );
             })}
-            {/* Actions - Always visible */}
-            <TableHead className="text-center font-bold">Actions</TableHead>
           </TableRow>
         </TableHeader>
 

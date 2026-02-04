@@ -84,6 +84,14 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
           : ""
       }
     >
+
+      {/* Actions - Always visible */}
+      <TableActions
+        item={collaboration}
+        onEdit={canEdit ? onEdit : undefined}
+        onDelete={canEdit ? handleDelete : undefined}
+      />
+      
       {COLLABORATION_FIELDS.filter(
         (field) => !hiddenColumns.includes(field.id)
       ).map((column) => {
@@ -394,12 +402,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
         );
       })}
 
-      {/* Actions - Always visible */}
-      <TableActions
-        item={collaboration}
-        onEdit={canEdit ? onEdit : undefined}
-        onDelete={canEdit ? handleDelete : undefined}
-      />
+      
     </TableRow>
   );
 });

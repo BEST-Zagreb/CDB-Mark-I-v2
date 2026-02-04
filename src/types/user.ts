@@ -32,6 +32,7 @@ export const userSchema = z.object({
     .optional()
     .nullable(),
   isLocked: z.boolean(),
+  isAdmin: z.boolean().optional(),
 });
 
 // Schema for creating a new user

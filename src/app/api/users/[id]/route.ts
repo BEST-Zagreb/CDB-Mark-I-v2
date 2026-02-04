@@ -129,6 +129,25 @@ export async function PUT(
       }
     }
 
+    // Prevent removing admin rights from the last administrator
+    if (validatedData.isAdmin === false && existingUser[0].isAdmin) {
+      const adminCount = await db
+        .select({ count: count() })
+        .from(appUsers)
+        .where(eq(appUsers.isAdmin, true));
+
+      const totalAdmins = adminCount[0]?.count || 0;
+      if (totalAdmins <= 1) {
+        return NextResponse.json(
+          {
+            error:
+              "Cannot remove administrator rights from the last administrator account.",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const nowISO = new Date().toISOString();
 
     const result = await db

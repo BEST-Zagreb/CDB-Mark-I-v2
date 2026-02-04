@@ -76,6 +76,11 @@ export const UsersTableRow = memo(function UsersTableRow({
             className="text-primary hover:underline text-pretty"
           >
             {user.fullName || "-"}
+            {user.isAdmin && (
+              <span className="text-muted-foreground font-normal">
+                {" "}(Admin)
+              </span>
+            )}
           </Link>
         </TableCell>
       )}
