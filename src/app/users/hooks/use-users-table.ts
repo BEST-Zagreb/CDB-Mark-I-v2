@@ -19,19 +19,26 @@ const defaultPreferences: TablePreferences = {
 };
 
 export function useUsersTable() {
+  // Start with defaults to ensure SSR and first client render match.
   const [tablePreferences, setTablePreferences] = useState<TablePreferences>(
-    () => {
-      return getTablePreferences("users", defaultPreferences);
-    }
+    defaultPreferences
   );
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Save preferences to localStorage whenever they change
+  // Load preferences from localStorage after mount to avoid hydration mismatches.
   useEffect(() => {
+    setTablePreferences(getTablePreferences("users", defaultPreferences));
+    setPreferencesInitialized(true);
+  }, []);
+
+  // Save preferences to localStorage whenever they change (after initialization).
+  useEffect(() => {
+    if (!preferencesInitialized) return;
     saveTablePreferences("users", tablePreferences);
-  }, [tablePreferences]);
+  }, [preferencesInitialized, tablePreferences]);
 
   // Memoize column selector handler
   const handleUpdateVisibleColumns = useCallback(

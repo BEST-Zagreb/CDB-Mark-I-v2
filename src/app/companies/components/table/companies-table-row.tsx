@@ -62,6 +62,14 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
         company.hasDoNotContact ? "bg-orange-50 text-muted-foreground" : ""
       }
     >
+      {/* Actions - Always visible */}
+      <TableActions
+        item={company}
+        onView={isMobile ? undefined : handleView}
+        onEdit={onEdit}
+        onDelete={handleDelete}
+      />
+
       {COMPANY_FIELDS.map((column) => {
         if (!isColumnVisible(column.id, tablePreferences) && !column.required)
           return null;
@@ -143,14 +151,6 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
           </TableCell>
         );
       })}
-
-      {/* Actions - Always visible */}
-      <TableActions
-        item={company}
-        onView={isMobile ? undefined : handleView}
-        onEdit={onEdit}
-        onDelete={handleDelete}
-      />
     </TableRow>
   );
 });

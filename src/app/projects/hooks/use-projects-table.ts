@@ -19,19 +19,26 @@ const defaultPreferences: TablePreferences = {
 };
 
 export function useProjectsTable() {
+  // Start with defaults to ensure SSR and first client render match.
   const [tablePreferences, setTablePreferences] = useState<TablePreferences>(
-    () => {
-      return getTablePreferences("projects", defaultPreferences);
-    }
+    defaultPreferences
   );
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Save preferences to localStorage whenever they change
+  // Load preferences from localStorage after mount to avoid hydration mismatches.
   useEffect(() => {
+    setTablePreferences(getTablePreferences("projects", defaultPreferences));
+    setPreferencesInitialized(true);
+  }, []);
+
+  // Save preferences to localStorage whenever they change (after initialization).
+  useEffect(() => {
+    if (!preferencesInitialized) return;
     saveTablePreferences("projects", tablePreferences);
-  }, [tablePreferences]);
+  }, [preferencesInitialized, tablePreferences]);
 
   // Memoize column selector handler
   const handleUpdateVisibleColumns = useCallback(

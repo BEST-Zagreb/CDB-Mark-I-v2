@@ -46,4 +46,15 @@ export const companyService = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/companies/${id}`);
   },
+
+  // Create multiple companies
+  bulkCreate: async (items: CreateCompanyData[]) => {
+    const response = await api.post("/companies/bulk", { items });
+    return response.data as {
+      createdCount: number;
+      createdIds: number[];
+      skipped: Array<{ index: number; name: string; reason: string }>;
+      failed: Array<{ index: number; name: string; error: string }>;
+    };
+  },
 };

@@ -101,6 +101,8 @@ export function CompaniesTable({
       <Table>
         <TableHeader className="bg-zinc-100">
           <TableRow>
+            {/* Actions - Always visible */}
+            <TableHead className="text-center font-bold">Actions</TableHead>
             {COMPANY_FIELDS.map((column) => {
               if (!isColumnVisible(column.id, tablePreferences)) return null;
 
@@ -134,8 +136,6 @@ export function CompaniesTable({
                 </TableHead>
               );
             })}
-            {/* Actions - Always visible */}
-            <TableHead className="text-center font-bold">Actions</TableHead>
           </TableRow>
         </TableHeader>
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Plus, Layers } from "lucide-react";
 import { CompaniesTable } from "@/app/companies/components/table/companies-table";
 import { FormDialog } from "@/components/common/form-dialog";
 import { CompanyForm } from "@/app/companies/components/form/company-form";
+import { BulkCompaniesDialog } from "@/app/companies/components/bulk-companies-dialog";
 import { ColumnSelector } from "@/components/common/table/column-selector";
 import { SearchBar } from "@/components/common/table/search-bar";
 import { BlocksWaveLoader } from "@/components/common/blocks-wave-loader";
@@ -13,10 +14,13 @@ import { useCompaniesTable } from "@/app/companies/hooks/use-companies-table";
 import { useCompanyOperations } from "@/app/companies/hooks/use-company-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Company, CompanyFormData } from "@/types/company";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import { useBulkCreateCompanies } from "@/app/companies/hooks/use-companies";
 
 export default function CompaniesPage() {
   const isMobile = useIsMobile();
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const bulkCreate = useBulkCreateCompanies();
 
   // Custom hooks for table management and company operations
   const {
@@ -67,13 +71,24 @@ export default function CompaniesPage() {
             </h1>
             <Badge variant="secondary">{companies.length}</Badge>
           </div>
-          <Button
-            onClick={handleCreateCompany}
-            size={isMobile ? "sm" : "default"}
-          >
-            <Plus className="size-4" />
-            Add company
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleCreateCompany}
+              size={isMobile ? "sm" : "default"}
+            >
+              <Plus className="size-4" />
+              Add company
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => setBulkDialogOpen(true)}
+              size={isMobile ? "sm" : "default"}
+            >
+              <Layers className="size-4" />
+              Add multiple companies
+            </Button>
+          </div>
         </div>
 
         {/* Search Bar and Column Selector */}
@@ -124,6 +139,15 @@ export default function CompaniesPage() {
           />
         )}
       </FormDialog>
+
+      <BulkCompaniesDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        isSaving={bulkCreate.isPending}
+        onSave={async (rows) => {
+          return await bulkCreate.mutateAsync(rows);
+        }}
+      />
     </div>
   );
 }

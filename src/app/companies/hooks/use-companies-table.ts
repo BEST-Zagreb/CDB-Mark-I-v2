@@ -19,19 +19,26 @@ const defaultPreferences: TablePreferences = {
 };
 
 export function useCompaniesTable() {
+  // Start with defaults to ensure SSR and first client render match.
   const [tablePreferences, setTablePreferences] = useState<TablePreferences>(
-    () => {
-      return getTablePreferences("companies", defaultPreferences);
-    }
+    defaultPreferences
   );
+  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Save preferences to localStorage whenever they change
+  // Load preferences from localStorage after mount to avoid hydration mismatches.
   useEffect(() => {
+    setTablePreferences(getTablePreferences("companies", defaultPreferences));
+    setPreferencesInitialized(true);
+  }, []);
+
+  // Save preferences to localStorage whenever they change (after initialization).
+  useEffect(() => {
+    if (!preferencesInitialized) return;
     saveTablePreferences("companies", tablePreferences);
-  }, [tablePreferences]);
+  }, [preferencesInitialized, tablePreferences]);
 
   // Memoize column selector handler
   const handleUpdateVisibleColumns = useCallback(

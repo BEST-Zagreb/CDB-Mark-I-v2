@@ -93,3 +93,24 @@ export function useDeleteCompany() {
     },
   });
 }
+
+export function useBulkCreateCompanies() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: CreateCompanyData[]) => companyService.bulkCreate(items),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: companyKeys.all });
+
+      // Don't over-toast here; caller shows a detailed results dialog.
+      if (result.createdCount > 0) {
+        toast.success(`Created ${result.createdCount} compan${result.createdCount === 1 ? "y" : "ies"}`);
+      }
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error ? error.message : "Failed to create companies";
+      toast.error(message);
+    },
+  });
+}
