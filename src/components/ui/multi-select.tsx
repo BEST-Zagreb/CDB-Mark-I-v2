@@ -67,8 +67,20 @@ export function MultiSelect({
       }
       return newSet;
     };
-    setSelectedValues(getNewSet);
-    onValuesChange?.([...getNewSet(selectedValues)]);
+
+    // Controlled mode: derive next from `values` and notify.
+    if (values) {
+      const next = getNewSet(new Set(values));
+      onValuesChange?.([...next]);
+      return;
+    }
+
+    // Uncontrolled mode: update internal state and notify.
+    setSelectedValues((prev) => {
+      const next = getNewSet(prev);
+      onValuesChange?.([...next]);
+      return next;
+    });
   }
 
   const onItemAdded = useCallback((value: string, label: ReactNode) => {
@@ -145,6 +157,8 @@ export function MultiSelectValue({
     overflowBehavior === "wrap" ||
     (overflowBehavior === "wrap-when-open" && open);
 
+  const selectedKey = [...selectedValues].join("\u0001");
+
   const checkOverflow = useCallback(() => {
     if (valueRef.current == null) return;
 
@@ -154,9 +168,36 @@ export function MultiSelectValue({
       "[data-selected-item]"
     );
 
-    if (overflowElement != null) overflowElement.style.display = "none";
+    // In wrap modes, don't hide anything.
+    if (shouldWrap) {
+      if (overflowElement != null) overflowElement.style.display = "none";
+      items.forEach((child) => child.style.removeProperty("display"));
+      setOverflowAmount((prev) => (prev === 0 ? prev : 0));
+      return;
+    }
+
     items.forEach((child) => child.style.removeProperty("display"));
+
+    const reserveOverflowSpace = () => {
+      if (overflowElement == null) return;
+      // Reserve a stable width to avoid oscillating measurements.
+      overflowElement.style.display = "inline-flex";
+      overflowElement.style.visibility = "hidden";
+      overflowElement.textContent = `+${items.length}`;
+    };
+
+    if (overflowElement != null) {
+      overflowElement.style.display = "none";
+      overflowElement.style.removeProperty("visibility");
+    }
+
     let amount = 0;
+
+    // If we already overflow, reserve space for the overflow badge.
+    if (containerElement.scrollWidth > containerElement.clientWidth) {
+      reserveOverflowSpace();
+    }
+
     for (let i = items.length - 1; i >= 0; i--) {
       const child = items[i];
       if (containerElement.scrollWidth <= containerElement.clientWidth) {
@@ -164,29 +205,34 @@ export function MultiSelectValue({
       }
       amount = items.length - i;
       child.style.display = "none";
-      overflowElement?.style.removeProperty("display");
+      reserveOverflowSpace();
     }
-    setOverflowAmount(amount);
-  }, []);
+    const next = Math.max(0, Math.round(amount));
+    setOverflowAmount((prev) => (prev === next ? prev : next));
+
+    if (overflowElement != null) {
+      overflowElement.style.removeProperty("visibility");
+      overflowElement.textContent = "";
+    }
+  }, [shouldWrap]);
 
   useLayoutEffect(() => {
     checkOverflow();
-  }, [selectedValues, checkOverflow, shouldWrap]);
+  }, [checkOverflow, shouldWrap, selectedKey]);
 
-  const handleResize = useCallback(
-    (node: HTMLDivElement) => {
-      valueRef.current = node;
+  useEffect(() => {
+    const node = valueRef.current;
+    if (!node) return;
 
-      const observer = new ResizeObserver(checkOverflow);
-      observer.observe(node);
+    const observer = new ResizeObserver(() => {
+      checkOverflow();
+    });
+    observer.observe(node);
 
-      return () => {
-        observer.disconnect();
-        valueRef.current = null;
-      };
-    },
-    [checkOverflow]
-  );
+    return () => {
+      observer.disconnect();
+    };
+  }, [checkOverflow]);
 
   if (selectedValues.size === 0 && placeholder) {
     return (
@@ -199,7 +245,7 @@ export function MultiSelectValue({
   return (
     <div
       {...props}
-      ref={handleResize}
+      ref={valueRef}
       className={cn(
         "flex w-full gap-1.5 overflow-hidden",
         shouldWrap && "h-full flex-wrap",

@@ -33,6 +33,10 @@ interface VirtualizedCollaborationListProps {
   onSortColumn: (field: string) => void;
   hiddenColumns?: string[];
   currentUserName?: string;
+
+  enableRowSelection?: boolean;
+  selectedIds?: Set<number>;
+  onSelectedIdsChange?: (next: Set<number>) => void;
 }
 
 export function CollaborationsTable({
@@ -44,8 +48,13 @@ export function CollaborationsTable({
   onSortColumn,
   hiddenColumns = [],
   currentUserName,
+  enableRowSelection = false,
+  selectedIds,
+  onSelectedIdsChange,
 }: VirtualizedCollaborationListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const lastSelectedIndexRef = useRef<number | null>(null);
 
   // Sort collaborations based on current sort field and direction
   const sortedCollaborations = useMemo(() => {
@@ -160,6 +169,7 @@ export function CollaborationsTable({
 
   // Use virtualization hook
   const {
+    filteredCollaborations,
     visibleCollaborations,
     rowVirtualizer,
     hasMore,
@@ -171,10 +181,55 @@ export function CollaborationsTable({
     containerRef: containerRef as React.RefObject<HTMLElement>,
   });
 
+  const indexById = useMemo(() => {
+    const map = new Map<number, number>();
+    filteredCollaborations.forEach((c, i) => map.set(c.id, i));
+    return map;
+  }, [filteredCollaborations]);
+
+  const handleSelectChange = (
+    id: number,
+    checked: boolean,
+    opts: { shiftKey: boolean }
+  ) => {
+    if (!enableRowSelection || !selectedIds || !onSelectedIdsChange) return;
+
+    const index = indexById.get(id);
+    if (index === undefined) return;
+
+    const next = new Set(selectedIds);
+
+    if (opts.shiftKey && lastSelectedIndexRef.current !== null) {
+      const start = Math.min(lastSelectedIndexRef.current, index);
+      const end = Math.max(lastSelectedIndexRef.current, index);
+      for (let i = start; i <= end; i++) {
+        const rangeId = filteredCollaborations[i]?.id;
+        if (!rangeId) continue;
+        if (checked) next.add(rangeId);
+        else next.delete(rangeId);
+      }
+    } else {
+      if (checked) next.add(id);
+      else next.delete(id);
+    }
+
+    lastSelectedIndexRef.current = index;
+    onSelectedIdsChange(next);
+  };
+
   // Filter out hidden columns
   const visibleColumnsFields = COLLABORATION_FIELDS.filter(
     (field) => !hiddenColumns.includes(field.id)
   );
+
+  const visibleColumnCount = useMemo(() => {
+    return visibleColumnsFields.filter((column) =>
+      isColumnVisible(column.id, tablePreferences)
+    ).length;
+  }, [visibleColumnsFields, tablePreferences]);
+
+  const colSpan =
+    (enableRowSelection ? 1 : 0) + 1 /* Actions */ + visibleColumnCount;
 
   if (totalCount === 0) {
     return (
@@ -194,6 +249,9 @@ export function CollaborationsTable({
       <Table>
         <TableHeader className="bg-zinc-100">
           <TableRow>
+            {enableRowSelection && (
+              <TableHead className="w-10 text-center font-bold"></TableHead>
+            )}
             {/* Actions - Always visible */}
             <TableHead className="text-center font-bold">Actions</TableHead>
             {visibleColumnsFields.map((column) => {
@@ -241,7 +299,7 @@ export function CollaborationsTable({
                 height: `${rowVirtualizer.getVirtualItems()[0]?.start || 0}px`,
               }}
             >
-              <td></td>
+              <td colSpan={colSpan}></td>
             </tr>
           )}
 
@@ -259,6 +317,9 @@ export function CollaborationsTable({
                 onDeleteConfirm={onDelete}
                 hiddenColumns={hiddenColumns}
                 currentUserName={currentUserName}
+                enableRowSelection={enableRowSelection}
+                isSelected={!!selectedIds?.has(collaboration.id)}
+                onSelectChange={handleSelectChange}
               />
             );
           })}
@@ -275,7 +336,7 @@ export function CollaborationsTable({
                 }px`,
               }}
             >
-              <td></td>
+              <td colSpan={colSpan}></td>
             </tr>
           )}
         </TableBody>

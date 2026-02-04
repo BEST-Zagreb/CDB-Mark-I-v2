@@ -88,4 +88,31 @@ export const collaborationService = {
     const response = await axios.post(`${API_BASE}/copy`, data);
     return response.data;
   },
+
+  // Bulk update collaborations in a project
+  async bulkUpdate(input: {
+    projectId: number;
+    ids: number[];
+    set?: {
+      responsible?: string | null;
+      priority?: "Low" | "Medium" | "High";
+      successful?: boolean | null;
+      contacted?: boolean;
+      letter?: boolean;
+      meeting?: boolean | null;
+    };
+    appendComment?: string;
+  }): Promise<{ updatedCount: number; missingIds: number[] }> {
+    const response = await axios.put(`${API_BASE}/bulk`, input);
+    return response.data;
+  },
+
+  // Bulk delete collaborations in a project
+  async bulkDelete(input: {
+    projectId: number;
+    ids: number[];
+  }): Promise<{ deletedCount: number; missingIds: number[] }> {
+    const response = await axios.delete(`${API_BASE}/bulk`, { data: input });
+    return response.data;
+  },
 };

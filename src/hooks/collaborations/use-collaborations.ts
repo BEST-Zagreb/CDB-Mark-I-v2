@@ -346,3 +346,66 @@ export function useCopyCollaborations() {
     },
   });
 }
+
+export function useBulkUpdateCollaborations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: {
+      projectId: number;
+      ids: number[];
+      set?: {
+        responsible?: string | null;
+        priority?: "Low" | "Medium" | "High";
+        successful?: boolean | null;
+        contacted?: boolean;
+        letter?: boolean;
+        meeting?: boolean | null;
+      };
+      appendComment?: string;
+    }) => collaborationService.bulkUpdate(input),
+    onSuccess: (res, vars) => {
+      queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: collaborationKeys.byProject(vars.projectId),
+      });
+      if (res.missingIds?.length) {
+        toast.info(`Some rows were missing: ${res.missingIds.length}`);
+      }
+      toast.success(`Updated ${res.updatedCount} collaboration(s)`);
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk update collaborations";
+      toast.error(message);
+    },
+  });
+}
+
+export function useBulkDeleteCollaborations() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: { projectId: number; ids: number[] }) =>
+      collaborationService.bulkDelete(input),
+    onSuccess: (res, vars) => {
+      queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: collaborationKeys.byProject(vars.projectId),
+      });
+      if (res.missingIds?.length) {
+        toast.info(`Some rows were missing: ${res.missingIds.length}`);
+      }
+      toast.success(`Deleted ${res.deletedCount} collaboration(s)`);
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to bulk delete collaborations";
+      toast.error(message);
+    },
+  });
+}

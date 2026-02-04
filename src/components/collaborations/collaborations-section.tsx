@@ -7,6 +7,13 @@ import {
   MoreVertical,
   Users,
   Copy,
+  Layers,
+  Trash2,
+  UserRoundPlus,
+  Flag,
+  Pickaxe,
+  ListChecks,
+  MessageSquarePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +27,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -34,24 +47,51 @@ import { CopyCollaborationForm } from "@/components/collaborations/form/copy-col
 import { useCollaborationsTable } from "@/hooks/collaborations/use-collaborations-table";
 import { useCollaborationsOperations } from "@/hooks/collaborations/use-collaborations-operations";
 import {
+  useBulkDeleteCollaborations,
+  useBulkUpdateCollaborations,
+} from "@/hooks/collaborations/use-collaborations";
+import {
   CollaborationFormData,
   BulkCollaborationFormData,
   CopyCollaborationFormData,
 } from "@/types/collaboration";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Suspense } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/app/users/hooks/use-users";
+import { useQuery } from "@tanstack/react-query";
+import { projectMemberService } from "@/services/project-member.service";
+import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useIsProjectResponsible } from "@/app/projects/[id]/hooks/use-is-project-responsible";
+import { useSession } from "@/lib/auth-client";
+import { useDeleteAlert } from "@/contexts/delete-alert-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CollaborationsSection() {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { showDeleteAlert } = useDeleteAlert();
+  const { data: session } = useSession();
+  const myUserId = session?.user?.id;
 
   // Extract type and id from pathname for UI logic
   const pathSegments = pathname.split("/").filter(Boolean);
   const pageType = pathSegments[0] as "companies" | "projects" | "users";
   const pageId = pathSegments[1] as string;
   const id = pageType !== "users" ? parseInt(pageId) : pageId;
+  const projectId = pageType === "projects" ? (id as number) : 0;
+
+  const { isAdmin } = useIsAdmin();
+  const { isResponsible } = useIsProjectResponsible(projectId);
 
   // Fetch user data if on users page (for display purposes)
   const { data: user } = useUser(pageType === "users" ? pageId : "");
@@ -78,6 +118,149 @@ export function CollaborationsSection() {
     handleSubmitCopyCollaboration,
     isSubmitting,
   } = useCollaborationsOperations();
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Keep selection in sync with the current list
+  useEffect(() => {
+    if (pageType !== "projects") {
+      setSelectedIds(new Set());
+      return;
+    }
+
+    const existingIds = new Set(collaborations.map((c) => c.id));
+    setSelectedIds((prev) => {
+      const next = new Set<number>();
+      for (const id of prev) {
+        if (existingIds.has(id)) next.add(id);
+      }
+      return next;
+    });
+  }, [pageType, collaborations]);
+
+  const selectedCount = selectedIds.size;
+  const selectedIdList = useMemo(() => Array.from(selectedIds), [selectedIds]);
+
+  const bulkUpdate = useBulkUpdateCollaborations();
+  const bulkDelete = useBulkDeleteCollaborations();
+
+  const { data: projectMembers = [], isLoading: isLoadingProjectMembers } =
+    useQuery({
+      queryKey: ["projectMembersForBulkActions", projectId],
+      queryFn: async () => {
+        const res = await projectMemberService.getByProject(projectId);
+        return res.items;
+      },
+      enabled: pageType === "projects" && !!projectId,
+      staleTime: 5 * 60 * 1000,
+    });
+
+  const myProjectRole = useMemo(() => {
+    if (!myUserId) return null;
+    const row = projectMembers.find((m) => m.appUserId === myUserId);
+    return row?.role ?? null;
+  }, [projectMembers, myUserId]);
+
+  const canManageAll = pageType === "projects" && (isAdmin || isResponsible);
+  const isTeamMember =
+    pageType === "projects" && myProjectRole === "Project team member";
+
+  const canBulkDelete = canManageAll;
+  const canBulkAssignTo = canManageAll;
+  const canBulkPriority = canManageAll;
+  const canBulkStatus = canManageAll || isTeamMember;
+  const canBulkProgress = canManageAll || isTeamMember;
+  const canBulkAppendComment = canManageAll || isTeamMember;
+
+  const canUseBulkActions =
+    pageType === "projects" &&
+    (canBulkDelete ||
+      canBulkAssignTo ||
+      canBulkPriority ||
+      canBulkStatus ||
+      canBulkProgress ||
+      canBulkAppendComment);
+
+  useEffect(() => {
+    if (pageType !== "projects" || canUseBulkActions) return;
+    setSelectedIds(new Set());
+  }, [pageType, canUseBulkActions]);
+
+  const [progressDialogOpen, setProgressDialogOpen] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({
+    contacted: false,
+    letter: false,
+    meeting: false,
+  });
+
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [appendComment, setAppendComment] = useState("");
+
+  const runBulkDelete = () => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+
+    showDeleteAlert({
+      entityType: "collaborations",
+      entityDescription: `${selectedCount} collaboration(s)`,
+      onConfirm: async () => {
+        await bulkDelete.mutateAsync({ projectId, ids: selectedIdList });
+        setSelectedIds(new Set());
+      },
+    });
+  };
+
+  const runBulkAssignTo = async (responsible: string) => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+    await bulkUpdate.mutateAsync({
+      projectId,
+      ids: selectedIdList,
+      set: { responsible },
+    });
+  };
+
+  const runBulkPriority = async (priority: "Low" | "Medium" | "High") => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+    await bulkUpdate.mutateAsync({
+      projectId,
+      ids: selectedIdList,
+      set: { priority },
+    });
+  };
+
+  const runBulkStatus = async (successful: boolean | null) => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+    await bulkUpdate.mutateAsync({
+      projectId,
+      ids: selectedIdList,
+      set: { successful },
+    });
+  };
+
+  const runBulkProgress = async () => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+    await bulkUpdate.mutateAsync({
+      projectId,
+      ids: selectedIdList,
+      set: {
+        contacted: bulkProgress.contacted,
+        letter: bulkProgress.letter,
+        meeting: bulkProgress.meeting,
+      },
+    });
+    setProgressDialogOpen(false);
+  };
+
+  const runBulkAppendComment = async () => {
+    if (pageType !== "projects" || selectedCount === 0) return;
+    if (!appendComment.trim()) return;
+    await bulkUpdate.mutateAsync({
+      projectId,
+      ids: selectedIdList,
+      appendComment: appendComment.trim(),
+    });
+    setAppendComment("");
+    setCommentDialogOpen(false);
+  };
 
   const storageKey = (
     pageType === "companies"
@@ -161,6 +344,143 @@ export function CollaborationsSection() {
 
             {pageType !== "users" && (
               <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
+                {pageType === "projects" && canUseBulkActions && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size={isMobile ? "icon" : "default"}
+                        disabled={selectedCount === 0}
+                      >
+                        <Layers className="size-5" />
+                        {!isMobile &&
+                          `Bulk actions${
+                            selectedCount ? ` (${selectedCount})` : ""
+                          }`}
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>
+                        {selectedCount} selected
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+
+                      {canBulkDelete && (
+                        <DropdownMenuItem
+                          onClick={runBulkDelete}
+                          className="cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      )}
+
+                      {canBulkAssignTo && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="cursor-pointer">
+                            <UserRoundPlus className="mr-2 h-4 w-4" />
+                            Assign to
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            {isLoadingProjectMembers ? (
+                              <DropdownMenuItem disabled>
+                                Loading...
+                              </DropdownMenuItem>
+                            ) : projectMembers.length === 0 ? (
+                              <DropdownMenuItem disabled>
+                                No project members
+                              </DropdownMenuItem>
+                            ) : (
+                              projectMembers.map((m) => (
+                                <DropdownMenuItem
+                                  key={`${m.appUserId}-${m.role}`}
+                                  onClick={() => runBulkAssignTo(m.fullName)}
+                                  className="cursor-pointer"
+                                >
+                                  {m.fullName}
+                                  <DropdownMenuShortcut>
+                                    {m.role}
+                                  </DropdownMenuShortcut>
+                                </DropdownMenuItem>
+                              ))
+                            )}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+
+                      {canBulkPriority && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="cursor-pointer">
+                            <Flag className="mr-2 h-4 w-4" />
+                            Change priority
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            {(["Low", "Medium", "High"] as const).map((p) => (
+                              <DropdownMenuItem
+                                key={p}
+                                onClick={() => runBulkPriority(p)}
+                                className="cursor-pointer"
+                              >
+                                {p}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+
+                      {canBulkStatus && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="cursor-pointer">
+                            <Pickaxe className="mr-2 h-4 w-4" />
+                            Change status
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem
+                              onClick={() => runBulkStatus(null)}
+                              className="cursor-pointer"
+                            >
+                              Pending
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => runBulkStatus(true)}
+                              className="cursor-pointer"
+                            >
+                              Successful
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => runBulkStatus(false)}
+                              className="cursor-pointer"
+                            >
+                              Rejected
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+
+                      {canBulkProgress && (
+                        <DropdownMenuItem
+                          onClick={() => setProgressDialogOpen(true)}
+                          className="cursor-pointer"
+                        >
+                          <ListChecks className="mr-2 h-4 w-4" />
+                          Change progress
+                        </DropdownMenuItem>
+                      )}
+
+                      {canBulkAppendComment && (
+                        <DropdownMenuItem
+                          onClick={() => setCommentDialogOpen(true)}
+                          className="cursor-pointer"
+                        >
+                          <MessageSquarePlus className="mr-2 h-4 w-4" />
+                          Append comment
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 <Button
                   onClick={handleAddCollaboration}
                   size={isMobile ? "icon" : "default"}
@@ -231,10 +551,94 @@ export function CollaborationsSection() {
               onSortColumn={handleSortColumn}
               hiddenColumns={hiddenColumns}
               currentUserName={pageType === "users" ? userName : undefined}
+              enableRowSelection={pageType === "projects" && canUseBulkActions}
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
             />
           )}
         </CardContent>
       </Card>
+
+      {/* Bulk progress dialog */}
+      <Dialog open={progressDialogOpen} onOpenChange={setProgressDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change progress</DialogTitle>
+            <DialogDescription>
+              Applies to {selectedCount} selected collaboration(s).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={bulkProgress.contacted}
+                onCheckedChange={(v) =>
+                  setBulkProgress((p) => ({ ...p, contacted: v === true }))
+                }
+              />
+              <span>Contacted</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={bulkProgress.letter}
+                onCheckedChange={(v) =>
+                  setBulkProgress((p) => ({ ...p, letter: v === true }))
+                }
+              />
+              <span>Letter sent</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={bulkProgress.meeting}
+                onCheckedChange={(v) =>
+                  setBulkProgress((p) => ({ ...p, meeting: v === true }))
+                }
+              />
+              <span>Meeting held</span>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProgressDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={runBulkProgress} disabled={bulkUpdate.isPending}>
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk append comment dialog */}
+      <Dialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Append comment</DialogTitle>
+            <DialogDescription>
+              Adds a new line of comment to each selected row.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={appendComment}
+            onChange={(e) => setAppendComment(e.target.value)}
+            placeholder="Enter comment to append..."
+          />
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCommentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={runBulkAppendComment}
+              disabled={bulkUpdate.isPending || !appendComment.trim()}
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <FormDialog<CollaborationFormData>
         open={collaborationDialogOpen}
