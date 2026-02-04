@@ -3,12 +3,19 @@ import { db } from "@/lib/db";
 import { people, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Contact } from "@/types/contact";
+import { getAuthContext, getResponsibleCompanyIdsByFullName, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ companyId: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { companyId: companyIdParam } = await params;
     const companyId = parseInt(companyIdParam);
 
@@ -17,6 +24,17 @@ export async function GET(
         { error: "Invalid company ID" },
         { status: 400 }
       );
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (!allowed.includes(companyId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const result = await db

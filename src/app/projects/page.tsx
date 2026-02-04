@@ -13,12 +13,21 @@ import { useProjectsTable } from "@/app/projects/hooks/use-projects-table";
 import { useProjectOperations } from "@/app/projects/hooks/use-project-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { usePermissions } from "@/hooks/use-permissions";
 import { Project, ProjectFormData } from "@/types/project";
 import { Suspense } from "react";
 
 export default function ProjectsPage() {
   const isMobile = useIsMobile();
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
+  const { data: permissions } = usePermissions();
+
+  const responsibleProjectIds = permissions?.responsibleProjectIds ?? [];
+  const canEditProject = (project: Project) =>
+    isAdmin || responsibleProjectIds.includes(project.id);
+  const canDeleteProject = () => isAdmin;
+
+  const canSeeAnyEdit = isAdmin || responsibleProjectIds.length > 0;
 
   // Custom hooks for table management and project operations
   const {
@@ -98,8 +107,10 @@ export default function ProjectsPage() {
             projects={projects}
             searchQuery={searchQuery}
             tablePreferences={tablePreferences}
-            onEdit={isAdmin ? handleEditProject : undefined}
+            onEdit={canSeeAnyEdit ? handleEditProject : undefined}
             onDelete={isAdmin ? handleDeleteProject : undefined}
+            canEdit={canEditProject}
+            canDelete={canDeleteProject}
             onSortColumn={handleSortColumn}
           />
         )}

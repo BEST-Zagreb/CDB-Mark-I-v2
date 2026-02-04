@@ -35,7 +35,7 @@ export function SearchBar({
   useEffect(() => {
     const currentValue = searchParams.get(searchParam) || "";
 
-    // ✅ Guard: ako je već isto u URL-u, ne diraj URL (sprječava loop)
+    // Guard: if it's already the same in the URL, don't touch it (prevents loops)
     if (currentValue === debouncedSearchQuery) return;
 
     const params = new URLSearchParams(searchParams.toString());
@@ -51,7 +51,6 @@ export function SearchBar({
     // Update URL without triggering a page reload
     router.replace(next ? `?${next}` : "?", { scroll: false });
   }, [debouncedSearchQuery, router, searchParam, searchParams]);
-
 
   // Notify parent component of search changes
   useEffect(() => {

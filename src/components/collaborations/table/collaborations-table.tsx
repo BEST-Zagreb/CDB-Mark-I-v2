@@ -28,8 +28,8 @@ interface VirtualizedCollaborationListProps {
   })[];
   searchQuery: string;
   tablePreferences: TablePreferences;
-  onEdit: (collaboration: Collaboration) => void;
-  onDelete: (collaborationId: number) => Promise<void>;
+  onEdit?: (collaboration: Collaboration) => void;
+  onDelete?: (collaborationId: number) => Promise<void>;
   onSortColumn: (field: string) => void;
   hiddenColumns?: string[];
   currentUserName?: string;
@@ -187,6 +187,10 @@ export function CollaborationsTable({
     return map;
   }, [filteredCollaborations]);
 
+  const isSelectable = (c: Collaboration) => {
+    return !currentUserName || c.responsible === currentUserName;
+  };
+
   const handleSelectChange = (
     id: number,
     checked: boolean,
@@ -197,16 +201,19 @@ export function CollaborationsTable({
     const index = indexById.get(id);
     if (index === undefined) return;
 
+    const clicked = filteredCollaborations[index];
+    if (!clicked || !isSelectable(clicked)) return;
+
     const next = new Set(selectedIds);
 
     if (opts.shiftKey && lastSelectedIndexRef.current !== null) {
       const start = Math.min(lastSelectedIndexRef.current, index);
       const end = Math.max(lastSelectedIndexRef.current, index);
       for (let i = start; i <= end; i++) {
-        const rangeId = filteredCollaborations[i]?.id;
-        if (!rangeId) continue;
-        if (checked) next.add(rangeId);
-        else next.delete(rangeId);
+        const collab = filteredCollaborations[i];
+        if (!collab || !isSelectable(collab)) continue;
+        if (checked) next.add(collab.id);
+        else next.delete(collab.id);
       }
     } else {
       if (checked) next.add(id);

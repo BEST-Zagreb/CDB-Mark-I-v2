@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { companies, collaborations } from "@/db/schema";
-import { eq, asc, and, sql } from "drizzle-orm";
+import { eq, asc, and, sql, inArray } from "drizzle-orm";
 import { companySchema, type Company } from "@/types/company";
+import { getAuthContext, getResponsibleCompanyIdsByFullName, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 async function companyHasDoNotContact(companyId: number) {
   const result = await db
@@ -41,10 +42,28 @@ async function fetchDoNotContactCompanyIds() {
 // GET /api/companies - Get all companies
 export async function GET(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    let allowedCompanyIds: number[] | null = null;
+    if (!responsibleAny) {
+      allowedCompanyIds = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (allowedCompanyIds.length === 0) {
+        return NextResponse.json([]);
+      }
+    }
+
     // Get all companies with do not contact status
-    const [results, doNotContactIds] = await Promise.all([
-      db
-        .select({
+    const companiesQuery = db
+      .select({
           id: companies.id,
           name: companies.name,
           url: companies.url,
@@ -56,8 +75,14 @@ export async function GET(request: NextRequest) {
           budgetingMonth: companies.budgetingMonth,
           comment: companies.comment,
         })
-        .from(companies)
-        .orderBy(asc(companies.name)),
+      .from(companies);
+
+    const companiesQueryWithWhere = allowedCompanyIds
+      ? companiesQuery.where(inArray(companies.id, allowedCompanyIds))
+      : companiesQuery;
+
+    const [results, doNotContactIds] = await Promise.all([
+      companiesQueryWithWhere.orderBy(asc(companies.name)),
       fetchDoNotContactCompanyIds(),
     ]);
 
@@ -88,6 +113,20 @@ export async function GET(request: NextRequest) {
 // POST /api/companies - Create a new company
 export async function POST(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
     const body = await request.json();
 
     // Validate the request body

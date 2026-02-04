@@ -52,12 +52,10 @@ function normalizeHeader(header: unknown) {
 const HEADER_TO_KEY: Record<string, ColumnKey> = {
   name: "name",
   companyname: "name",
-  naziv: "name",
-  nazivtvrtke: "name",
+  company: "name",
+  company_name: "name",
 
   country: "country",
-  država: "country",
-  drzava: "country",
 
   url: "url",
   website: "url",
@@ -65,26 +63,20 @@ const HEADER_TO_KEY: Record<string, ColumnKey> = {
   web: "url",
 
   phone: "phone",
-  telefon: "phone",
-  mobitel: "phone",
+  phonenumber: "phone",
 
   address: "address",
-  adresa: "address",
 
   city: "city",
-  grad: "city",
 
   zip: "zip",
   zipcode: "zip",
-  postanskibroj: "zip",
 
   budgetingmonth: "budgeting_month",
   budgeting_month: "budgeting_month",
-  mjesecbudzetiranja: "budgeting_month",
 
   comment: "comment",
-  komentar: "comment",
-  napomena: "comment",
+  notes: "comment",
 };
 
 function downloadCompaniesTemplate() {

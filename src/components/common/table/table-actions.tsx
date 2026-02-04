@@ -8,6 +8,9 @@ interface TableActionsProps<T> {
   onView?: (item: T) => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  canView?: boolean | ((item: T) => boolean);
+  canEdit?: boolean | ((item: T) => boolean);
+  canDelete?: boolean | ((item: T) => boolean);
 }
 
 export const TableActions = memo(function TableActions<T>({
@@ -15,21 +18,34 @@ export const TableActions = memo(function TableActions<T>({
   onView,
   onEdit,
   onDelete,
+  canView,
+  canEdit,
+  canDelete,
 }: TableActionsProps<T>) {
+  const allow = (flag: boolean | ((item: T) => boolean) | undefined) => {
+    if (typeof flag === "function") return flag(item);
+    if (typeof flag === "boolean") return flag;
+    return true;
+  };
+
+  const showView = !!onView && allow(canView);
+  const showEdit = !!onEdit && allow(canEdit);
+  const showDelete = !!onDelete && allow(canDelete);
+
   return (
     <TableCell className="text-center">
       <div className="flex justify-center items-center gap-2">
-        {onView && (
+        {showView && (
           <Button variant="outline" size="icon" onClick={() => onView(item)}>
             <Eye className="h-4 w-4 text-primary" />
           </Button>
         )}
-        {onEdit && (
+        {showEdit && (
           <Button variant="outline" size="icon" onClick={() => onEdit(item)}>
             <Pencil className="h-4 w-4 text-primary" />
           </Button>
         )}
-        {onDelete && (
+        {showDelete && (
           <Button
             variant="outline"
             size="icon"

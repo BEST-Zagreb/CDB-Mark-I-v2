@@ -23,8 +23,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface CompaniesTableRowProps {
   company: Company;
   tablePreferences: TablePreferences;
-  onEdit: (company: Company) => void;
-  onDeleteConfirm: (companyId: number) => Promise<void>;
+  onEdit?: (company: Company) => void;
+  onDeleteConfirm?: (companyId: number) => Promise<void>;
 }
 
 export const CompaniesTableRow = memo(function CompanyTableRow({
@@ -46,6 +46,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
   // Memoize the delete handler to prevent recreation
   const handleDelete = useCallback(
     (company: Company) => {
+      if (!onDeleteConfirm) return;
       showDeleteAlert({
         entityType: "company",
         entityDescription: `company "${company.name}"`,
@@ -67,7 +68,7 @@ export const CompaniesTableRow = memo(function CompanyTableRow({
         item={company}
         onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
-        onDelete={handleDelete}
+        onDelete={onDeleteConfirm ? handleDelete : undefined}
       />
 
       {COMPANY_FIELDS.map((column) => {

@@ -154,7 +154,7 @@ export const projectMembers = sqliteTable(
       .default("Project team member"),
   },
   (table) => [
-    // sprječava duplikate (projectId, appUserId)
+    // Prevents duplicate (projectId, appUserId) pairs
     primaryKey({ columns: [table.projectId, table.appUserId] }),
 
     index("idx_project_members_project_id").on(table.projectId),

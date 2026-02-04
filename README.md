@@ -10,6 +10,58 @@ Company Database (CDB) is a lightweight admin application for managing organizat
 
 The app is built with Next.js (App Router), TypeScript, React Query for data fetching, React Hook Form + Zod for form validation, and a local SQLite database for storage. It's intentionally simple and optimized for internal use by teams managing outreach, partnerships and project tracking.
 
+## Roles & permissions (RBAC)
+
+The app uses a mix of **global** and **project-scoped** permissions:
+
+- **Admin** (global): `app_users.isAdmin = true`.
+- **Project role** (per project): `project_members.role` is one of:
+   - `Project responsible`
+   - `Project team member`
+- **"Responsible on any project"** (global flag): the user is `Project responsible` on **at least one** project. This is used to grant broader read access across the app.
+- **Row ownership** (collaborations): a collaboration row is considered "owned" by a user when `collaborations.responsible === app_users.fullName`.
+
+### Rules summary
+
+- **Collaboration visibility within a project**
+   - Admin: sees everything.
+   - Project responsible on at least one project: can see all rows in all projects.
+   - Project team members (and are not responsible on any project): in project view they only see their own rows.
+
+- **Collaboration manipulation within a project** (edit/delete/bulk/select)
+   - Admin: everything.
+   - Project responsible on this project: everything.
+   - Project responsible on other project: can only copy collaborations.
+   - Project team members: can only change status, progress and comment on their own rows
+
+#### Admin
+
+- Users: full CRUD (create/edit/lock/unlock with safeguards for admin accounts)
+- Projects: create/update/delete; manage project members
+- Companies & Contacts: full CRUD + bulk import
+- Collaborations: full CRUD + copy + bulk actions without restrictions
+
+#### Project responsible
+
+- Projects: can edit only projects where they are `Project responsible`; cannot create/delete projects (admin-only)
+- Project members: can manage members only on projects where they are `Project responsible`
+- Companies & Contacts:
+  - can view all (because they are responsible on at least one project)
+  - can create/edit/delete (non-admin write access is enabled when responsible-any)
+- Collaborations:
+  - can view all rows across all projects
+  - bulk actions: full CRUD + copy + bulk actions without restrictions
+  - in projects where they are only a team member: can select/edit only owned rows (`responsible == my fullName`)
+
+#### Project team member
+
+- Projects: can view only projects they belong to (`Project team member`)
+- Companies & Contacts: can view only companies/contacts for which they are responsible in a project.
+- Users: no access (unless responsible-any; see above)
+- Collaborations (in projects where they are a team member):
+   - can see only owned rows
+   - can change only status/progress and append comments, and only on owned rows
+
 ## Link
 
 Deployed and available on [cdb.best.hr](https://cdb.best.hr)

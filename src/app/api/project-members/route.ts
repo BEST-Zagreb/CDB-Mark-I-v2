@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth"; // koristi se za getSession
 import { db } from "@/lib/db";
 import { appUsers, projectMembers, projects } from "@/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-
-const RESPONSIBLE_ROLE = "Project responsible" as const;
-const TEAM_MEMBER_ROLE = "Project team member" as const;
+import {
+  getAuthContext,
+  getProjectRole,
+  isResponsibleOnAnyProject,
+  RESPONSIBLE_ROLE,
+  TEAM_MEMBER_ROLE,
+} from "@/lib/rbac";
 
 const addProjectMembersSchema = z.object({
   projectId: z.number().int().positive(),
@@ -16,6 +19,12 @@ const addProjectMembersSchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    const authRes = await getAuthContext(request as NextRequest);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { searchParams } = new URL(request.url);
 
     const projectIdRaw = searchParams.get("projectId");
@@ -28,6 +37,27 @@ export async function GET(request: Request) {
     const projectId = parseInt(projectIdRaw, 10);
     if (Number.isNaN(projectId)) {
       return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
+    }
+
+    if (!ctx.isAdmin) {
+      const responsibleAny = await isResponsibleOnAnyProject(ctx.userId);
+      if (!responsibleAny) {
+        const [member] = await db
+          .select({ projectId: projectMembers.projectId })
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, projectId),
+              eq(projectMembers.appUserId, ctx.userId),
+              eq(projectMembers.role, TEAM_MEMBER_ROLE)
+            )
+          )
+          .limit(1);
+
+        if (!member) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+      }
     }
 
     const whereClause = role
@@ -58,12 +88,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
-    const currentUserId = session?.user?.id;
-
-    if (!currentUserId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 403 });
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
     }
+
+    const { ctx } = authRes;
 
     const body = await request.json();
     const validated = addProjectMembersSchema.parse(body);
@@ -79,34 +109,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // 2) check current user (locked + isAdmin)
-    const [me] = await db
-      .select({ id: appUsers.id, isAdmin: appUsers.isAdmin, isLocked: appUsers.isLocked })
-      .from(appUsers)
-      .where(eq(appUsers.id, currentUserId))
-      .limit(1);
-
-    if (!me || me.isLocked) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const isAdmin = !!me.isAdmin;
-
-    // 3) if not admin, user needs to be project responsible
-    if (!isAdmin) {
-      const [responsibleRow] = await db
-        .select({ projectId: projectMembers.projectId })
-        .from(projectMembers)
-        .where(
-          and(
-            eq(projectMembers.projectId, validated.projectId),
-            eq(projectMembers.appUserId, currentUserId),
-            eq(projectMembers.role, RESPONSIBLE_ROLE)
-          )
-        )
-        .limit(1);
-
-      if (!responsibleRow) {
+    // 2) if not admin, user needs to be project responsible
+    if (!ctx.isAdmin) {
+      const role = await getProjectRole(ctx.userId, validated.projectId);
+      if (role !== RESPONSIBLE_ROLE) {
         return NextResponse.json(
           { error: "Insufficient permissions" },
           { status: 403 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { companies, collaborations } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { updateCompanySchema, type Company } from "@/types/company";
+import { getAuthContext, getResponsibleCompanyIdsByFullName, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 async function companyHasDoNotContact(companyId: number) {
   const result = await db
@@ -25,6 +26,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { id } = await params;
     const companyId = parseInt(id);
 
@@ -33,6 +40,17 @@ export async function GET(
         { error: "Invalid company ID" },
         { status: 400 }
       );
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (!allowed.includes(companyId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const results = await db
@@ -87,6 +105,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { id } = await params;
     const companyId = parseInt(id);
 
@@ -95,6 +119,14 @@ export async function PUT(
         { error: "Invalid company ID" },
         { status: 400 }
       );
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -213,6 +245,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { id } = await params;
     const companyId = parseInt(id);
 
@@ -221,6 +259,14 @@ export async function DELETE(
         { error: "Invalid company ID" },
         { status: 400 }
       );
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
     // Check if company exists before deletion

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { projects } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { projectMembers, projects } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { updateProjectSchema, type Project } from "@/types/project";
-import { checkIsAdmin } from "@/lib/server-auth";
+import {
+  getAuthContext,
+  getProjectRole,
+  isResponsibleOnAnyProject,
+  RESPONSIBLE_ROLE,
+  TEAM_MEMBER_ROLE,
+} from "@/lib/rbac";
 
 // Helper function to parse dates
 function parseDate(dateString: string | null): Date | null {
@@ -17,6 +23,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+
     const { id } = await params;
     const projectId = parseInt(id);
 
@@ -25,6 +38,27 @@ export async function GET(
         { error: "Invalid project ID" },
         { status: 400 }
       );
+    }
+
+    if (!ctx.isAdmin) {
+      const responsibleAny = await isResponsibleOnAnyProject(ctx.userId);
+      if (!responsibleAny) {
+        const [member] = await db
+          .select({ projectId: projectMembers.projectId })
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, projectId),
+              eq(projectMembers.appUserId, ctx.userId),
+              eq(projectMembers.role, TEAM_MEMBER_ROLE)
+            )
+          )
+          .limit(1);
+
+        if (!member) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+      }
     }
 
     const result = await db
@@ -62,14 +96,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if user is an administrator
-    const authCheck = await checkIsAdmin(request);
-    if (!authCheck.isAdmin) {
-      return NextResponse.json(
-        { error: authCheck.error || "Unauthorized" },
-        { status: 403 }
-      );
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
     }
+
+    const { ctx } = authRes;
 
     const { id } = await params;
     const projectId = parseInt(id);
@@ -79,6 +111,13 @@ export async function PUT(
         { error: "Invalid project ID" },
         { status: 400 }
       );
+    }
+
+    if (!ctx.isAdmin) {
+      const role = await getProjectRole(ctx.userId, projectId);
+      if (role !== RESPONSIBLE_ROLE) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const body = await request.json();
@@ -150,13 +189,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if user is an administrator
-    const authCheck = await checkIsAdmin(request);
-    if (!authCheck.isAdmin) {
-      return NextResponse.json(
-        { error: authCheck.error || "Unauthorized" },
-        { status: 403 }
-      );
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+    if (!ctx.isAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id } = await params;

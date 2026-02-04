@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { appUsers, projectMembers, projects } from "@/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { createProjectSchema, type Project } from "@/types/project";
 import { checkIsAdmin } from "@/lib/server-auth";
+import { getAuthContext, getTeamMemberProjectIds, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 const parseDate = (dateStr: string | null): Date | null => {
   if (!dateStr || dateStr === "null") return null;
@@ -12,11 +14,31 @@ const parseDate = (dateStr: string | null): Date | null => {
 };
 
 // GET /api/projects - Get all projects
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    let whereClause: ReturnType<typeof inArray> | undefined;
+    if (!responsibleAny) {
+      const teamIds = await getTeamMemberProjectIds(ctx.userId);
+      if (teamIds.length === 0) {
+        return NextResponse.json([]);
+      }
+      whereClause = inArray(projects.id, teamIds);
+    }
+
     const results = await db
       .select()
       .from(projects)
+      .where(whereClause)
       .orderBy(
         sql`CASE WHEN ${projects.createdAt} IS NULL OR ${projects.createdAt} = 'null' THEN 1 ELSE 0 END`,
         desc(projects.createdAt)

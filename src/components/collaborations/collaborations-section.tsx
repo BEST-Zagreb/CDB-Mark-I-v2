@@ -65,6 +65,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useIsProjectResponsible } from "@/app/projects/[id]/hooks/use-is-project-responsible";
 import { useSession } from "@/lib/auth-client";
 import { useDeleteAlert } from "@/contexts/delete-alert-context";
+import { usePermissions } from "@/hooks/use-permissions";
 import {
   Dialog,
   DialogContent,
@@ -92,6 +93,9 @@ export function CollaborationsSection() {
 
   const { isAdmin } = useIsAdmin();
   const { isResponsible } = useIsProjectResponsible(projectId);
+  const { data: permissions } = usePermissions();
+  const responsibleAny = !!permissions?.isResponsibleOnAnyProject;
+  const myFullName = permissions?.fullName;
 
   // Fetch user data if on users page (for display purposes)
   const { data: user } = useUser(pageType === "users" ? pageId : "");
@@ -162,15 +166,18 @@ export function CollaborationsSection() {
   }, [projectMembers, myUserId]);
 
   const canManageAll = pageType === "projects" && (isAdmin || isResponsible);
-  const isTeamMember =
+
+  // Per-project rule: if user is a team member on THIS project,
+  // allow limited bulk actions regardless of their roles on other projects.
+  const isTeamMemberOnThisProject =
     pageType === "projects" && myProjectRole === "Project team member";
 
   const canBulkDelete = canManageAll;
   const canBulkAssignTo = canManageAll;
   const canBulkPriority = canManageAll;
-  const canBulkStatus = canManageAll || isTeamMember;
-  const canBulkProgress = canManageAll || isTeamMember;
-  const canBulkAppendComment = canManageAll || isTeamMember;
+  const canBulkStatus = canManageAll || isTeamMemberOnThisProject;
+  const canBulkProgress = canManageAll || isTeamMemberOnThisProject;
+  const canBulkAppendComment = canManageAll || isTeamMemberOnThisProject;
 
   const canUseBulkActions =
     pageType === "projects" &&
@@ -180,6 +187,13 @@ export function CollaborationsSection() {
       canBulkStatus ||
       canBulkProgress ||
       canBulkAppendComment);
+
+  const canLogCollaboration =
+    isAdmin || (pageType === "projects" ? isResponsible : responsibleAny);
+  const canLogMultiple = isAdmin || (pageType === "projects" && isResponsible);
+  const canCopyCollaborations = isAdmin || responsibleAny;
+  const canEditDeleteCollaboration =
+    isAdmin || (pageType === "projects" && isResponsible);
 
   useEffect(() => {
     if (pageType !== "projects" || canUseBulkActions) return;
@@ -481,13 +495,15 @@ export function CollaborationsSection() {
                   </DropdownMenu>
                 )}
 
-                <Button
-                  onClick={handleAddCollaboration}
-                  size={isMobile ? "icon" : "default"}
-                >
-                  <Plus className="size-5" />
-                  {!isMobile && "Log collaboration"}
-                </Button>
+                {canLogCollaboration && (
+                  <Button
+                    onClick={handleAddCollaboration}
+                    size={isMobile ? "icon" : "default"}
+                  >
+                    <Plus className="size-5" />
+                    {!isMobile && "Log collaboration"}
+                  </Button>
+                )}
 
                 {pageType === "projects" && (
                   <DropdownMenu>
@@ -498,20 +514,24 @@ export function CollaborationsSection() {
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={handleAddBulkCollaboration}
-                        className="cursor-pointer"
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        Log multiple collaborations
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={handleCopyCollaborations}
-                        className="cursor-pointer"
-                      >
-                        <Copy className="mr-2 h-4 w-4" />
-                        Copy collaborations
-                      </DropdownMenuItem>
+                      {canLogMultiple && (
+                        <DropdownMenuItem
+                          onClick={handleAddBulkCollaboration}
+                          className="cursor-pointer"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Log multiple collaborations
+                        </DropdownMenuItem>
+                      )}
+                      {canCopyCollaborations && (
+                        <DropdownMenuItem
+                          onClick={handleCopyCollaborations}
+                          className="cursor-pointer"
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy collaborations
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -546,11 +566,17 @@ export function CollaborationsSection() {
               collaborations={collaborations}
               searchQuery={searchQuery}
               tablePreferences={tablePreferences}
-              onEdit={handleEditCollaboration}
-              onDelete={handleDeleteCollaboration}
+              onEdit={canEditDeleteCollaboration ? handleEditCollaboration : undefined}
+              onDelete={canEditDeleteCollaboration ? handleDeleteCollaboration : undefined}
               onSortColumn={handleSortColumn}
               hiddenColumns={hiddenColumns}
-              currentUserName={pageType === "users" ? userName : undefined}
+              currentUserName={
+                pageType === "users"
+                  ? userName
+                  : isAdmin
+                  ? undefined
+                  : myFullName
+              }
               enableRowSelection={pageType === "projects" && canUseBulkActions}
               selectedIds={selectedIds}
               onSelectedIdsChange={setSelectedIds}

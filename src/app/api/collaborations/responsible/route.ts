@@ -2,12 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { collaborations, appUsers } from "@/db/schema";
 import { sql, asc } from "drizzle-orm";
-import { email } from "zod";
-import { id } from "zod/v4/locales";
+import { getAuthContext, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 // GET /api/collaborations/responsible - Get all unique responsible persons
 export async function GET(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
+    if (!ctx.isAdmin) {
+      const responsibleAny = await isResponsibleOnAnyProject(ctx.userId);
+      if (!responsibleAny) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     // Get all unique responsible persons from collaborations
     const collabResponsible = await db
       .selectDistinct({ responsible: collaborations.responsible })

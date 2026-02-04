@@ -3,9 +3,16 @@ import { db } from "@/lib/db";
 import { people, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Contact } from "@/types/contact";
+import { getAuthContext, getResponsibleCompanyIdsByFullName, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
 
@@ -17,6 +24,22 @@ export async function GET(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    const companyIdNum = parseInt(companyId);
+    if (Number.isNaN(companyIdNum)) {
+      return NextResponse.json({ error: "Invalid companyId" }, { status: 400 });
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (!allowed.includes(companyIdNum)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
     }
 
     const result = await db
@@ -32,7 +55,7 @@ export async function GET(request: NextRequest) {
       })
       .from(people)
       .leftJoin(companies, eq(people.companyId, companies.id))
-      .where(eq(people.companyId, parseInt(companyId)))
+      .where(eq(people.companyId, companyIdNum))
       .orderBy(people.name);
 
     const contacts: Contact[] = result.map((row) => ({
@@ -58,7 +81,29 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const data = await request.json();
+
+    const companyIdNum = Number(data.companyId);
+    if (!companyIdNum || Number.isNaN(companyIdNum)) {
+      return NextResponse.json({ error: "Invalid companyId" }, { status: 400 });
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (!allowed.includes(companyIdNum)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
 
     const result = await db
       .insert(people)
@@ -66,7 +111,7 @@ export async function POST(request: NextRequest) {
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
-        companyId: data.companyId,
+        companyId: companyIdNum,
         function: data.function || null,
         createdAt: new Date().toISOString(),
       })

@@ -36,8 +36,8 @@ interface CollaborationsTableRowProps {
     contactName?: string;
   };
   tablePreferences: TablePreferences;
-  onEdit: (collaboration: Collaboration) => void;
-  onDeleteConfirm: (collaborationId: number) => Promise<void>;
+  onEdit?: (collaboration: Collaboration) => void;
+  onDeleteConfirm?: (collaborationId: number) => Promise<void>;
   hiddenColumns?: string[];
   currentUserName?: string;
 
@@ -64,6 +64,9 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
   const { showDeleteAlert } = useDeleteAlert();
   const shiftKeyRef = useRef(false);
 
+  const canSelectRow =
+    !currentUserName || collaboration.responsible === currentUserName;
+
   // Check if the current user can edit/delete this collaboration
   // User can edit if they're the responsible person, or if no currentUserName is passed (admin view)
   const canEdit =
@@ -77,6 +80,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
         projectName?: string;
       }
     ) => {
+      if (!onDeleteConfirm) return;
       const companyText = collaboration.companyName || "Unknown Company";
       const projectText = collaboration.projectName || "Unknown Project";
       showDeleteAlert({
@@ -101,6 +105,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
         <TableCell className="text-center">
           <Checkbox
             checked={isSelected}
+            disabled={!canSelectRow}
             onPointerDown={(e) => {
               shiftKeyRef.current = (e as unknown as { shiftKey?: boolean })
                 .shiftKey
@@ -109,6 +114,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
             }}
             onCheckedChange={(checked) => {
               if (!onSelectChange) return;
+              if (!canSelectRow) return;
               onSelectChange(collaboration.id, checked === true, {
                 shiftKey: shiftKeyRef.current,
               });
@@ -122,7 +128,7 @@ export const CollaborationsTableRow = memo(function CollaborationTableRow({
       <TableActions
         item={collaboration}
         onEdit={canEdit ? onEdit : undefined}
-        onDelete={canEdit ? handleDelete : undefined}
+        onDelete={canEdit && onDeleteConfirm ? handleDelete : undefined}
       />
       
       {COLLABORATION_FIELDS.filter(

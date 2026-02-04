@@ -29,7 +29,7 @@ interface ResponsiblePersonSelectProps {
   placeholder?: string;
   disabled?: boolean;
 
-  /** Ako je postavljen, u dropdownu prikazujemo samo članove tog projekta */
+  /** When set, the dropdown shows only members of that project */
   projectId?: number;
 }
 
@@ -55,7 +55,7 @@ export function ResponsiblePersonSelect({
   const { data: responsiblePersons = [], isLoading: isLoadingResponsible } =
     useResponsiblePersons();
 
-  // Project members - used when projectId is availible
+  // Project members - used when projectId is available
   const {
     data: projectMemberPersons = [],
     isLoading: isLoadingProjectMembers,
@@ -63,13 +63,13 @@ export function ResponsiblePersonSelect({
     queryKey: ["projectMembersForResponsibleSelect", projectId],
     queryFn: async () => {
       const data = await projectMemberService.getByProject(projectId!);
-      // mapiraj na shape koji select očekuje
+      // Map into the shape expected by the select
       const mapped: PersonOption[] = data.items.map((m) => ({
         id: m.appUserId,
         fullName: m.fullName,
         email: m.email,
       }));
-      // opcionalno: uniq po fullName+email
+      // Optional: de-dupe by fullName+email
       const seen = new Set<string>();
       return mapped.filter((p) => {
         const key = `${p.fullName}|${p.email ?? ""}`;

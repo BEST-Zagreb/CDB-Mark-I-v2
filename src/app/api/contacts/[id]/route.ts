@@ -3,6 +3,26 @@ import { db } from "@/lib/db";
 import { people, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { Contact } from "@/types/contact";
+import { getAuthContext, getResponsibleCompanyIdsByFullName, isResponsibleOnAnyProject } from "@/lib/rbac";
+
+async function assertCanAccessContactCompany(request: NextRequest, companyId: number) {
+  const authRes = await getAuthContext(request);
+  if (!authRes.ok) return authRes;
+
+  const { ctx } = authRes;
+  const responsibleAny = ctx.isAdmin
+    ? true
+    : await isResponsibleOnAnyProject(ctx.userId);
+
+  if (!responsibleAny) {
+    const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+    if (!allowed.includes(companyId)) {
+      return { ok: false as const, status: 403, error: "Forbidden" };
+    }
+  }
+
+  return authRes;
+}
 
 export async function GET(
   request: NextRequest,
@@ -40,6 +60,14 @@ export async function GET(
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
+    const authRes = await assertCanAccessContactCompany(
+      request,
+      row.companyId ?? 0
+    );
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
     const contact: Contact = {
       id: row.id,
       name: row.name,
@@ -66,6 +94,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes0 = await getAuthContext(request);
+    if (!authRes0.ok) {
+      return NextResponse.json({ error: authRes0.error }, { status: authRes0.status });
+    }
+    const { ctx } = authRes0;
+
     const { id } = await params;
     const contactId = parseInt(id);
 
@@ -78,13 +112,29 @@ export async function PUT(
 
     const data = await request.json();
 
+    const nextCompanyId = Number(data.companyId);
+    if (!nextCompanyId || Number.isNaN(nextCompanyId)) {
+      return NextResponse.json({ error: "Invalid companyId" }, { status: 400 });
+    }
+
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      const allowed = await getResponsibleCompanyIdsByFullName(ctx.fullName);
+      if (!allowed.includes(nextCompanyId)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const result = await db
       .update(people)
       .set({
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
-        companyId: data.companyId,
+        companyId: nextCompanyId,
         function: data.function || null,
       })
       .where(eq(people.id, contactId))
@@ -131,6 +181,22 @@ export async function DELETE(
         { error: "Invalid contact ID" },
         { status: 400 }
       );
+    }
+
+    // Read the contact first to enforce company access.
+    const [row] = await db
+      .select({ companyId: people.companyId })
+      .from(people)
+      .where(eq(people.id, contactId))
+      .limit(1);
+
+    if (!row) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
+
+    const authRes = await assertCanAccessContactCompany(request, row.companyId ?? 0);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
     }
 
     const result = await db

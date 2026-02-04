@@ -6,6 +6,7 @@ import { alias } from "drizzle-orm/sqlite-core";
 import { userSchema, type User } from "@/types/user";
 import { checkIsAdmin } from "@/lib/server-auth";
 import { resolveAddedByUser } from "@/lib/user-utils";
+import { getAuthContext, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
@@ -13,6 +14,19 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
+    if (!ctx.isAdmin) {
+      const responsibleAny = await isResponsibleOnAnyProject(ctx.userId);
+      if (!responsibleAny) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const { id: userId } = await params;
 
     // Get user info

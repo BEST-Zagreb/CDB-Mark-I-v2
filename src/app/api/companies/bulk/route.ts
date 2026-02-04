@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { companies } from "@/db/schema";
 import { companySchema, type CompanyFormData } from "@/types/company";
+import { getAuthContext, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 const bulkCreateCompaniesSchema = z.object({
   items: z.array(z.unknown()).min(1, "At least one company is required"),
@@ -65,6 +66,20 @@ function cleanCompanyInput(input: CompanyFormData): CompanyFormData {
 // POST /api/companies/bulk - Create multiple companies at once
 export async function POST(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+
+    const { ctx } = authRes;
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
+    if (!responsibleAny) {
+      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
     const rawBody = await request.json();
     const body = bulkCreateCompaniesSchema.parse(rawBody);
 

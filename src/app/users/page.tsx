@@ -13,12 +13,19 @@ import { useUsersTable } from "@/app/users/hooks/use-users-table";
 import { useUserOperations } from "@/app/users/hooks/use-user-operations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { usePermissions } from "@/hooks/use-permissions";
 import { UserFormData } from "@/types/user";
 import { Suspense } from "react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Shield } from "lucide-react";
 
 export default function UsersPage() {
   const isMobile = useIsMobile();
   const { isAdmin, isPending: isAdminPending } = useIsAdmin();
+  const { data: permissions, isPending: permissionsPending } = usePermissions();
+
+  const canAccessUsers =
+    permissions?.isAdmin || permissions?.isResponsibleOnAnyProject;
 
   // Custom hooks for table management and user operations
   const {
@@ -57,6 +64,14 @@ export default function UsersPage() {
 
   return (
     <div className="mx-auto p-4">
+      {!permissionsPending && !canAccessUsers ? (
+        <div className="mt-8 w-fit mx-auto">
+          <Alert variant="destructive">
+            <Shield className="h-4 w-4" />
+            <AlertTitle>Insufficient permissions to view users.</AlertTitle>
+          </Alert>
+        </div>
+      ) : (
       <div className="space-y-6">
         <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-2">
@@ -107,6 +122,8 @@ export default function UsersPage() {
           />
         )}
       </div>
+
+      )}
 
       <FormDialog<UserFormData>
         open={dialogOpen}

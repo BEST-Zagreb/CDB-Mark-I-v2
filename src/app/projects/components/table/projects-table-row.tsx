@@ -18,6 +18,8 @@ interface ProjectsTableRowProps {
   tablePreferences: TablePreferences;
   onEdit?: (project: Project) => void;
   onDeleteConfirm?: (projectId: number) => Promise<void>;
+  canEdit?: (project: Project) => boolean;
+  canDelete?: (project: Project) => boolean;
 }
 
 export const ProjectsTableRow = memo(function ProjectTableRow({
@@ -25,6 +27,8 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
   tablePreferences,
   onEdit,
   onDeleteConfirm,
+  canEdit,
+  canDelete,
 }: ProjectsTableRowProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -117,6 +121,8 @@ export const ProjectsTableRow = memo(function ProjectTableRow({
         onView={isMobile ? undefined : handleView}
         onEdit={onEdit}
         onDelete={onDeleteConfirm ? handleDelete : undefined}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
     </TableRow>
   );

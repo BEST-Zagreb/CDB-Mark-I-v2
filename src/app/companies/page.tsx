@@ -16,11 +16,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Company, CompanyFormData } from "@/types/company";
 import { Suspense, useState } from "react";
 import { useBulkCreateCompanies } from "@/app/companies/hooks/use-companies";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function CompaniesPage() {
   const isMobile = useIsMobile();
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const bulkCreate = useBulkCreateCompanies();
+  const { data: permissions } = usePermissions();
+
+  const canManageCompanies =
+    permissions?.isAdmin || permissions?.isResponsibleOnAnyProject;
 
   // Custom hooks for table management and company operations
   const {
@@ -72,22 +77,26 @@ export default function CompaniesPage() {
             <Badge variant="secondary">{companies.length}</Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleCreateCompany}
-              size={isMobile ? "sm" : "default"}
-            >
-              <Plus className="size-4" />
-              Add company
-            </Button>
+            {canManageCompanies && (
+              <>
+                <Button
+                  onClick={handleCreateCompany}
+                  size={isMobile ? "sm" : "default"}
+                >
+                  <Plus className="size-4" />
+                  Add company
+                </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => setBulkDialogOpen(true)}
-              size={isMobile ? "sm" : "default"}
-            >
-              <Layers className="size-4" />
-              Add multiple companies
-            </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setBulkDialogOpen(true)}
+                  size={isMobile ? "sm" : "default"}
+                >
+                  <Layers className="size-4" />
+                  Add multiple companies
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -116,38 +125,42 @@ export default function CompaniesPage() {
             companies={companies}
             searchQuery={searchQuery}
             tablePreferences={tablePreferences}
-            onEdit={handleEditCompany}
-            onDelete={handleDeleteCompany}
+            onEdit={canManageCompanies ? handleEditCompany : undefined}
+            onDelete={canManageCompanies ? handleDeleteCompany : undefined}
             onSortColumn={handleSortColumn}
           />
         )}
       </div>
 
-      <FormDialog<CompanyFormData>
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        entity="Company"
-        initialData={initialFormData}
-        onSubmit={handleSubmitCompany}
-        isLoading={isSubmitting}
-      >
-        {(formProps) => (
-          <CompanyForm
-            initialData={formProps.initialData}
-            onSubmit={formProps.onSubmit}
-            isLoading={formProps.isLoading}
-          />
-        )}
-      </FormDialog>
+      {canManageCompanies && (
+        <FormDialog<CompanyFormData>
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          entity="Company"
+          initialData={initialFormData}
+          onSubmit={handleSubmitCompany}
+          isLoading={isSubmitting}
+        >
+          {(formProps) => (
+            <CompanyForm
+              initialData={formProps.initialData}
+              onSubmit={formProps.onSubmit}
+              isLoading={formProps.isLoading}
+            />
+          )}
+        </FormDialog>
+      )}
 
-      <BulkCompaniesDialog
-        open={bulkDialogOpen}
-        onOpenChange={setBulkDialogOpen}
-        isSaving={bulkCreate.isPending}
-        onSave={async (rows) => {
-          return await bulkCreate.mutateAsync(rows);
-        }}
-      />
+      {canManageCompanies && (
+        <BulkCompaniesDialog
+          open={bulkDialogOpen}
+          onOpenChange={setBulkDialogOpen}
+          isSaving={bulkCreate.isPending}
+          onSave={async (rows) => {
+            return await bulkCreate.mutateAsync(rows);
+          }}
+        />
+      )}
     </div>
   );
 }

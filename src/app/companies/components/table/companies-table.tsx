@@ -20,8 +20,8 @@ interface VirtualizedCompanyListProps {
   companies: Company[];
   searchQuery: string;
   tablePreferences: TablePreferences;
-  onEdit: (company: Company) => void;
-  onDelete: (companyId: number) => Promise<void>;
+  onEdit?: (company: Company) => void;
+  onDelete?: (companyId: number) => Promise<void>;
   onSortColumn: (field: keyof Company) => void;
 }
 

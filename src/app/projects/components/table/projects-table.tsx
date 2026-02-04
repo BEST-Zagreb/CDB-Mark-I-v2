@@ -22,6 +22,8 @@ interface VirtualizedProjectListProps {
   tablePreferences: TablePreferences;
   onEdit?: (project: Project) => void;
   onDelete?: (projectId: number) => Promise<void>;
+  canEdit?: (project: Project) => boolean;
+  canDelete?: (project: Project) => boolean;
   onSortColumn: (field: keyof Project) => void;
 }
 
@@ -31,6 +33,8 @@ export function ProjectsTable({
   tablePreferences,
   onEdit,
   onDelete,
+  canEdit,
+  canDelete,
   onSortColumn,
 }: VirtualizedProjectListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -176,6 +180,8 @@ export function ProjectsTable({
                 tablePreferences={tablePreferences}
                 onEdit={onEdit}
                 onDeleteConfirm={onDelete}
+                canEdit={canEdit}
+                canDelete={canDelete}
               />
             );
           })}

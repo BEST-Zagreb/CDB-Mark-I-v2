@@ -9,10 +9,27 @@ import {
 } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { Collaboration, CollaborationFormData } from "@/types/collaboration";
+import {
+  getAuthContext,
+  getProjectRole,
+  getResponsibleCompanyIdsByFullName,
+  isResponsibleOnAnyProject,
+  RESPONSIBLE_ROLE,
+  TEAM_MEMBER_ROLE,
+} from "@/lib/rbac";
 
 // GET /api/collaborations - Get collaborations with required project, company, or responsible filter
 export async function GET(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+    const responsibleAny = ctx.isAdmin
+      ? true
+      : await isResponsibleOnAnyProject(ctx.userId);
+
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("project_id");
     const companyId = searchParams.get("company_id");
@@ -27,6 +44,40 @@ export async function GET(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    const parsedProjectId = projectId ? parseInt(projectId) : NaN;
+    const hasProjectFilter = !!projectId && !Number.isNaN(parsedProjectId);
+    let onlyMineInProject = false;
+
+    if (!ctx.isAdmin && hasProjectFilter && !responsibleAny) {
+      const role = await getProjectRole(ctx.userId, parsedProjectId);
+      if (role === RESPONSIBLE_ROLE) {
+        // can view all collaborations in this project
+      } else if (role === TEAM_MEMBER_ROLE) {
+        // can view only collaborations where user is responsible
+        onlyMineInProject = true;
+      } else {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    } else if (!responsibleAny) {
+      // Non-admin users without any responsible role can't use the global responsible filter.
+      if (responsible) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      // Company-scoped access is based on companies the user is responsible for.
+      if (companyId) {
+        const cid = parseInt(companyId);
+        if (!Number.isNaN(cid)) {
+          const allowedCompanies = await getResponsibleCompanyIdsByFullName(
+            ctx.fullName
+          );
+          if (!allowedCompanies.includes(cid)) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+          }
+        }
+      }
     }
 
     const baseQuery = db
@@ -61,7 +112,14 @@ export async function GET(request: NextRequest) {
     let result;
     if (projectId) {
       result = await baseQuery
-        .where(eq(collaborations.projectId, parseInt(projectId)))
+        .where(
+          onlyMineInProject
+            ? and(
+                eq(collaborations.projectId, parseInt(projectId)),
+                eq(collaborations.responsible, ctx.fullName)
+              )
+            : eq(collaborations.projectId, parseInt(projectId))
+        )
         .orderBy(
           desc(collaborations.updatedAt),
           desc(collaborations.createdAt)
@@ -148,7 +206,26 @@ export async function GET(request: NextRequest) {
 // POST /api/collaborations - Create a new collaboration
 export async function POST(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
     const data: CollaborationFormData = await request.json();
+
+    if (!ctx.isAdmin) {
+      const role = await getProjectRole(ctx.userId, data.projectId);
+      if (role !== RESPONSIBLE_ROLE) {
+        return NextResponse.json(
+          { error: "Insufficient permissions" },
+          { status: 403 }
+        );
+      }
+
+      // Non-admin users can only create collaborations assigned to themselves.
+      data.responsible = ctx.fullName;
+    }
 
     // Check if collaboration already exists
     const existingCollaboration = await db

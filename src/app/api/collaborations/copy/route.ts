@@ -3,10 +3,24 @@ import { db } from "@/lib/db";
 import { collaborations } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { CopyCollaborationFormData } from "@/types/collaboration";
+import { getAuthContext, isResponsibleOnAnyProject } from "@/lib/rbac";
 
 // POST /api/collaborations/copy - Copy collaborations from one project to another
 export async function POST(request: NextRequest) {
   try {
+    const authRes = await getAuthContext(request);
+    if (!authRes.ok) {
+      return NextResponse.json({ error: authRes.error }, { status: authRes.status });
+    }
+    const { ctx } = authRes;
+
+    if (!ctx.isAdmin) {
+      const responsibleAny = await isResponsibleOnAnyProject(ctx.userId);
+      if (!responsibleAny) {
+        return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+      }
+    }
+
     const data: CopyCollaborationFormData & { sourceProjectId: number } =
       await request.json();
 

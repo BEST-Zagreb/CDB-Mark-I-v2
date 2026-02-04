@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const navigationLinks = [
   { href: "/", label: "Home", icon: Home },
@@ -31,6 +32,14 @@ export const AppSidebar = memo(function AppSidebar() {
   const { setOpenMobile, setOpen } = useSidebar();
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { data: permissions } = usePermissions();
+
+  const canSeeUsers =
+    permissions?.isAdmin || permissions?.isResponsibleOnAnyProject;
+
+  const visibleLinks = canSeeUsers
+    ? navigationLinks
+    : navigationLinks.filter((l) => l.href !== "/users");
 
   // Close sidebar when route changes
   useEffect(() => {
@@ -61,7 +70,7 @@ export const AppSidebar = memo(function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationLinks.map((link) => (
+              {visibleLinks.map((link) => (
                 <SidebarMenuItem key={link.href}>
                   <SidebarMenuButton asChild>
                     <Link

@@ -9,55 +9,39 @@ import {
   projectMembers,
 } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import {
   Collaboration,
   BulkCollaborationFormData,
 } from "@/types/collaboration";
 
-const RESPONSIBLE_ROLE = "Project responsible" as const;
-const TEAM_MEMBER_ROLE = "Project team member" as const;
+import {
+  getAuthContext,
+  getProjectRole,
+  RESPONSIBLE_ROLE,
+  TEAM_MEMBER_ROLE,
+} from "@/lib/rbac";
 
 async function getBulkPermissions(request: NextRequest, projectId: number) {
-  const session = await auth.api.getSession({ headers: request.headers });
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    return { allowed: false as const, status: 403, error: "Not authenticated" };
+  const authRes = await getAuthContext(request);
+  if (!authRes.ok) {
+    return { allowed: false as const, status: authRes.status, error: authRes.error };
   }
 
-  const [me] = await db
-    .select({ id: appUsers.id, isAdmin: appUsers.isAdmin, isLocked: appUsers.isLocked })
-    .from(appUsers)
-    .where(eq(appUsers.id, userId))
-    .limit(1);
+  const { ctx } = authRes;
 
-  if (!me || me.isLocked) {
-    return { allowed: false as const, status: 403, error: "Unauthorized" };
-  }
-
-  if (me.isAdmin) {
+  if (ctx.isAdmin) {
     return {
       allowed: true as const,
-      userId,
+      userId: ctx.userId,
+      fullName: ctx.fullName,
+      isAdmin: true,
       canManageAll: true,
       canLimited: true,
       role: "Admin",
     };
   }
 
-  const [member] = await db
-    .select({ role: projectMembers.role })
-    .from(projectMembers)
-    .where(
-      and(
-        eq(projectMembers.projectId, projectId),
-        eq(projectMembers.appUserId, userId)
-      )
-    )
-    .limit(1);
-
-  const role = member?.role ?? null;
+  const role = await getProjectRole(ctx.userId, projectId);
   const canManageAll = role === RESPONSIBLE_ROLE;
   const canLimited = role === TEAM_MEMBER_ROLE;
 
@@ -71,7 +55,9 @@ async function getBulkPermissions(request: NextRequest, projectId: number) {
 
   return {
     allowed: true as const,
-    userId,
+    userId: ctx.userId,
+    fullName: ctx.fullName,
+    isAdmin: false,
     canManageAll,
     canLimited,
     role: role ?? "",
@@ -110,6 +96,21 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const perms = await getBulkPermissions(request, data.projectId);
+    if (!perms.allowed) {
+      return NextResponse.json({ error: perms.error }, { status: perms.status });
+    }
+
+    if (!perms.canManageAll) {
+      return NextResponse.json(
+        { error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    // Non-admins cannot create collaborations assigned to someone else.
+    const responsibleValue = perms.isAdmin ? (data.responsible ?? null) : perms.fullName;
 
     // Check for existing collaborations
     const existingCollaborations = await db
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       companyId,
       projectId: data.projectId,
       personId: data.contactId || null,
-      responsible: data.responsible || null,
+      responsible: responsibleValue,
       comment: data.comment || null,
       contacted: data.contacted ? 1 : 0,
       successful:
@@ -342,7 +343,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const existing = await db
-      .select({ id: collaborations.id, comment: collaborations.comment })
+      .select({
+        id: collaborations.id,
+        responsible: collaborations.responsible,
+        comment: collaborations.comment,
+      })
       .from(collaborations)
       .where(
         and(
@@ -361,6 +366,21 @@ export async function PUT(request: NextRequest) {
     const existingIds = new Set(existing.map((r) => r.id));
     const missingIds = uniqueIds.filter((id) => !existingIds.has(id));
     const idsToUpdate = uniqueIds.filter((id) => existingIds.has(id));
+
+    if (!perms.isAdmin) {
+      const allowedIds = new Set(
+        existing
+          .filter((r) => !!r.responsible && r.responsible === perms.fullName)
+          .map((r) => r.id)
+      );
+      const forbiddenIds = idsToUpdate.filter((id) => !allowedIds.has(id));
+      if (forbiddenIds.length > 0) {
+        return NextResponse.json(
+          { error: "Forbidden", forbiddenIds },
+          { status: 403 }
+        );
+      }
+    }
 
     const now = new Date().toISOString();
     const set = body.set;
@@ -404,6 +424,7 @@ export async function PUT(request: NextRequest) {
     if (append) {
       await db.transaction(async (tx) => {
         for (const row of existing) {
+          if (!perms.isAdmin && row.responsible !== perms.fullName) continue;
           const current = (row.comment ?? "").toString();
           const nextComment = current
             ? `${current.replace(/\s+$/, "")}\n${append}`
@@ -467,6 +488,31 @@ export async function DELETE(request: NextRequest) {
         { error: "Insufficient permissions" },
         { status: 403 }
       );
+    }
+
+    if (!perms.isAdmin) {
+      const rows = await db
+        .select({ id: collaborations.id, responsible: collaborations.responsible })
+        .from(collaborations)
+        .where(
+          and(
+            eq(collaborations.projectId, projectId),
+            inArray(collaborations.id, uniqueIds)
+          )
+        );
+
+      const allowedIds = new Set(
+        rows
+          .filter((r) => !!r.responsible && r.responsible === perms.fullName)
+          .map((r) => r.id)
+      );
+      const forbiddenIds = uniqueIds.filter((id) => !allowedIds.has(id));
+      if (forbiddenIds.length > 0) {
+        return NextResponse.json(
+          { error: "Forbidden", forbiddenIds },
+          { status: 403 }
+        );
+      }
     }
 
     const deleted = await db
