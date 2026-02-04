@@ -88,7 +88,6 @@ export default function CompaniesPage() {
                 </Button>
 
                 <Button
-                  variant="outline"
                   onClick={() => setBulkDialogOpen(true)}
                   size={isMobile ? "sm" : "default"}
                 >
